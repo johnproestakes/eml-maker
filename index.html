@@ -1,0 +1,92 @@
+<html>
+<head>
+  <link rel="stylesheet" href="scripts/css/libs/semantic.min.css"/>
+  <link rel="stylesheet" href="scripts/css/libs/codemirror.css"/>
+  <script src="scripts/js/libs/jquery.min.js" type="text/javascript"></script>
+  <script src="scripts/js/libs/semantic.min.js" type="text/javascript"></script>
+  <script src="scripts/js/libs/angular.min.js" type="text/javascript"></script>
+  <script src="scripts/js/libs/angular-route.min.js" type="text/javascript"></script>
+
+<script src="scripts/js/libs/codemirror.js" type="text/javascript"></script>
+<script src="scripts/js/libs/htmlmixed.js" type="text/javascript"></script>
+  <script src="prod/app/app.js" type="text/javascript"></script>
+  <script src="prod/app/services.js" type="text/javascript"></script>
+  <script src="prod/app/controllers.js" type="text/javascript"></script>
+  <script src="prod/app/directives.js" type="text/javascript"></script>
+  <script src="prod/app/routes.js" type="text/javascript"></script>
+
+  <style>
+    pre {background-color: #fafafa;padding: .5em;}
+    .context {
+    /*padding: .5em 1em; background-color: #fafafa; margin-bottom: 1em;*/
+    }
+    .file-dropper {border: dashed 3px #ccc;
+      color: #ccc;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    margin-top: 1em;
+    box-sizing: content-box;
+}
+    .context {background-image: -webkit-linear-gradient(0deg, #fafafa 5em, #fff 5em, #fff) !important;}
+    .context .line {float:left; font-weight:bold; width: 4em;}
+    .context .code {margin-left: 5em;}
+    .old-url {
+      /*background:#DFF0FF; color: #2185D0; box-shadow: 0 0 0 1px #2185D0 inset,0 0 0 0 transparent;  overflow:hidden; padding: .5em 1em; margin-bottom: 1em; border-radius: .28571429rem;*/
+    }
+    .old-url strong {float:left; width: 5em;}
+    .old-url .url {margin-left: 5em;}
+    #content {margin-bottom:3em; }
+    </style>
+
+</head>
+
+<body ng-app="EMLMaker" ng-controller="MainController">
+
+  <div class="ui fixed menu">
+    <div class="ui container">
+    <div class="item"><img src="assets/logo.png"/></div>
+      <a href="javascript:angular.noop()" class="item" ng-click="createNewEML()">New EML</a>
+  </div>
+  </div>
+  <div style="height: 50px;"></div>
+
+  <section  id="content" class="ui container"  style="padding-top: 1.5em;">
+
+    <div class="ui fluid ordered steps" >
+      <div class="step" id="step1" ng-class="{active: currentView==0, completed: sourceCode!==''}">
+        <div class="content">
+          <div class="title">HTML</div>
+          <!-- <div class="description">Choose your shipping options</div> -->
+        </div>
+      </div>
+      <div class=" step" ng-class="{active: currentView==1, disabled: sourceCode=='', completed: areLinksComplete() }">
+        <div class="content">
+          <div class="title">Links</div>
+          <!-- <div class="description">Enter billing information</div> -->
+        </div>
+      </div>
+      <div class="step" ng-class="{active: currentView==2, disabled: currentView<1}">
+        <div class="content">
+          <div class="title">Review</div>
+          <!-- <div class="description">Verify order details</div> -->
+        </div>
+      </div>
+    </div>
+
+    <div ng-view></div>
+
+
+
+
+
+
+
+
+
+
+
+    </section>
+
+  </body>
+</html>
