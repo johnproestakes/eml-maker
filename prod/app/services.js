@@ -12,7 +12,6 @@ angular.module('EMLMaker').factory('$Generator', function(){
     "X-Unsent: 1",
     "Mime-Version: 1.0 (Mac OS X Mail 10.1 \(3251\))",
     "X-Uniform-Type-Identifier: com.apple.mail-draft",
-    "From: Optum <optum@optum.com>",
     "Content-Type: text/html;\n\tcharset=us-ascii",
     "Content-Transfer-Encoding: 7bit"
   ];
