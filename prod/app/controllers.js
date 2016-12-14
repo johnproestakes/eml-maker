@@ -118,9 +118,9 @@ angular.module('EMLMaker')
     }
 
 
-    var re1 = /<a\b[^>]*>(.*)<\/a>/gm;
+    var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
     var re2 = /(href\=\"[^\s\"]+)/g;
-    var re3 = /<a\b[^>]*>(([\s\S]+?))<\/a>/ig; // find all.
+    var re3 = /<a\b[^>]*?>(([\s\S]+?))<\/a>/ig; // find all.
 
     var all = $scope.data.sourceCode.match(re3);
     if(all){
