@@ -108,6 +108,7 @@ angular.module('EMLMaker')
     $scope.data.linkData = [];
     window.scrollTo(0,0);
 
+    $scope.data.sourceCode = $scope.data.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n");
     //determine charset
     $scope.data.charset = $Processors.getCharsetFromHTML($scope.data.sourceCode);
 
@@ -158,16 +159,10 @@ angular.module('EMLMaker')
 
       $scope.data.linkData.forEach(function(item){
         var line = item.line - 1;
-        codeLines[line] = codeLines[line].replace(new RegExp( item.old,"g"), item.new);
-        if(item.old.length < item.new.length){
-          codeLines[line] = codeLines[line].replace(new RegExp(item.old, "g"), item.new);
-        } else {
-          var start = codeLines[line].indexOf(item.old);
-          codeLines[line] = codeLines[line].substr(0, start)+ item.new + codeLines[line].substr(start+item.old.length, codeLines[line].length);
 
-        }
-
-
+        // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
+        var start = codeLines[line].indexOf("href=\"" + item.old);
+        codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + item.new + codeLines[line].substr(start+6+item.old.length, codeLines[line].length);
 
 
       });
