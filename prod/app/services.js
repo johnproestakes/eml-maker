@@ -25,13 +25,14 @@ angular.module('EMLMaker').factory('$Generator', function(){
   };
   this.buildHeaders = function(charset, headerInput, allowableHeaderFields){
     var headers = jQuery.extend([], self.headers);
-    headers.push("Content-Type: text/html;\n\t"+ (charset=="" ? "charset=UTF-8" : charset));
+    if(charset == "") charset = "charset=UTF-8";
+    headers.push("Content-Type: text/html;\n\t" + charset);
 
-
+    console.log(headers, allowableHeaderFields);
 
     for(i in headerInput){
       if(headerInput.hasOwnProperty(i)){
-        if(allowableHeaderFields[i] && headerInput[i]){
+        if(allowableHeaderFields.hasOwnProperty(i)){
           headers.push(
             allowableHeaderFields[i].syntax + " " + headerInput[i]
           );
@@ -44,5 +45,35 @@ angular.module('EMLMaker').factory('$Generator', function(){
 
 
 
+  return this;
+});
+
+angular.module('EMLMaker').factory('$Processors', function(){
+
+  var self = this;
+
+  this.replaceEloquaMergeFields = function(content){
+    var re4 = /<span(%20|\s)class="?eloquaemail"?>(.*?)<\/span>/ig;
+    content = content.replace(re4, "#$2#");
+    return content;
+  };
+  this.getCharsetFromHTML = function(content){
+    var re5 = /<meta.*?charset=([^\s"]*)/ig, charset ="";
+
+    var metaTags = content.match(re5);
+    if(metaTags){
+      metaTags.forEach(function(item){
+        var charsetVals = item.match(/charset=([^\s"]*)/ig);
+        if(charsetVals){
+          charset = charsetVals[0];
+        } else {
+          charset = "charset=UTF-8";
+        }
+      });
+    }
+
+    return charset;
+
+  };
   return this;
 });

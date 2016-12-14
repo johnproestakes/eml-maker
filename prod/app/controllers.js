@@ -1,5 +1,5 @@
 angular.module('EMLMaker')
-.controller('MainController', ['$scope','saveAs','$Generator','$routeParams', function($scope,saveAs,$Generator, $routeParams){
+.controller('MainController', ['$scope','saveAs','$Generator','$routeParams','$Processors', function($scope,saveAs,$Generator, $routeParams,$Processors){
 
   $scope.sessionToken = 0;
   $scope.navigateTo = function( section){
@@ -21,14 +21,15 @@ angular.module('EMLMaker')
       header:{ "subject": "" },
       emlHeaders: "",
       outputCode: "",
-      sourceCode: ""
+      sourceCode: "",
+      allowableHeaderFields:{
+        "to": {syntax:"To: ", label:"To", instructions: "A list of email addresses separated by commas."},
+        "subject": {syntax: "Subject: ", label:"Subject", instructions: ""},
+        "cc" : {syntax:"Cc: ", label:"CC", instructions: "A list of email addresses separated by commas."},
+        "replyto": { syntax:"Reply-to: ", label:"Reply to", instructions: "A list of email addresses separated by commas."}
+      }
     }
-    $scope.allowableHeaderFields = {
-      "to": {syntax:"To: ", label:"To", instructions: "A list of email addresses separated by commas."},
-      "subject": {syntax: "Subject: ", label:"Subject", instructions: ""},
-      "cc" : {syntax:"Cc: ", label:"CC", instructions: "A list of email addresses separated by commas."},
-      "replyto": { syntax:"Reply-to: ", label:"Reply to", instructions: "A list of email addresses separated by commas."}
-    };
+
   };
 
   //only load once!
@@ -50,7 +51,10 @@ angular.module('EMLMaker')
   $scope.isHeaderSelected= function(header){ if(!$scope.data.header.hasOwnProperty(header) || $scope.data.header==""  ) { return true; } else { return false; } };
 
   $scope.changeHeaderInputFields = function(){
-    $scope.data.emlHeaders = $Generator.buildHeaders($scope.data.charset, $scope.data.header, $scope.allowableHeaderFields);
+    $scope.data.emlHeaders = $Generator.buildHeaders(
+      $scope.data.charset,
+      $scope.data.header,
+      $scope.data.allowableHeaderFields);
   };
 
 
@@ -103,66 +107,21 @@ angular.module('EMLMaker')
   $scope.processHtml = function(){
     $scope.data.linkData = [];
     window.scrollTo(0,0);
-    $scope.data.emlHeaders = $Generator.buildHeaders($scope.data.header, $scope.allowableHeaderFields);
 
-    if($scope.data.header.subject ==""){
-      jQuery('#step1').popup({
-        position : 'top center',
-        target   : '#step1',
-        className: { popup: 'ui tiny inverted popup' },
-        content  : 'Your subject line is blank'
-      }).popup('toggle');
+    //determine charset
+    $scope.data.charset = $Processors.getCharsetFromHTML($scope.data.sourceCode);
 
-          setTimeout(function(){
-            jQuery('#step1').popup('destroy');
+    //determine email headers
+    $scope.data.emlHeaders = $Generator.buildHeaders(
+      $scope.data.charset,
+      $scope.data.header,
+      $scope.data.allowableHeaderFields);
 
-          },5000);
-    }
-
-
-
+    //replace merge fields
+    $scope.data.sourceCode = $Processors.replaceEloquaMergeFields($scope.data.sourceCode);
 
     var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
     var re2 = /(href\=\"[^\s\"]+)/g;
-    var re3 = /<a\b[^>]*?>(([\s\S]+?))<\/a>/ig; // find all.
-    var re4 = /<span(%20|\s)class="?eloquaemail"?>(.*?)<\/span>/ig;
-
-
-    //get the charset from the html.
-    var re5 = /<meta.*?charset=([^\s"]*)/ig;
-
-    var metaTags = $scope.data.sourceCode.match(re5);
-    if(charset){
-      metaTags.forEach(function(item){
-        var charsetVals = item.match(/charset=([^\s"]*)/ig);
-        if(charsetVals){
-          $scope.data.charset = charsetVals[0];
-        }
-      });
-    }
-
-    var charset = a.value.match(re5);
-    if(charset){
-      charset.forEach(function(item){
-        console.log(item);
-
-      });
-    }
-
-    //take care of merge fields
-    $scope.data.sourceCode = $scope.data.sourceCode.replace(re4, "#$2#");
-
-    var all = $scope.data.sourceCode.match(re3);
-    if(all){
-      all.forEach(function(item){ //force the link tags onto one line.
-        var a = item.replace(new RegExp("\n", "g"), "");
-
-        $scope.data.sourceCode = $scope.data.sourceCode.replace(item, a);
-      });
-    }
-
-
-
     var codeLines = $scope.data.sourceCode.split("\n");
     for(var n=0; n<codeLines.length;n++){
 
