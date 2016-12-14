@@ -118,9 +118,14 @@ angular.module('EMLMaker')
     }
 
 
+
+
     var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
     var re2 = /(href\=\"[^\s\"]+)/g;
     var re3 = /<a\b[^>]*?>(([\s\S]+?))<\/a>/ig; // find all.
+    var re4 = /<span(%20|\s)class="?eloquaemail"?>(.*?)<\/span>/ig;
+    //take care of merge fields
+    $scope.data.sourceCode = $scope.data.sourceCode.replace(re4, "#$2#");
 
     var all = $scope.data.sourceCode.match(re3);
     if(all){
