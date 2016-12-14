@@ -56,34 +56,3 @@ angular.module('EMLMaker')
 			}
 		};
 	}]);
-
-angular.module('EMLMaker').directive("htmlEditor", ['$timeout',function($timeout){
-  return {
-    restrict: "A",
-    scope:"ngModel",
-    link: function(scope, el, attr){
-
-      $timeout(function(){
-        var editor = CodeMirror.fromTextArea(el[0], {
-          lineNumbers: true,
-          mode: {name: "htmlmixed" }
-        });
-
-        jQuery(el).on('change', function(){
-          if(a == 1) return false;
-          editor.setValue(scope.$parent[attr.ngModel]);
-          console.log('setvalue');
-        });
-        editor.on('change', function(){
-          a = 1;
-          //editor.save();
-          scope.$apply(function(){
-            scope.$parent[attr.ngModel] = editor.getValue();
-          });
-          setTimeout(function(){a = 0;},1000);
-        });
-    });
-
-  }
-}
-}]);

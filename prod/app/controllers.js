@@ -1,14 +1,26 @@
 angular.module('EMLMaker')
-.controller('MainController', ['$scope','saveAs','$Generator', function($scope,saveAs,$Generator){
+.controller('MainController', ['$scope','saveAs','$Generator','$routeParams', function($scope,saveAs,$Generator, $routeParams){
 
   $scope.sessionToken = 0;
-
+  $scope.navigateTo = function( section){
+    var s = {
+      'main':0,
+      'links' : 1,
+      'export': 2
+    };
+    var current = location.hash.substr(2, location.hash.length);
+    if (current && s[section] < s[current]){
+      location.href= "#/" + section;
+    }
+  };
   $scope.blankSlate = function(){
-    $scope.linkData = [];
-    $scope.headerData = { "subject": "" };
-    $scope.emlHeaders = "";
-    $scope.outputCode = "";
-    $scope.sourceCode = "\n<html><a href=\"#1\">1</a> \n <a href=\"#\">2</a>   \n<a href=\"http://google3.com\">3</a>    \n<a href=\"http://google.com\">4</a></html>";
+    $scope.data = {
+      linkData: [],
+      header:{ "subject": "" },
+      emlHeaders: "",
+      outputCode: "",
+      sourceCode: ""
+    }
     $scope.allowableHeaderFields = {
       "to": {syntax:"To: ", label:"To", instructions: "A list of email addresses separated by commas."},
       "subject": {syntax: "Subject: ", label:"Subject", instructions: ""},
@@ -33,10 +45,10 @@ angular.module('EMLMaker')
   };
 
 
-  $scope.isHeaderSelected= function(header){ if(!$scope.headerData.hasOwnProperty(header) || $scope.headerData==""  ) { return true; } else { return false; } };
+  $scope.isHeaderSelected= function(header){ if(!$scope.data.header.hasOwnProperty(header) || $scope.data.header==""  ) { return true; } else { return false; } };
 
   $scope.changeHeaderInputFields = function(){
-    $scope.emlHeaders = $Generator.buildHeaders($scope.headerData, $scope.allowableHeaderFields);
+    $scope.data.emlHeaders = $Generator.buildHeaders($scope.data.header, $scope.allowableHeaderFields);
   };
 
 
@@ -49,7 +61,7 @@ angular.module('EMLMaker')
       var reader = new FileReader();
       reader.onloadend = function(evt){
         var dropText = evt.target.result;
-        $scope.sourceCode = dropText;
+        $scope.data.sourceCode = dropText;
         $scope.$apply();
       };
       reader.readAsBinaryString(files[0]);
@@ -59,37 +71,39 @@ angular.module('EMLMaker')
 
 
   $scope.areLinksComplete = function(){
-    if ($scope.linkData.length ==0) return false;
+    if ($scope.data.linkData.length ==0) return true;
     var output = true;
-    $scope.linkData.forEach(function(item){
-      if(!item.new.match(/^https?:\/\//)){
-        output = false;
-      }
+    if($scope.data.linkData.length>0) {
+      $scope.data.linkData.forEach(function(item){
+        if(!item.new.match(/^https?:\/\/|mailto:/)){
+          output = false;
+        }
+      });
+    }
 
-    });
     return output;
   };
 
 
   $scope.displayFriendlyHtml = function(text){ return text; };
   $scope.addNewHeaderField = function(val){
-    $scope.headerData[val] = "";
+    $scope.data.header[val] = "";
 
   };
 
   //button clicks
 
   $scope.downloadEml = function(){
-    var output = $scope.emlHeaders + "\n\n" + $Generator.removeWhiteSpace($scope.outputCode);
+    var output = $scope.data.emlHeaders + "\n\n" + $Generator.removeWhiteSpace($scope.data.outputCode);
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.eml");
   };
 
   $scope.processHtml = function(){
-    $scope.linkData = [];
+    $scope.data.linkData = [];
     window.scrollTo(0,0);
-    $scope.emlHeaders = $Generator.buildHeaders($scope.headerData, $scope.allowableHeaderFields);
+    $scope.data.emlHeaders = $Generator.buildHeaders($scope.data.header, $scope.allowableHeaderFields);
 
-    if($scope.headerData.subject ==""){
+    if($scope.data.header.subject ==""){
       jQuery('#step1').popup({
         position : 'top center',
         target   : '#step1',
@@ -107,16 +121,19 @@ angular.module('EMLMaker')
     var re1 = /<a\b[^>]*>(.*)<\/a>/gm;
     var re2 = /(href\=\"[^\s\"]+)/g;
     var re3 = /<a\b[^>]*>(([\s\S]+?))<\/a>/ig; // find all.
-    
-    var all = $scope.sourceCode.match(re3);
-    all.forEach(function(item){ //force the link tags onto one line.
-      var a = item.replace(new RegExp("\n", "g"), "");
 
-      $scope.sourceCode = $scope.sourceCode.replace(item, a);
-    });
+    var all = $scope.data.sourceCode.match(re3);
+    if(all){
+      all.forEach(function(item){ //force the link tags onto one line.
+        var a = item.replace(new RegExp("\n", "g"), "");
+
+        $scope.data.sourceCode = $scope.data.sourceCode.replace(item, a);
+      });
+    }
 
 
-    var codeLines = $scope.sourceCode.split("\n");
+
+    var codeLines = $scope.data.sourceCode.split("\n");
     for(var n=0; n<codeLines.length;n++){
 
       var found = codeLines[n].match(re1);
@@ -124,7 +141,7 @@ angular.module('EMLMaker')
         found.forEach(function(item){
           var href = item.match(re2);
           if(href.length>0){
-            $scope.linkData.push({
+            $scope.data.linkData.push({
               line: n+1,
               context: item,
               new: href[0].substr(6, href[0].length),
@@ -146,11 +163,11 @@ angular.module('EMLMaker')
     }
       location.href="#/export";
       window.scrollTo(0,0);
-      $scope.outputCode = $scope.sourceCode;
+      $scope.data.outputCode = $scope.data.sourceCode;
 
-      var codeLines = $scope.outputCode.split("\n");
+      var codeLines = $scope.data.outputCode.split("\n");
 
-      $scope.linkData.forEach(function(item){
+      $scope.data.linkData.forEach(function(item){
         var line = item.line - 1;
         codeLines[line] = codeLines[line].replace(new RegExp( item.old,"g"), item.new);
         if(item.old.length < item.new.length){
@@ -166,7 +183,7 @@ angular.module('EMLMaker')
 
       });
 
-      $scope.outputCode = codeLines.join("\n");
+      $scope.data.outputCode = codeLines.join("\n");
 
   };
 
