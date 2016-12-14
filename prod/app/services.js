@@ -12,7 +12,6 @@ angular.module('EMLMaker').factory('$Generator', function(){
     "X-Unsent: 1",
     "Mime-Version: 1.0 (Mac OS X Mail 10.1 \(3251\))",
     "X-Uniform-Type-Identifier: com.apple.mail-draft",
-    "Content-Type: text/html;\n\tcharset=us-ascii",
     "Content-Transfer-Encoding: 7bit"
   ];
 
@@ -24,9 +23,12 @@ angular.module('EMLMaker').factory('$Generator', function(){
     output = output.replace(/\s{2,99999}/g, "");
     return output;
   };
-  this.buildHeaders = function(headerInput, allowableHeaderFields){
+  this.buildHeaders = function(charset, headerInput, allowableHeaderFields){
     var headers = jQuery.extend([], self.headers);
 
+
+
+    this.headers[] = "Content-Type: text/html;\n\t"+charset;
     for(i in headerInput){
       if(headerInput.hasOwnProperty(i)){
         if(allowableHeaderFields[i] && headerInput[i]){

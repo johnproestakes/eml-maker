@@ -14,7 +14,9 @@ angular.module('EMLMaker')
     }
   };
   $scope.blankSlate = function(){
+
     $scope.data = {
+      charset: "",
       linkData: [],
       header:{ "subject": "" },
       emlHeaders: "",
@@ -48,7 +50,7 @@ angular.module('EMLMaker')
   $scope.isHeaderSelected= function(header){ if(!$scope.data.header.hasOwnProperty(header) || $scope.data.header==""  ) { return true; } else { return false; } };
 
   $scope.changeHeaderInputFields = function(){
-    $scope.data.emlHeaders = $Generator.buildHeaders($scope.data.header, $scope.allowableHeaderFields);
+    $scope.data.emlHeaders = $Generator.buildHeaders($scope.data.charset, $scope.data.header, $scope.allowableHeaderFields);
   };
 
 
@@ -124,6 +126,29 @@ angular.module('EMLMaker')
     var re2 = /(href\=\"[^\s\"]+)/g;
     var re3 = /<a\b[^>]*?>(([\s\S]+?))<\/a>/ig; // find all.
     var re4 = /<span(%20|\s)class="?eloquaemail"?>(.*?)<\/span>/ig;
+
+
+    //get the charset from the html.
+    var re5 = /<meta.*?charset=([^\s"]*)/ig;
+
+    var metaTags = $scope.data.sourceCode.match(re5);
+    if(charset){
+      metaTags.forEach(function(item){
+        var charsetVals = item.match(/charset=([^\s"]*)/ig);
+        if(charsetVals){
+          $scope.data.charset = charsetVals[0];
+        }
+      });
+    }
+
+    var charset = a.value.match(re5);
+    if(charset){
+      charset.forEach(function(item){
+        console.log(item);
+
+      });
+    }
+
     //take care of merge fields
     $scope.data.sourceCode = $scope.data.sourceCode.replace(re4, "#$2#");
 
