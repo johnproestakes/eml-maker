@@ -25,10 +25,10 @@ angular.module('EMLMaker').factory('$Generator', function(){
   };
   this.buildHeaders = function(charset, headerInput, allowableHeaderFields){
     var headers = jQuery.extend([], self.headers);
+    headers.push("Content-Type: text/html;\n\t"+ (charset=="" ? "charset=UTF-8" : charset));
 
 
 
-    this.headers[] = "Content-Type: text/html;\n\t"+charset;
     for(i in headerInput){
       if(headerInput.hasOwnProperty(i)){
         if(allowableHeaderFields[i] && headerInput[i]){
