@@ -79,7 +79,10 @@ angular.module('EMLMaker')
   $scope.displayFormattedURL = function(content,oldUrl, newUrl){
     content = content.replace(new RegExp("<","g"), "&lt;");
     content = content.replace(new RegExp(">","g"), "&gt;");
-    content = content.replace(new RegExp("href=\""+oldUrl, "g"), "href=\"<strong>"+newUrl + "</strong>");
+    var start = content.indexOf("href=\""+oldUrl );
+
+    content = content.substr(0, start) + "href=\"<strong>"+newUrl + "</strong>" +
+    content.substr(start + ("href=\""+oldUrl).length, content.length );
     content = $sce.trustAsHtml(content);
     return content;
   };
