@@ -59,7 +59,7 @@
           <!-- <div class="description">Choose your shipping options</div> -->
         </div>
       </div>
-      <div class=" step" ng-click="navigateTo('links')" ng-class="{ disabled: data.sourceCode=='', completed: data.linkData>1&&areLinksComplete() }">
+      <div class=" step" ng-click="navigateTo('links')" ng-class="{ disabled: data.sourceCode=='', completed: verifyLinkSectionComplete() }">
         <div class="content">
           <div class="title">Links</div>
           <!-- <div class="description">Enter billing information</div> -->

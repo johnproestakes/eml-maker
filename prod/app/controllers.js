@@ -75,6 +75,13 @@ angular.module('EMLMaker')
 
   };
 
+  $scope.verifyLinkSectionComplete = function(){
+    if ($scope.data.linkData.length ==0) return false;
+    if ($scope.areLinksComplete())
+      return true;
+    else
+      return false;
+  };
 
   $scope.areLinksComplete = function(){
     if ($scope.data.linkData.length ==0) return true;
