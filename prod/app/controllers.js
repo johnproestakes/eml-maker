@@ -94,14 +94,20 @@ angular.module('EMLMaker')
       return false;
   };
 
+  $scope.isLinkComplete = function(url){
+    output = true;
+    if(!url.match(/^https?:\/\/|mailto:/)){
+      output = false;
+    }
+    return output;
+  };
   $scope.areLinksComplete = function(){
     if ($scope.data.linkData.length ==0) return true;
     var output = true;
     if($scope.data.linkData.length>0) {
       $scope.data.linkData.forEach(function(item){
-        if(!item.new.match(/^https?:\/\/|mailto:/)){
-          output = false;
-        }
+          return $scope.isLinkComplete(item.new);
+
       });
     }
 
