@@ -106,7 +106,9 @@ angular.module('EMLMaker')
     var output = true;
     if($scope.data.linkData.length>0) {
       $scope.data.linkData.forEach(function(item){
-          return $scope.isLinkComplete(item.new);
+          if(!$scope.isLinkComplete(item.new)){
+            output = false;
+          }
 
       });
     }
