@@ -53,7 +53,7 @@ angular.module('EMLMaker').factory('$Processors', function(){
   var self = this;
 
   this.replaceEloquaMergeFields = function(content){
-    var re4 = /<span(%20|\s)class="?eloquaemail"?>(.*?)<\/span>/ig;
+    var re4 = /<span(%20|\s)class="?eloquaemail"?\s?>(.*?)<\/span>/ig;
     content = content.replace(re4, "#$2#");
     return content;
   };
