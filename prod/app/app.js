@@ -1,1 +1,1 @@
-angular.module('EMLMaker', ['ngRoute']);
+angular.module('EMLMaker', ['ngRoute','ngSanitize']);

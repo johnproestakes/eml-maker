@@ -1,5 +1,7 @@
 angular.module('EMLMaker')
-.controller('MainController', ['$scope','saveAs','$Generator','$routeParams','$Processors', function($scope,saveAs,$Generator, $routeParams,$Processors){
+.controller('MainController', [
+  '$scope','saveAs','$Generator','$routeParams','$Processors', '$sce',
+  function($scope,saveAs,$Generator, $routeParams,$Processors, $sce){
 
   $scope.sessionToken = 0;
   $scope.navigateTo = function( section){
@@ -74,7 +76,13 @@ angular.module('EMLMaker')
     }
 
   };
-
+  $scope.displayFormattedURL = function(content,oldUrl, newUrl){
+    content = content.replace(new RegExp("<","g"), "&lt;");
+    content = content.replace(new RegExp(">","g"), "&gt;");
+    content = content.replace(new RegExp("href=\""+oldUrl, "g"), "href=\"<strong>"+newUrl + "</strong>");
+    content = $sce.trustAsHtml(content);
+    return content;
+  };
   $scope.verifyLinkSectionComplete = function(){
     if ($scope.data.linkData.length ==0) return false;
     if ($scope.areLinksComplete())
