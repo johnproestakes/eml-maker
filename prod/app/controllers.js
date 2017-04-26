@@ -130,6 +130,11 @@ angular.module('EMLMaker')
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.eml");
   };
 
+  $scope.downloadHtml = function(){
+    var output = $Generator.removeWhiteSpace($scope.data.outputCode);
+    window.saveAs(new Blob([output], {type:"text/html"}), "untitled.html");
+  };
+
   $scope.processHtml = function(){
     $scope.data.linkData = [];
     window.scrollTo(0,0);
