@@ -69,7 +69,13 @@ angular.module('EMLMaker')
       var reader = new FileReader();
       reader.onloadend = function(evt){
         var dropText = evt.target.result;
-        $scope.data.sourceCode = dropText;
+        var ext = files[0].name.split(".").pop().toLowerCase();
+        if(ext=='eml'){
+          $scope.data.sourceCode = $Generator.stripHtmlAndSubjectFromEML(dropText, $scope);
+        } else {
+          $scope.data.sourceCode = dropText;
+        }
+
         $scope.$apply();
       };
       reader.readAsBinaryString(files[0]);

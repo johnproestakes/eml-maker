@@ -15,10 +15,29 @@ angular.module('EMLMaker').factory('$Generator', function(){
     "Content-Transfer-Encoding: 7bit"
   ];
 
+
+  this.stripHtmlAndSubjectFromEML = function(code, $scope){
+    var output = code.split("\n");
+    var html = output.pop();
+
+    for(var i =0; i< output.length; i++){
+      console.log(output[i]);
+      if(output[i].indexOf("Subject:")>-1){
+        if($scope.data.header === undefined) $scope.data.header = {};
+
+        $scope.$apply(function(){
+            $scope.data.header["subject"] =  output[i].substr(8,output[i].length).trim();
+        });
+      }
+    }
+    return html;
+
+  };
+
   this.removeWhiteSpace = function(code){
     var output = code;
 
-    output = output.replace(new RegExp("\n", "g"), "");
+    output = output.replace(new RegExp("\n", "g"), " ");
     output = output.replace(new RegExp("\t", "g"), "");
     output = output.replace(/\s{2,99999}/g, "");
     return output;
