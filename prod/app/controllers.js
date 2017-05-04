@@ -141,6 +141,18 @@ angular.module('EMLMaker')
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.html");
   };
 
+  $scope.downloadCsv = function(){
+    // var output = $Generator.removeWhiteSpace($scope.data.outputCode);
+
+    if($scope.areLinksComplete()){
+      var output = "Original URL,Modified URL\n";
+      $scope.data.linkData.forEach(function(item) {
+        output+= item.old + "," +item.new + "\n";
+      });
+    }
+    window.saveAs(new Blob([output], {type:"text/csv"}), "email_links.csv");
+  };
+
   $scope.processHtml = function(){
     $scope.data.linkData = [];
     window.scrollTo(0,0);

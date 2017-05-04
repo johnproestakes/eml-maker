@@ -38,8 +38,8 @@ angular.module('EMLMaker').factory('$Generator', function(){
     var output = code;
 
     output = output.replace(new RegExp("\n", "g"), " ");
-    output = output.replace(new RegExp("\t", "g"), "");
-    output = output.replace(/\s{2,99999}/g, "");
+    output = output.replace(new RegExp("\t", "g"), " ");
+    output = output.replace(/\s{2,99999}/g, " ");
     return output;
   };
   this.buildHeaders = function(charset, headerInput, allowableHeaderFields){
