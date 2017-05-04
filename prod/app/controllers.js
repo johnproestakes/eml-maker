@@ -100,13 +100,20 @@ angular.module('EMLMaker')
       return false;
   };
 
+  $scope.doesLinkHaveTrackingCode = function(url){
+    var output = false;
+    if(url.match(/(\?|&)([a-zA-Z]{1,4})=([a-zA-Z]{1,99})\:([a-zA-Z]{1,99})\:/)){
+      output = true;
+    }
+    return output;
+  };
   $scope.doesLinkNeedTrackingCode = function(url){
     var output = false;
     if(url.match(/optum([a-zA-Z0-9].*)?\.com/)) {
       output = true;
-        if(url.match(/(\?|&)([a-zA-Z]{1,4})=([a-zA-Z]{1,99})\:([a-zA-Z]{1,99})\:/)){
-          output = false;
-        }
+      if($scope.doesLinkHaveTrackingCode(url) ){
+        output = false;
+      }
 
     }
     return output;
@@ -124,6 +131,9 @@ angular.module('EMLMaker')
     if($scope.data.linkData.length>0) {
       $scope.data.linkData.forEach(function(item){
           if(!$scope.isLinkComplete(item.new)){
+            output = false;
+          }
+          if($scope.doesLinkNeedTrackingCode(item.new)){
             output = false;
           }
 
