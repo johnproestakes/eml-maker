@@ -100,6 +100,17 @@ angular.module('EMLMaker')
       return false;
   };
 
+  $scope.doesLinkNeedTrackingCode = function(url){
+    var output = false;
+    if(url.match(/optum([a-zA-Z0-9].*)?\.com/)) {
+      output = true;
+        if(url.match(/(\?|&)([a-zA-Z]{1,4})=([a-zA-Z]{1,99})\:([a-zA-Z]{1,99})\:/)){
+          output = false;
+        }
+
+    }
+    return output;
+  };
   $scope.isLinkComplete = function(url){
     output = true;
     if(!url.match(/^https?:\/\/|mailto:/)){
