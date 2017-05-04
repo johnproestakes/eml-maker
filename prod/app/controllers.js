@@ -109,7 +109,7 @@ angular.module('EMLMaker')
   };
   $scope.doesLinkNeedTrackingCode = function(url){
     var output = false;
-    if(url.match(/optum([a-zA-Z0-9].*)?\.com/)) {
+    if(url.match(/^http(s)?:\/\/(.*?)?optum(.*?)?\.com/)) {
       output = true;
       if($scope.doesLinkHaveTrackingCode(url) ){
         output = false;
