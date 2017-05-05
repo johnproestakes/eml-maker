@@ -102,9 +102,14 @@ angular.module('EMLMaker')
 
   $scope.doesLinkHaveTrackingCode = function(url){
     var output = false;
-    if(url.match(/(\?|&)([a-zA-Z]{1,4})=((.*?){1,40})\:((.*?){1,40})\:/)){
-      output = true;
+    try {
+      if(url.match(/(\?|&)([a-zA-Z]{1,4})=((.*?){1,40})\:((.*?){1,40})\:/)){
+        output = true;
+      }
+    } catch (e){
+
     }
+
     return output;
   };
   $scope.doesLinkNeedTrackingCode = function(url){
