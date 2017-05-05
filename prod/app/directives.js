@@ -56,3 +56,25 @@ angular.module('EMLMaker')
 			}
 		};
 	}]);
+
+angular.module('EMLMaker')
+.directive('textExpand', ['$timeout', function($timeout){
+	return {
+		restrict: "A",
+    link: function(scope, el, attr){
+      var resizeText = function(){
+        el[0].style.height = "0px";
+        el[0].style.maxHeight = "none";
+        el[0].style.height = el[0].scrollHeight + "px";
+
+      };
+      $timeout(function(){
+        el.on('change keyup', function(){
+          resizeText();
+          console.log('changed');});
+
+      });
+
+    }
+  };
+}]);
