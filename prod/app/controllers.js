@@ -102,6 +102,7 @@ angular.module('EMLMaker')
 
   $scope.doesLinkHaveTrackingCode = function(url){
     var output = false;
+    if(url.match(/app\.info\.optum\.com/)) return false;
     try {
       if(url.match(/(\?|&)([a-zA-Z]{1,4})=((.*?){1,40})\:((.*?){1,40})\:/)){
         output = true;
