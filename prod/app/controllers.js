@@ -104,7 +104,7 @@ angular.module('EMLMaker')
     var output = false;
     if(url.indexOf('app.info.optum.com') >-1) return false;
     try {
-      if(RegExp('(\?|&)([a-zA-Z]{1,4})=((.*?){1,40})\:((.*?){1,40})\:').test(url)){
+      if(/(\?|&)([a-zA-Z]{1,4})=((.*?){1,40})\:((.*?){1,40})\:/.test(url)){
         output = true;
       }
     } catch (e){
@@ -115,7 +115,7 @@ angular.module('EMLMaker')
   };
   $scope.doesLinkNeedTrackingCode = function(url){
     var output = false;
-    if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.com').test(url)) {
+    if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?').test(url)) {
       if(url.indexOf('app.info.optum.com') >-1) return false;
       output = true;
       if($scope.doesLinkHaveTrackingCode(url) ){
