@@ -77,6 +77,8 @@ angular.module('EMLMaker')
         }
 
         $scope.$apply();
+        $scope.processHtml();
+        console.log('droppped');
       };
       reader.readAsBinaryString(files[0]);
     }
@@ -102,19 +104,30 @@ angular.module('EMLMaker')
 
   $scope.doesLinkHaveTrackingCode = function(url){
     var output = false;
+    console.log("doesLinkHaveTrackingCode",url);
     if(url.indexOf('app.info.optum.com') >-1) return false;
-    try {
-      if(/(\?|&)([a-zA-Z]{1,4})=((.*?){1,40})\:((.*?){1,40})\:/.test(url)){
-        output = true;
-      }
-    } catch (e){
+    // try {
 
+    var b = url.split("?");
+    var a = b[1]===undefined ? [] : b[1].split("&");
+    for(i=0;i<a.length;i++){
+      console.log(a[i]);
+      if(a[i].indexOf(':') > -1) {
+        var d = a[i].split(":");
+        if(d.length>3)
+          output = true;
+      }
     }
+    // } catch (e){
+    //   console.log(e);
+    // }
 
     return output;
   };
   $scope.doesLinkNeedTrackingCode = function(url){
     var output = false;
+
+    console.log("doesLinkNeedTrackingCode",url);
     if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?').test(url)) {
       if(url.indexOf('app.info.optum.com') >-1) return false;
       output = true;
@@ -151,6 +164,20 @@ angular.module('EMLMaker')
   };
 
 
+  $scope.getLinksSummary = function(){
+    var data = {
+      needsTracking: 0,
+      invalidUrl: 0
+    };
+    $scope.data.linkData.forEach(function(item){
+      if($scope.doesLinkNeedTrackingCode(item.new)) data.needsTracking++;
+      if($scope.isLinkComplete(item.new)) data.invalidUrl++;
+    });
+    return data;
+
+  };
+
+
   $scope.displayFriendlyHtml = function(text){ return text; };
   $scope.addNewHeaderField = function(val){
     $scope.data.header[val] = "";
@@ -172,12 +199,13 @@ angular.module('EMLMaker')
   $scope.downloadCsv = function(){
     // var output = $Generator.removeWhiteSpace($scope.data.outputCode);
 
-    if($scope.areLinksComplete()){
-      var output = "Original URL,Modified URL\n";
+    //if($scope.areLinksComplete()){
+      var output = "Context,Original URL,Modified URL\n";
       $scope.data.linkData.forEach(function(item) {
-        output+= item.old + "," +item.new + "\n";
+        console.log(item);
+        output+= item.context + "," + item.old + "," +item.new + "\n";
       });
-    }
+    //}
     window.saveAs(new Blob([output], {type:"text/csv"}), "email_links.csv");
   };
 
