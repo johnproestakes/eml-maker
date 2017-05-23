@@ -21,7 +21,7 @@ angular.module('EMLMaker').factory('$Generator', function(){
     var html = output.pop();
 
     for(var i =0; i< output.length; i++){
-      console.log(output[i]);
+
       if(output[i].indexOf("Subject:")>-1){
         if($scope.data.header === undefined) $scope.data.header = {};
 
@@ -47,7 +47,7 @@ angular.module('EMLMaker').factory('$Generator', function(){
     if(charset == "") charset = "charset=UTF-8";
     headers.push("Content-Type: text/html;\n\t" + charset);
 
-    console.log(headers, allowableHeaderFields);
+    // console.log(headers, allowableHeaderFields);
 
     for(i in headerInput){
       if(headerInput.hasOwnProperty(i)){

@@ -44,7 +44,7 @@ angular.module('EMLMaker')
   // Here are functions for the UI
 
   $scope.createNewEML = function(){
-    console.log('holler')
+    // console.log('holler')
     $scope.blankSlate();
     location.href = "#/main";
   };
@@ -78,7 +78,7 @@ angular.module('EMLMaker')
 
         $scope.$apply();
         $scope.processHtml();
-        console.log('droppped');
+        // console.log('droppped');
       };
       reader.readAsBinaryString(files[0]);
     }
@@ -104,14 +104,14 @@ angular.module('EMLMaker')
 
   $scope.doesLinkHaveTrackingCode = function(url){
     var output = false;
-    console.log("doesLinkHaveTrackingCode",url);
+    // console.log("doesLinkHaveTrackingCode",url);
     if(url.indexOf('app.info.optum.com') >-1) return false;
     // try {
 
     var b = url.split("?");
     var a = b[1]===undefined ? [] : b[1].split("&");
     for(i=0;i<a.length;i++){
-      console.log(a[i]);
+      // console.log(a[i]);
       if(a[i].indexOf(':') > -1) {
         var d = a[i].split(":");
         if(d.length>3)
@@ -127,7 +127,7 @@ angular.module('EMLMaker')
   $scope.doesLinkNeedTrackingCode = function(url){
     var output = false;
 
-    console.log("doesLinkNeedTrackingCode",url);
+    // console.log("doesLinkNeedTrackingCode",url);
     if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?').test(url)) {
       if(url.indexOf('app.info.optum.com') >-1) return false;
       output = true;
@@ -202,7 +202,7 @@ angular.module('EMLMaker')
     //if($scope.areLinksComplete()){
       var output = "Context,Original URL,Modified URL\n";
       $scope.data.linkData.forEach(function(item) {
-        console.log(item);
+        // console.log(item);
         output+= item.context.replace(/,/g, "(comma)") + "," + item.old + "," +item.new + "\n";
       });
     //}

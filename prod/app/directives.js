@@ -20,7 +20,6 @@ angular.module('EMLMaker').directive('aceEditor', ['$timeout', function($timeout
         });
 
       scope.$on('$destroy', function(){
-        console.log(destroy);
         editor.destroy();
       });
 
@@ -94,17 +93,24 @@ angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
   return {
     restrict: "A",
-    scope: {popupId:"@"},
+    scope: {popupId:"@",popupBehavior:"@"},
     link: function(scope, el, attr){
       $timeout(function(){
-        $( el).popup({
-          on: 'click',
-          popup: attr.popupId });
+        var args = {
+          hoverable: true,
+          popup: "#" + attr.popupId
+        };
 
-      });
-
-    }
-  };
+          if(attr.popupBehavior !== undefined ) args.on = "click";
+          if(attr.popupId !== undefined ) args.popup = attr.popupId;
+        $(el).popup(args);
+        $(el).popup("show");
+        scope.$on('$destroy', function(){
+          $(el).popup("destroy");
+        });
+    });
+  }
+};
 
 
 }]);
