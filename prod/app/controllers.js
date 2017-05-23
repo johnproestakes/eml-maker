@@ -203,7 +203,7 @@ angular.module('EMLMaker')
       var output = "Context,Original URL,Modified URL\n";
       $scope.data.linkData.forEach(function(item) {
         console.log(item);
-        output+= item.context + "," + item.old + "," +item.new + "\n";
+        output+= item.context.replace(/,/g, "(comma)") + "," + item.old + "," +item.new + "\n";
       });
     //}
     window.saveAs(new Blob([output], {type:"text/csv"}), "email_links.csv");
@@ -252,7 +252,7 @@ angular.module('EMLMaker')
 
   $scope.updateLinksAndExport = function(){
     if(!$scope.areLinksComplete()) {
-      alert("Please review your links again, some of them did not look like URLs");
+      alert("Please verify that you have entered valid links, and that links requiring tracking codes have tracking codes set.");
       return false;
 
     }
