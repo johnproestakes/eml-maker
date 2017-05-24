@@ -81,6 +81,7 @@ angular.module('EMLMaker')
         // console.log('droppped');
       };
       reader.readAsBinaryString(files[0]);
+      window.ga('send', 'event', "HTML", "import", "HTML Import File Drop");
     }
 
   };
@@ -189,11 +190,13 @@ angular.module('EMLMaker')
   $scope.downloadEml = function(){
     var output = $scope.data.emlHeaders + "\n\n" + $Generator.removeWhiteSpace($scope.data.outputCode);
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.eml");
+    window.ga('send', 'event', "EML", "download", "EML Export");
   };
 
   $scope.downloadHtml = function(){
     var output = $Generator.removeWhiteSpace($scope.data.outputCode);
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.html");
+    window.ga('send', 'event', "HTML", "download", "HTML Export");
   };
 
   $scope.downloadCsv = function(){
@@ -207,6 +210,7 @@ angular.module('EMLMaker')
       });
     //}
     window.saveAs(new Blob([output], {type:"text/csv"}), "email_links.csv");
+    window.ga('send', 'event', "CSV", "download", "CSV Export");
   };
 
   $scope.processHtml = function(){
