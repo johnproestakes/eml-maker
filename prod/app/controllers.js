@@ -130,6 +130,7 @@ angular.module('EMLMaker')
 
     // console.log("doesLinkNeedTrackingCode",url);
     if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?').test(url)) {
+      if(url.indexOf(".pdf")>-1||url.indexOf(".ics")) return false;
       if(url.indexOf('app.info.optum.com') >-1) return false;
       output = true;
       if($scope.doesLinkHaveTrackingCode(url) ){
