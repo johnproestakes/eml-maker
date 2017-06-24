@@ -165,6 +165,7 @@ angular.module('EMLMaker')
 
     return output;
   };
+
   $scope.isMailtoLink = function(item){
     if(item.new.substr(0,"mailto:".length)=="mailto:"){
       return true;
@@ -175,6 +176,10 @@ angular.module('EMLMaker')
   $scope.composeEmail = function(item){
     item.new = "mailto:" + item.mailto.email;
     item.new = item.new + (item.mailto.subject && item.mailto.subject !== "" ? "?subject="+ window.encodeURI(item.mailto.subject) : "");
+  };
+  $scope.deinitEmailEditor = function(item){
+    item.mailto = {};
+    console.log("deinit");
   };
   $scope.initEmailEditor = function(item){
     if(item.mailto === undefined) item.mailto = {};
