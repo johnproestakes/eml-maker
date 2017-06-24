@@ -131,7 +131,7 @@ angular.module('EMLMaker')
     // console.log("doesLinkNeedTrackingCode",url);
     if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?').test(url)) {
       //ignore file types
-      if(url.indexOf(".pdf")>-1||url.indexOf(".ics")>-1) return false;
+      if(url.indexOf(".pdf")>-1||url.indexOf(".ics")>-1||url.indexOf(".oft")>-1) return false;
       if(url.indexOf('app.info.optum.com') >-1) return false;
       output = true;
       if($scope.doesLinkHaveTrackingCode(url) ){
@@ -165,7 +165,31 @@ angular.module('EMLMaker')
 
     return output;
   };
+  $scope.isMailtoLink = function(item){
+    if(item.new.substr(0,"mailto:".length)=="mailto:"){
+      return true;
+    } else {
+      return false;
+    }
+  };
+  $scope.composeEmail = function(item){
+    item.new = "mailto:" + item.mailto.email;
+    item.new = item.new + (item.mailto.subject && item.mailto.subject !== "" ? "?subject="+ window.encodeURI(item.mailto.subject) : "");
+  };
+  $scope.initEmailEditor = function(item){
+    if(item.mailto === undefined) item.mailto = {};
+    var a = item.new.substr(7, item.new.length-7);
+    var b = a.split("?");
 
+    item.mailto.email = b[0];
+    if(b.length>1){
+      var c = b[1].match(/subject=([^&]*)/g);
+      item.mailto.subject = window.decodeURI(c[0].substr(8,c[0].length-8));
+    }
+
+
+    console.log(item.mailto);
+  }
 
   $scope.getLinksSummary = function(){
     var data = {
