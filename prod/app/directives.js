@@ -89,6 +89,33 @@ angular.module('EMLMaker')
 		};
 	}]);
 
+angular.module('EMLMaker')
+.directive('mailtoLinkEditor', ['$timeout', function($timeout){
+  return {
+    restrict: "A",
+    scope: {popupId:"@",popupBehavior:"@"},
+    link: function(scope, el, attr){
+      $timeout(function(){
+        $(el).find('.ui.icon.button').popup({
+          popup: el.find('.ui.popup').get(0),
+          position: 'top right',
+          on: 'click'
+        });
+
+      
+        // $(el).find('.ui.icon.button').on('click', function(){
+        //   $(el).popup('show');
+        // });
+        scope.$on('$destroy', function(){
+          $(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
 angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
   return {

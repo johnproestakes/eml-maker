@@ -1,7 +1,7 @@
 angular.module('EMLMaker')
 .controller('MainController', [
-  '$scope','saveAs','$Generator','$routeParams','$Processors', '$sce',
-  function($scope,saveAs,$Generator, $routeParams,$Processors, $sce){
+  '$scope','saveAs','$Generator','$routeParams','$Processors', '$sce','$AppTour',
+  function($scope,saveAs,$Generator, $routeParams,$Processors, $sce,$AppTour){
 
   $scope.sessionToken = 0;
   $scope.navigateTo = function( section){
@@ -173,9 +173,25 @@ angular.module('EMLMaker')
       return false;
     }
   };
+  $scope.uriDecodeString = function(text){
+    // var b = [ "?",  "&",  "#",  "'",  "$"];
+    // var a = ["%3F","%26","%23","%27","%24"];
+    // for(var i = 0; i<a.length; i++){
+    //   text = text.replace(new RegExp(a[i],"g"), b[i]);
+    // }
+    return window.decodeURI(text);
+  };
+  $scope.uriEncodeString = function(text){
+    // var a = [ "\?",  "&",  "#",  "\'",  "\$"];
+    // var b = ["%3F","%26","%23","%27","%24"];
+    // for(var i = 0; i<a.length; i++){
+    //   text = text.replace(new RegExp(a[i],"g"), b[i]);
+    // }
+    return window.encodeURI(text);
+  };
   $scope.composeEmail = function(item){
     item.new = "mailto:" + item.mailto.email;
-    item.new = item.new + (item.mailto.subject && item.mailto.subject !== "" ? "?subject="+ window.encodeURI(item.mailto.subject) : "");
+    item.new = item.new + (item.mailto.subject && item.mailto.subject !== "" ? "?subject="+ $scope.uriEncodeString(item.mailto.subject) : "");
   };
   $scope.deinitEmailEditor = function(item){
     item.mailto = {};
@@ -189,7 +205,7 @@ angular.module('EMLMaker')
     item.mailto.email = b[0];
     if(b.length>1){
       var c = b[1].match(/subject=([^&]*)/g);
-      item.mailto.subject = window.decodeURI(c[0].substr(8,c[0].length-8));
+      item.mailto.subject = $scope.uriDecodeString(c[0].substr(8,c[0].length-8));
     }
 
 
