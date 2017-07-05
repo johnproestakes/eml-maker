@@ -129,9 +129,9 @@ angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
         };
 
           if(attr.popupBehavior !== undefined ) args.on = "click";
-          if(attr.popupId !== undefined ) args.popup = attr.popupId;
+          if(attr.popupId !== undefined ) args.popup = "#" + attr.popupId;
         $(el).popup(args);
-        $(el).popup("show");
+        if(attr.popupShow !== undefined ) $(el).popup("show");
         scope.$on('$destroy', function(){
           $(el).popup("destroy");
         });

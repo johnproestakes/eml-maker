@@ -8,10 +8,14 @@ angular.module('EMLMaker')
     var s = {
       'main':0,
       'links' : 1,
-      'export': 2
+      'export': 2,
+      'export-html':2,
+      'export-eml':2
     };
+
     var current = location.hash.substr(2, location.hash.length);
-    if (current && s[section] < s[current]){
+    console.log(section, s[section], s[current]);
+    if (current && s[section] <= s[current]){
       location.href= "#/" + section;
     }
   };
@@ -33,12 +37,13 @@ angular.module('EMLMaker')
     }
 
   };
-
+  $scope.viewExportHTMLCode = false;
   //only load once!
   if($scope.sessionToken == 0) {
     location.href="#/main";
     $scope.blankSlate();
     $scope.sessionToken = 1;
+
   }
 
   // Here are functions for the UI
@@ -49,7 +54,10 @@ angular.module('EMLMaker')
     location.href = "#/main";
   };
 
-
+  $scope.viewExportHTML = function(){
+    $scope.navigateTo('export-html');
+    window.ga('send', 'event', "View HTML", "view", "HTML Export");
+  };
   $scope.isHeaderSelected= function(header){ if(!$scope.data.header.hasOwnProperty(header) || $scope.data.header==""  ) { return true; } else { return false; } };
 
   $scope.changeHeaderInputFields = function(){
@@ -235,13 +243,15 @@ angular.module('EMLMaker')
   //button clicks
 
   $scope.downloadEml = function(){
+    $scope.data.outputCode = $Processors.replaceEloquaMergeFields($scope.data.sourceCode);
     var output = $scope.data.emlHeaders + "\n\n" + $Generator.removeWhiteSpace($scope.data.outputCode);
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.eml");
     window.ga('send', 'event', "EML", "download", "EML Export");
+    $scope.navigateTo('export-eml');
   };
 
   $scope.downloadHtml = function(){
-    var output = $Generator.removeWhiteSpace($scope.data.outputCode);
+    var output = $scope.data.outputCode;
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.html");
     window.ga('send', 'event', "HTML", "download", "HTML Export");
   };
@@ -260,7 +270,10 @@ angular.module('EMLMaker')
     window.ga('send', 'event', "CSV", "download", "CSV Export");
   };
 
+
+
   $scope.processHtml = function(){
+    $scope.viewExportHTMLCode = false;
     $scope.data.linkData = [];
     window.scrollTo(0,0);
 
@@ -275,7 +288,7 @@ angular.module('EMLMaker')
       $scope.data.allowableHeaderFields);
 
     //replace merge fields
-    $scope.data.sourceCode = $Processors.replaceEloquaMergeFields($scope.data.sourceCode);
+
 
     var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
     var re2 = /(href\=\"[^\s\"]+)/g;
