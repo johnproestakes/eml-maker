@@ -45,6 +45,19 @@ pre {background-color: #fafafa;padding: .5em;}
   padding: 0 !important;
 }
 
+
+
+
+.tags-layout {
+  overflow: hidden;
+  margin:0;
+  padding:0;
+  padding-top:.5em;
+  a {color: #fff;}
+  li {float:left;display: inline-block; background-color: #10a3a3; color: #fff; margin-right: .5em; margin-bottom:.5em; padding: 2px 5px 6px 10px; border-radius: .28571429rem;}
+
+}
+
 .context {
   background-image: -webkit-linear-gradient(0deg, #fafafa 5em, #fff 5em, #fff) !important;
   .line {float:left; font-weight:bold; width: 4em;}

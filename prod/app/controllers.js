@@ -300,11 +300,40 @@ angular.module('EMLMaker')
         found.forEach(function(item){
           var href = item.match(re2);
           if(href.length>0){
+            var url = href[0].substr(6, href[0].length);
+            var parts = url.split("?");
+            var qStrings = [];
+            if(parts.length >1){
+              qStrings = parts[1].split("&");
+            }
             $scope.data.linkData.push({
               line: n+1,
               context: item,
-              new: href[0].substr(6, href[0].length),
-              old: href[0].substr(6, href[0].length)
+              new: url,
+              old: url,
+              removeQueryAtIndex: function(index){
+
+
+                //this.new = this.new.replace(this.queryStrings[index], "");
+                this.queryStrings.splice(index, 1);
+
+                var parts = this.new.split("?");
+                var strs = "";
+                if(this.queryStrings.length>0){
+                  strs = this.queryStrings.join("&");
+                }
+
+                this.new = parts[0] + (strs=="" ? "" : "?"+strs);
+
+              },
+              updateQueryString: function(){
+                  var parts = this.new.split("?");
+                  var qStrings = [];
+
+                  this.queryStrings = parts.length >1 ? parts[1].split("&") : [];
+
+              },
+              queryStrings: qStrings
             });
           }
         });
