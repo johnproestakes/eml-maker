@@ -145,3 +145,9 @@ angular.module('EMLMaker').factory('$Processors', function(){
   };
   return this;
 });
+
+angular.module('EMLMaker').factory('$QueryStrings', function(){
+
+
+  return this;
+});

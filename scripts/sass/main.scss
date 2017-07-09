@@ -13,8 +13,10 @@ textarea[text-expand] {max-height: none;}
 
 pre {background-color: #fafafa;padding: .5em;}
 
-.orange, .green {
+.link-section {
+  border-left:solid 5px rgba(34,36,38,.22);
   padding: 1em .5em 1em 1.25em;
+  background-color: #f8f8f9;
 }
 .orange {
   border-left:solid 5px #9F3A38;
@@ -47,15 +49,31 @@ pre {background-color: #fafafa;padding: .5em;}
 
 
 
-
+.query-string-editor {
+  padding-top:.5em;
+  margin-top:.5em;
+  padding: 1em 1.5em;
+  background-color: #fff;
+  box-shadow: 0 0 0 1px rgba(34,36,38,.22) inset, 0 0 0 0 transparent;
+  border-radius: .28571429rem;
+  a {color: #a333c8}
+}
 .tags-layout {
   overflow: hidden;
   margin:0;
   padding:0;
   padding-top:.5em;
-  a {color: #fff;}
-  li {float:left;display: inline-block; background-color: #10a3a3; color: #fff; margin-right: .5em; margin-bottom:.5em; padding: 2px 5px 6px 10px; border-radius: .28571429rem;}
-
+  a {color: #a333c8;}
+  li {
+    background-color: #f6e7ff;
+    color: #a333c8;
+    box-shadow: 0 0 0 1px #a333c8 inset, 0 0 0 0 transparent;
+    float:left;
+    display: inline-block;
+    margin-right: .5em;
+    margin-bottom:.5em;
+    padding: 2px 5px 6px 15px;
+    border-radius: .28571429rem;}
 }
 
 .context {

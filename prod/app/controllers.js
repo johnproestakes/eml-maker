@@ -1,7 +1,15 @@
 angular.module('EMLMaker')
 .controller('MainController', [
-  '$scope','saveAs','$Generator','$routeParams','$Processors', '$sce','$AppTour',
-  function($scope,saveAs,$Generator, $routeParams,$Processors, $sce,$AppTour){
+  '$scope',
+  'saveAs',
+  '$Generator',
+  '$routeParams',
+  '$Processors',
+  '$sce',
+  '$AppTour',
+  '$QueryStrings',
+  function($scope, saveAs, $Generator, $routeParams,$Processors, $sce,
+    $AppTour,$QueryStrings){
 
   $scope.sessionToken = 0;
   $scope.navigateTo = function( section){
@@ -271,7 +279,7 @@ angular.module('EMLMaker')
   };
 
 
-
+  
   $scope.processHtml = function(){
     $scope.viewExportHTMLCode = false;
     $scope.data.linkData = [];
@@ -311,12 +319,15 @@ angular.module('EMLMaker')
               context: item,
               new: url,
               old: url,
+              removeQueryStrings: function(){
+                this.queryStrings = [];
+                this.refreshURL();
+              },
               removeQueryAtIndex: function(index){
-
-
-                //this.new = this.new.replace(this.queryStrings[index], "");
                 this.queryStrings.splice(index, 1);
-
+                this.refreshURL();
+              },
+              refreshURL: function(){
                 var parts = this.new.split("?");
                 var strs = "";
                 if(this.queryStrings.length>0){
@@ -324,7 +335,6 @@ angular.module('EMLMaker')
                 }
 
                 this.new = parts[0] + (strs=="" ? "" : "?"+strs);
-
               },
               updateQueryString: function(){
                   var parts = this.new.split("?");
