@@ -6,10 +6,8 @@ angular.module('EMLMaker')
   '$routeParams',
   '$Processors',
   '$sce',
-  '$AppTour',
   '$QueryStrings',
-  function($scope, saveAs, $Generator, $routeParams,$Processors, $sce,
-    $AppTour,$QueryStrings){
+  function($scope, saveAs, $Generator, $routeParams,$Processors, $sce,$QueryStrings){
 
   $scope.sessionToken = 0;
   $scope.navigateTo = function( section){
@@ -251,7 +249,7 @@ angular.module('EMLMaker')
   //button clicks
 
   $scope.downloadEml = function(){
-    $scope.data.outputCode = $Processors.replaceEloquaMergeFields($scope.data.sourceCode);
+    $scope.data.outputCode = $Processors.replaceEloquaMergeFields($scope.data.outputCode);
     var output = $scope.data.emlHeaders + "\n\n" + $Generator.removeWhiteSpace($scope.data.outputCode);
     window.saveAs(new Blob([output], {type:"text/html"}), "untitled.eml");
     window.ga('send', 'event', "EML", "download", "EML Export");
@@ -279,7 +277,7 @@ angular.module('EMLMaker')
   };
 
 
-  
+
   $scope.processHtml = function(){
     $scope.viewExportHTMLCode = false;
     $scope.data.linkData = [];
