@@ -54,7 +54,6 @@ angular.module('EMLMaker')
 		scope: {label: "@", ondrop:"&", dataTransferEvt:"="},
 		template: "<div class=\"file-dropper\">{{label}}</div>",
 		link: function(scope, el, attr){
-			console.log(scope, el, attr);
 			var fileDropper = el.find('.file-dropper');
 
 			//reset

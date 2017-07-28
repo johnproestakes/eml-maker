@@ -106,13 +106,24 @@ if ("onhashchange" in window) {
 }
 
 
-  if(location.href.indexOf("localhost")>-1  || location.href.indexOf('file:') >-1){
+  if(location.href.indexOf("localhost")>-1  || location.href.indexOf('file:') >-1 || location.href.indexOf('johnproestakes.github.io') ==-1){
       window.ga = function(args){
         var output = [];
         for (var i = 0; i < arguments.length; i++) {
+
+          if(typeof arguments[i] === "object"){
+            var joiner = [];
+            for(var a in arguments[i]){
+              if(arguments[i].hasOwnProperty(a)){
+                joiner.push(a + ":" + arguments[i][a]);
+              }
+            }
+            arguments[i] = joiner.join(",");
+          }
+
           output.push(arguments[i]);
         }
-        console.log("%c GOOGLE ANALYTICS [DEBUG]: "+ output.join(", "), "background-color:lime");
+        console.log("%c GOOGLE ANALYTICS [DEBUG]: "+ output.join(", "), "background-color:"+(arguments[1]=="event" ? "yellow" : "lime"));
       };
     } else {
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

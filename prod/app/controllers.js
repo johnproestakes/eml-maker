@@ -20,7 +20,6 @@ angular.module('EMLMaker')
     };
 
     var current = location.hash.substr(2, location.hash.length);
-    console.log(section, s[section], s[current]);
     if (current && s[section] <= s[current]){
       location.href= "#/" + section;
     }
@@ -255,6 +254,11 @@ angular.module('EMLMaker')
     window.ga('send', 'event', "EML", "download", "EML Export");
     $scope.navigateTo('export-eml');
   };
+  $scope.exportCodeToHTML = function(){
+    window.ga('send', 'event', "HTML", "view sourcecode", "Export/View HTML");
+    $scope.navigateTo('export-html');
+
+  };
 
   $scope.downloadHtml = function(){
     var output = $scope.data.outputCode;
@@ -347,6 +351,7 @@ angular.module('EMLMaker')
         });
       }
     }
+
       location.href="#/links";
 
       };
@@ -374,6 +379,7 @@ angular.module('EMLMaker')
       });
 
       $scope.data.outputCode = codeLines.join("\n");
+      $scope.data.outputCode = $scope.data.outputCode.replace(new RegExp("</a>\n(\.|,|\?)","ig"), "</a>$1");
 
   };
 
