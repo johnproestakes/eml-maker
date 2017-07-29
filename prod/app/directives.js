@@ -141,6 +141,80 @@ angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
 }]);
 
+angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout){
+
+  return {
+    restrict: "A",
+    link: function(scope, el, attr){
+      $timeout(function(){
+        scope.data.activeLinkId = 1;
+
+        var func = function(){
+          if(scope.data.isScrolling && scope.data.isScrolling ==1) return false;
+          var id = $(el).attr("id").split("-").pop();
+          scope.$apply(function(){
+            scope.data.activeLinkId =id*1;
+            console.log(id*1);
+          });
+
+
+
+          console.log($(el).attr("id"));
+
+        };
+        jQuery(el).visibility({
+    once: false,
+    // update size when new content loads
+    observeChanges: true,
+    // load content on bottom edge visible
+    onTopVisible: func,
+    onTopPassedReverse: func
+
+
+  });
+
+
+
+
+
+        scope.$on('$destroy', function(){
+          //$(el).popup("destroy");
+          jQuery(el).visibility("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
+angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
+
+  return {
+    restrict: "A",
+    link: function(scope, el, attr){
+      $timeout(function(){
+        jQuery(el)
+  .sticky({
+    context: '#stickyparent'
+  })
+;
+
+
+
+
+
+        scope.$on('$destroy', function(){
+          //$(el).popup("destroy");
+          jQuery(el).sticky("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
 angular.module('EMLMaker')
 .directive('textExpand', ['$timeout', function($timeout){
 	return {

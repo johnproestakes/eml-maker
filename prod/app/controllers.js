@@ -109,13 +109,31 @@ angular.module('EMLMaker')
     return content;
   };
   $scope.verifyLinkSectionComplete = function(){
-    if ($scope.data.linkData.length ==0) return false;
-    if ($scope.areLinksComplete())
-      return true;
-    else
-      return false;
+    var output = false;
+    if ($scope.data.linkData.length == 0) {
+      output = false;
+    } else {
+      if ($scope.areLinksComplete()) {
+        output = true;
+      }
+      else {
+        output = false;
+      }
+    }
+      return output;
   };
+  $scope.scrollTo = function(id){
+    $scope.data.isScrolling = 1;
+    console.log('#link-'+(id*1 + 1));
+    jQuery("html,body").animate({scrollTop: jQuery('#link-'+(id*1 + 1)).offset().top - 75}, 300);
+    setTimeout(function(){
+      $scope.$apply(function(){
+        $scope.data.activeLinkId = id+1;
+        $scope.data.isScrolling = -1;
+      });
 
+    }, 400);
+  };
   $scope.doesLinkHaveTrackingCode = function(url){
     var output = false;
     // console.log("doesLinkHaveTrackingCode",url);
