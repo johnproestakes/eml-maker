@@ -7,7 +7,11 @@ angular.module('EMLMaker').factory(
 angular.module('EMLMaker').factory(
   "$PersistJS",
   function $PersistJS(){
-    return new window.Persist.Store('EMLMaker');
+    var store = new window.Persist.Store('EMLMaker');
+    window.addEventListener('unload', function(){
+      store.save();
+    });
+    return store;
   });
 
 angular.module('EMLMaker').factory(
