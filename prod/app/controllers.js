@@ -6,10 +6,11 @@ angular.module('EMLMaker')
   '$routeParams',
   '$Processors',
   '$sce',
-  '$QueryStrings',
-  function($scope, saveAs, $Generator, $routeParams,$Processors, $sce,$QueryStrings){
+  '$UserManagement',
+  function($scope, saveAs, $Generator, $routeParams,$Processors, $sce,$UserManagement){
 
-  $scope.sessionToken = 0;
+  // $scope.sessionToken = 0;
+  $scope.sessionUserEmail = "";
   $scope.navigateTo = function( section){
     var s = {
       'main':0,
@@ -24,6 +25,7 @@ angular.module('EMLMaker')
       location.href= "#/" + section;
     }
   };
+
   $scope.blankSlate = function(){
 
     $scope.data = {
@@ -42,16 +44,67 @@ angular.module('EMLMaker')
     }
 
   };
-  $scope.viewExportHTMLCode = false;
-  //only load once!
-  if($scope.sessionToken == 0) {
-    location.href="#/main";
-    $scope.blankSlate();
-    $scope.sessionToken = 1;
 
-  }
+  //only load once!
+  $scope.blankSlate();
+  $scope.logOut = function(){
+    $scope.loginAsOther();
+    $scope.sessionUserEmail = "";
+    $UserManagement.logOut();
+    location.reload();
+  };
+  $scope.loginAsOther = function(){
+    clearTimeout($scope.loginTimer);
+    delete $scope.loginTimer;
+  };
+
+  if($UserManagement.hasSavedSessionId()){
+    if($UserManagement.isValidEmailAddress($UserManagement.sessionId)) {
+      $scope.sessionUserEmail = $UserManagement.sessionId;
+      $scope.blankSlate();
+      location.href="#/login";
+      $scope.loginTimer = setTimeout(function(){
+          location.href="#/main";
+          $UserManagement.setCurrentUser($scope.sessionUserEmail);
+        }, 1000);
+      //autologin as xx
+    } else {
+      location.href="#/login";
+      $scope.sessionUserEmail = "";
+      }
+    } else {
+      location.href="#/login";
+      $scope.sessionUserEmail = "";
+    }
+
+    window.addEventListener('hashchange', function(){
+      if( $scope.sessionUserEmail == "" || !$UserManagement.hasSavedSessionId()) {
+        location.href="#/login";
+        //$scope.blankSlate();
+        // $scope.sessionToken = 1;
+      }
+    });
+
 
   // Here are functions for the UI
+
+  $scope.sessionUpdateUserEmail = function(email){
+    $scope.errorMessage = "";
+
+    if($UserManagement.isValidEmailAddress(email)) {
+      $scope.sessionUserEmail = email;
+      $UserManagement.setCurrentUser(email);
+      $scope.blankSlate();
+      location.href = "#/main";
+    } else {
+      // Error message
+      $scope.errorMessage = "Sorry! You have to enter a valid email address.";
+    }
+  };
+  $scope.showNavBar = function(){
+    if(location.hash == '#/login') return false;
+    else return true;
+  };
 
   $scope.createNewEML = function(){
     // console.log('holler')
@@ -110,16 +163,19 @@ angular.module('EMLMaker')
   };
   $scope.verifyLinkSectionComplete = function(){
     var output = false;
-    if ($scope.data.linkData.length == 0) {
-      output = false;
-    } else {
-      if ($scope.areLinksComplete()) {
-        output = true;
-      }
-      else {
+
+      if ($scope.data.linkData && $scope.data.linkData.length == 0) {
         output = false;
+      } else {
+        if ($scope.areLinksComplete()) {
+          output = true;
+        }
+        else {
+          output = false;
+        }
       }
-    }
+
+
       return output;
   };
   $scope.scrollTo = function(id){
@@ -301,7 +357,7 @@ angular.module('EMLMaker')
 
 
   $scope.processHtml = function(){
-    $scope.viewExportHTMLCode = false;
+
     $scope.data.linkData = [];
     window.scrollTo(0,0);
 
@@ -397,7 +453,14 @@ angular.module('EMLMaker')
       });
 
       $scope.data.outputCode = codeLines.join("\n");
-      $scope.data.outputCode = $scope.data.outputCode.replace(new RegExp("</a>\n(\.|,|\?)","ig"), "</a>$1");
+      try {
+        $scope.data.sourceCode = $scope.data.sourceCode.replace(/<\/a>\n/g, "</a>");
+        $scope.data.outputCode = $scope.data.outputCode.replace(/<\/a>\n(\.|,|\?)/g, "</a>$1");
+      } catch(e){
+        console.log(e);
+        console.log("error merging lines with links that previously had punctuation.");
+      }
+
 
   };
 

@@ -5,23 +5,27 @@ angular.module('EMLMaker').directive('aceEditor', ['$timeout', function($timeout
     link: function(scope, el, attr){
       $timeout(function(){
 
-        var editor = ace.edit(el.get(0).id);
-        editor.setTheme("ace/theme/eclipse");
-        //dawn
-        //eclipse
-        editor.getSession().setUseWrapMode(true);
-        editor.getSession().setMode("ace/mode/xml");
-        var timer = null;
-        editor.getSession().on('change', function(e){
-          scope.$apply(function(){
-            scope.data.sourceCode = editor.getValue();
+
+          var editor = ace.edit(el.get(0).id);
+
+          editor.setTheme("ace/theme/eclipse");
+          //dawn
+          //eclipse
+          editor.getSession().setUseWrapMode(true);
+          editor.getSession().setMode("ace/mode/xml");
+          var timer = null;
+          editor.getSession().on('change', function(e){
+            scope.$apply(function(){
+              scope.data.sourceCode = editor.getValue();
+            });
+
           });
 
+        scope.$on('$destroy', function(){
+          editor.destroy();
         });
+        
 
-      scope.$on('$destroy', function(){
-        editor.destroy();
-      });
 
     });
   }
@@ -95,18 +99,24 @@ angular.module('EMLMaker')
     scope: {popupId:"@",popupBehavior:"@"},
     link: function(scope, el, attr){
       $timeout(function(){
-        $(el).find('.ui.icon.button').popup({
+        jQuery(el).find('.ui.icon.button').popup({
           popup: el.find('.ui.popup').get(0),
           position: 'top right',
           on: 'click'
         });
 
-      
+        jQuery(el).find('.ui.icon.button').on('click', function(){
+          //track this event;
+          window.ga('send', 'event', "Mailto Editor", "Click", "Clicked Mailto Editor");
+
+        });
+
+
         // $(el).find('.ui.icon.button').on('click', function(){
         //   $(el).popup('show');
         // });
         scope.$on('$destroy', function(){
-          $(el).popup("destroy");
+          jQuery(el).popup("destroy");
         });
     });
   }
@@ -213,26 +223,4 @@ angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
 };
 
 
-}]);
-
-angular.module('EMLMaker')
-.directive('textExpand', ['$timeout', function($timeout){
-	return {
-		restrict: "A",
-    link: function(scope, el, attr){
-      var resizeText = function(){
-        el[0].style.height = "0px";
-        el[0].style.maxHeight = "none";
-        el[0].style.height = el[0].scrollHeight + "px";
-
-      };
-      $timeout(function(){
-        el.on('change keyup', function(){
-          resizeText();
-          console.log('changed');});
-
-      });
-
-    }
-  };
 }]);
