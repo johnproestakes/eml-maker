@@ -5,8 +5,14 @@ angular.module('EMLMaker').factory(
   });
 
 angular.module('EMLMaker').factory(
+  "$PersistJS",
+  function $PersistJS(){
+    return new window.Persist.Store('EMLMaker');
+  });
+
+angular.module('EMLMaker').factory(
   "$UserManagement",
-  ['$CryptoJS',function $UserManagement($CryptoJS){
+  ['$CryptoJS','$PersistJS',function $UserManagement($CryptoJS, $PersistJS){
 
     var self = this;
     this.salt = "47dafea9aae3b28ab5c39eb7f7d2c924";
@@ -14,11 +20,13 @@ angular.module('EMLMaker').factory(
     this.sessionIdLocalStorageKey = "EMLMaker.emlUserID";
 
     this.logOut = function(){
-      localStorage.removeItem(self.sessionIdLocalStorageKey);
+      $PersistJS.remove(self.sessionIdLocalStorageKey);
       this.sessionId = "";
     };
     this.hasSavedSessionId = function(){
-      var savedEmailId= localStorage.getItem(self.sessionIdLocalStorageKey);
+
+
+      var savedEmailId = $PersistJS.get(self.sessionIdLocalStorageKey);;
       console.log(savedEmailId);
       if(savedEmailId){
         this.sessionId = savedEmailId;
@@ -30,7 +38,7 @@ angular.module('EMLMaker').factory(
     };
     this.setCurrentUser = function(email){
       var hash = $CryptoJS.MD5(email + self.salt).toString();
-      localStorage.setItem(self.sessionIdLocalStorageKey, email);
+      $PersistJS.set(self.sessionIdLocalStorageKey, email);
       window.ga('set', 'userId', hash);
     };
     this.isValidEmailAddress = function(email){
