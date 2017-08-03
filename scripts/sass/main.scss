@@ -9,18 +9,18 @@
 
 .ui.vertical.menu {width: 100%;}
 .ui.inverted.steps {
-  border-color: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.35);
   line-height: 1em;
   .step {
     font-size:.8rem;
-    background-color: #1B1C1D !important; color: #fff;border-right: 1px solid rgba(255,255,255,.15) }
+    background-color: #1B1C1D !important; color: #fff;border-right: 1px solid rgba(255,255,255,.35) }
   .disabled.step::after, .step::after{
     background-color: #1B1C1D;
-    border-color: rgba(255,255,255,.15);
+    border-color: rgba(255,255,255,.35);
   }
   .disabled.step {
-    .title {color: rgba(255,255,255,.15) !important;}
-    color: rgba(255,255,255,.15) !important;}
+    .title {color: rgba(255,255,255,.35) !important;}
+    color: rgba(255,255,255,.35) !important;}
   // .disabled.step .content {color: rgba(255,255,255,.87) !important;}
 }
 
