@@ -51,7 +51,7 @@ angular.module('EMLMaker')
     $scope.loginAsOther();
     $scope.sessionUserEmail = "";
     $UserManagement.logOut();
-    location.reload();
+    document.location.href = document.location.href;
   };
   $scope.loginAsOther = function(){
     clearTimeout($scope.loginTimer);
