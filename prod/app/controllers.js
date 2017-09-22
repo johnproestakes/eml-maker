@@ -220,6 +220,10 @@ angular.module('EMLMaker')
       //ignore file types
       if(url.indexOf(".pdf")>-1||url.indexOf(".ics")>-1||url.indexOf(".oft")>-1) return false;
       if(url.indexOf('app.info.optum.com') >-1) return false;
+      if(url.indexOf('optum.webex.com') >-1) return false;
+      if(url.indexOf('twitter.com') >-1) return false;
+      if(url.indexOf('facebook.com') >-1) return false;
+      if(url.indexOf('linkedin.com') >-1) return false;
       output = true;
       if($scope.doesLinkHaveTrackingCode(url) ){
         output = false;
