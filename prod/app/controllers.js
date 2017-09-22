@@ -261,20 +261,10 @@ angular.module('EMLMaker')
     }
   };
   $scope.uriDecodeString = function(text){
-    // var b = [ "?",  "&",  "#",  "'",  "$"];
-    // var a = ["%3F","%26","%23","%27","%24"];
-    // for(var i = 0; i<a.length; i++){
-    //   text = text.replace(new RegExp(a[i],"g"), b[i]);
-    // }
     return window.decodeURI(text);
   };
   $scope.uriEncodeString = function(text){
-    // var a = [ "\?",  "&",  "#",  "\'",  "\$"];
-    // var b = ["%3F","%26","%23","%27","%24"];
-    // for(var i = 0; i<a.length; i++){
-    //   text = text.replace(new RegExp(a[i],"g"), b[i]);
-    // }
-    return window.encodeURI(text);
+    return window.encodeURIComponent(text);
   };
   $scope.composeEmail = function(item){
     item.new = "mailto:" + item.mailto.email;
@@ -390,7 +380,8 @@ angular.module('EMLMaker')
             if(parts.length >1){
               qStrings = parts[1].split("&");
             }
-            $scope.data.linkData.push({
+
+            var linkObject = {
               line: n+1,
               context: item,
               new: url,
@@ -420,7 +411,15 @@ angular.module('EMLMaker')
 
               },
               queryStrings: qStrings
-            });
+            };
+            if(/src=\"(.*?)\"/.test(linkObject.context)){
+              var found = linkObject.context.match(/src=\"(.*?)\"/);
+              if(found.length>0){
+                console.log('image found', found[1]);
+                linkObject.linkImage = found[1];
+              }
+            }
+            $scope.data.linkData.push(linkObject);
           }
         });
       }
