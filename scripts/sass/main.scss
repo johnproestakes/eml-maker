@@ -1,4 +1,11 @@
-
+@media screen and (max-width: 767px) {
+  .wide-view { display:none !important; }
+  // .narrow-view {display:block;}
+}
+@media screen and (min-width: 767px) {
+  .narrow-view {display:none !important;}
+  // .wide-view {}
+}
 .truncate {
   width: 100%;
   display:block;

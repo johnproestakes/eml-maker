@@ -38,31 +38,41 @@
       <div class="item"><img src="assets/logo.png"/></div>
       <a href="javascript:angular.noop()" class="item" ng-click="createNewEML()">Start Fresh</a>
       <div class="right menu">
+        <div class="narrow-view ui pointing dropdown item" ui-dropdown>
+            <i class="content icon"></i>
+            <div class="menu">
+            <div class="item" ng-click="navigateTo('main')">HTML</div>
+            <div class="item" ng-click="navigateTo('links')">Links</div>
+            <div class="item" ng-click="navigateTo('export')">Export</div>
+            </div>
+          </div>
+          <div class="item wide-view" style="padding:.5em .5em">
+            <div >
+              <div class="ui inverted ordered steps" >
+                <div class="step" id="step1" ng-click="navigateTo('main')" ng-class="{  completed: data.sourceCode.length>0}">
+                  <div class="content">
+                    <div class="title">HTML</div>
+                    <!-- <div class="description">Choose your shipping options</div> -->
+                  </div>
+                </div>
+                <div class=" step" ng-click="navigateTo('links')" ng-class="{ disabled: data.sourceCode=='', completed: verifyLinkSectionComplete() }">
+                  <div class="content">
+                    <div class="title">Links</div>
+                    <!-- <div class="description">Enter billing information</div> -->
+                  </div>
+                </div>
+                <div class="step" ng-click="navigateTo('export')" ng-class="{ disabled: data.sourceCode=='' && ((data.linkData>1&&!areLinksComplete()) || data.linkData.length==0)}">
+                  <div class="content">
+                    <div class="title">Review</div>
+                    <!-- <div class="description">Verify order details</div> -->
+                  </div>
+                </div>
 
-        <div class="item" style="padding:.5em">
-          <div class="ui inverted ordered steps" >
-            <div class="step" id="step1" ng-click="navigateTo('main')" ng-class="{  completed: data.sourceCode.length>0}">
-              <div class="content">
-                <div class="title">HTML</div>
-                <!-- <div class="description">Choose your shipping options</div> -->
               </div>
-            </div>
-            <div class=" step" ng-click="navigateTo('links')" ng-class="{ disabled: data.sourceCode=='', completed: verifyLinkSectionComplete() }">
-              <div class="content">
-                <div class="title">Links</div>
-                <!-- <div class="description">Enter billing information</div> -->
-              </div>
-            </div>
-            <div class="step" ng-click="navigateTo('export')" ng-class="{ disabled: data.sourceCode=='' && ((data.linkData>1&&!areLinksComplete()) || data.linkData.length==0)}">
-              <div class="content">
-                <div class="title">Review</div>
-                <!-- <div class="description">Verify order details</div> -->
-              </div>
-            </div>
 
+              </div>
           </div>
 
-          </div>
 
           <div class="ui pointing dropdown item" ui-dropdown>
             <span class="truncate" style="width:8em;">{{sessionUserEmail}}</span>

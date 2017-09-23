@@ -125,6 +125,11 @@ angular.module('EMLMaker')
       $scope.data.allowableHeaderFields);
   };
 
+  $scope.requiredTrackingCodeRegexp = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
+  $scope.requiredTrackingCodeWhitelist = [
+    '.pdf','.ics','.oft','app.info.optum.com',
+    'optum.webex.com','twitter.com','facebook.com','linkedin.com'
+  ];
 
   $scope.importHtmlFromFileDrop = function(evt){
 
@@ -193,8 +198,7 @@ angular.module('EMLMaker')
   $scope.doesLinkHaveTrackingCode = function(url){
     var output = false;
     // console.log("doesLinkHaveTrackingCode",url);
-    if(url.indexOf('app.info.optum.com') >-1) return false;
-    // try {
+    // if(url.indexOf('app.info.optum.com') >-1) return false;
 
     var b = url.split("?");
     var a = b[1]===undefined ? [] : b[1].split("&");
@@ -206,32 +210,36 @@ angular.module('EMLMaker')
           output = true;
       }
     }
-    // } catch (e){
-    //   console.log(e);
-    // }
+
 
     return output;
   };
   $scope.doesLinkNeedTrackingCode = function(url){
     var output = false;
 
-    // console.log("doesLinkNeedTrackingCode",url);
-    if(RegExp('^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?').test(url)) {
-      //ignore file types
-      if(url.indexOf(".pdf")>-1||url.indexOf(".ics")>-1||url.indexOf(".oft")>-1) return false;
-      if(url.indexOf('app.info.optum.com') >-1) return false;
-      if(url.indexOf('optum.webex.com') >-1) return false;
-      if(url.indexOf('twitter.com') >-1) return false;
-      if(url.indexOf('facebook.com') >-1) return false;
-      if(url.indexOf('linkedin.com') >-1) return false;
+    // determine links that need special tracking
+    if($scope.requiredTrackingCodeRegexp.test(url)) {
       output = true;
-      if($scope.doesLinkHaveTrackingCode(url) ){
+      // iterate ofer whitelist
+      for(var i =0; i < $scope.requiredTrackingCodeWhitelist.length; i++){
+        if($scope.requiredTrackingCodeWhitelist[i].test) {
+          if($scope.requiredTrackingCodeWhitelist[i].test(url)) { output = false; }
+        } else {
+
+          if(url.indexOf($scope.requiredTrackingCodeWhitelist[i])>-1) { output = false; }
+          // console.log(url, $scope.requiredTrackingCodeWhitelist[i], output);
+        }
+
+      }
+
+      if(output && $scope.doesLinkHaveTrackingCode(url) ){
         output = false;
       }
 
     }
     return output;
   };
+
   $scope.isLinkComplete = function(url){
     output = true;
     if(!url.match(/^https?:\/\/|mailto:/)){
@@ -270,6 +278,7 @@ angular.module('EMLMaker')
   $scope.uriEncodeString = function(text){
     return window.encodeURIComponent(text);
   };
+
   $scope.composeEmail = function(item){
     item.new = "mailto:" + item.mailto.email;
     item.new = item.new + (item.mailto.subject && item.mailto.subject !== "" ? "?subject="+ $scope.uriEncodeString(item.mailto.subject) : "");
