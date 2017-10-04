@@ -281,7 +281,17 @@ angular.module('EMLMaker')
 
   $scope.composeEmail = function(item){
     item.new = "mailto:" + item.mailto.email;
-    item.new = item.new + (item.mailto.subject && item.mailto.subject !== "" ? "?subject="+ $scope.uriEncodeString(item.mailto.subject) : "");
+
+
+    var params = [];
+    var options = ["subject","body"];
+    for(var i =0; i<options.length; i++){
+      if(item.mailto[options[i]] && item.mailto[options[i]] !== "") {
+        params.push(options[i]+"="+ $scope.uriEncodeString(item.mailto[options[i]]));
+      }
+    }
+    item.new = (params.length>0 ? item.new + "?" + params.join("&") : item.new );
+
   };
   $scope.deinitEmailEditor = function(item){
     item.mailto = {};
@@ -293,10 +303,20 @@ angular.module('EMLMaker')
     var b = a.split("?");
 
     item.mailto.email = b[0];
-    if(b.length>1){
-      var c = b[1].match(/subject=([^&]*)/g);
-      item.mailto.subject = $scope.uriDecodeString(c[0].substr(8,c[0].length-8));
+    console.log(b[1]);
+    var params = b[1].split("&");
+    for(var n = 0; n<params.length; n++){
+        var c = params[n].match(/subject=([^&]*)/g);
+        if(c){
+          item.mailto.subject = $scope.uriDecodeString(c[0].substr(8,c[0].length-8));
+        }
+        var d = params[n].match(/body=([^&]*)/g);
+        if(d){
+          item.mailto.body = $scope.uriDecodeString(d[0].substr(5,d[0].length-5));
+        }
+
     }
+
 
 
     console.log(item.mailto);
