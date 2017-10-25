@@ -16,7 +16,7 @@ angular.module('EMLMaker').directive('aceEditor', ['$timeout', function($timeout
           var timer = null;
           editor.getSession().on('change', function(e){
             scope.$apply(function(){
-              scope.data.sourceCode = editor.getValue();
+              scope.workspace.sourceCode = editor.getValue();
             });
 
           });
@@ -24,7 +24,7 @@ angular.module('EMLMaker').directive('aceEditor', ['$timeout', function($timeout
         scope.$on('$destroy', function(){
           editor.destroy();
         });
-        
+
 
 
     });
@@ -74,8 +74,9 @@ angular.module('EMLMaker')
 			fileDropper.get(0).addEventListener('drop', function(evt){
 				evt.stopPropagation();
     			evt.preventDefault();
-				scope.$parent[attr.ondrop.replace("()", "")](evt);
-				dropperReset(evt);
+					scope.ondrop({"evt":evt});
+					
+					dropperReset(evt);
 				}, false);
 			fileDropper.get(0).addEventListener('dragend', dropperReset, false);
 			fileDropper.get(0).addEventListener('dragleave', dropperReset, false);
@@ -157,13 +158,15 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
     restrict: "A",
     link: function(scope, el, attr){
       $timeout(function(){
-        scope.data.activeLinkId = 1;
+        if(scope.activeLinkId === undefined) scope.activeLinkId = 1;
+        if(scope.isScrolling === undefined) scope.isScrolling = false;
+
 
         var func = function(){
-          if(scope.data.isScrolling && scope.data.isScrolling ==1) return false;
+          if(scope.isScrolling && scope.isScrolling ==1) return false;
           var id = $(el).attr("id").split("-").pop();
           scope.$apply(function(){
-            scope.data.activeLinkId =id*1;
+            scope.activeLinkId =id*1;
             console.log(id*1);
           });
 
