@@ -142,7 +142,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
           output = false;
         }
         if(this.mailto.subject.trim()==""){
-          this.errors.push("BEST PRACTICE: It is a best practice to always include a subject line.");
+          this.errors.push("BEST PRACTICE: It is a best practice to always include a subject line. You can add a subject line using the Editor button.");
         }
       } else {
         if(this.__requiresTrackingCodeRegExp.test(this.new) && !this.hasQueryStringParameter("s")){
@@ -268,9 +268,10 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
           if(Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")==-1){
             Wksp.linkData[i].queryStrings.push("elqTrack=true");
             Wksp.linkData[i].refreshURL();
+
           }
         }
-
+        window.ga('send', 'event', "HTML", "Add Eloqua Tracking", "Add Eloqua Tracking");
       } else {
         var Wksp = this;
         for(var i =0;i< this.linkData.length;i++){
