@@ -265,7 +265,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       if(this.exportForEloqua && this.exportForEloqua == "Yes") {
         var Wksp = this;
         for(var i =0;i< this.linkData.length;i++){
-          if(Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")==-1){
+          if(!Wksp.linkData[i].isLinkType("mailto") && Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")==-1){
             Wksp.linkData[i].queryStrings.push("elqTrack=true");
             Wksp.linkData[i].refreshURL();
 
