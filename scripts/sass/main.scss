@@ -48,6 +48,27 @@ textarea[text-expand] {max-height: none;}
 
 pre {background-color: #fafafa;padding: .5em;}
 
+
+
+
+#error-messages-list {
+  padding-bottom:1em;
+  .item {
+    padding-bottom:.5em;
+    .right.floated {
+      .button {min-width:150px;}
+      padding-left: 2em;}
+    .content {
+      &.red-color {color: #DB2828}
+      margin: .5em 0;
+
+    }
+  }
+}
+
+
+
+
 .link-section {
   border-left:solid 5px rgba(34,36,38,.22);
   padding: 1em .5em 1em 1.25em;

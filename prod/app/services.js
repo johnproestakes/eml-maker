@@ -8,20 +8,32 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
 
   var self = this;
 
+  this.errorObject = /**@class*/ (function(){
+    function ErrorObject(message, args){
+      this.message = $sce.trustAsHtml(message);
+      if(args===undefined) args = {};
+      this.handler = args.handler ===undefined ? function(){} : args.handler;
+      this.ctaLabel = args.ctaLabel === undefined ? "" : $sce.trustAsHtml(args.ctaLabel);
+      this.severity = args.severity === undefined ? "low" : args.severity;
+    }
+    ErrorObject.prototype.clear = function(){};
+    return ErrorObject;
+  })();
 
   this.LinkObject = /**@class*/ (function(){
     function LinkObject(line, context) {
       var LO = this;
+      this.__isComplete = false;
       LO.__requiresTrackingCodeRegExp = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
       LO.__requiredTrackingCodeWhitelist = [
-        '.pdf','.ics','.oft','app.info.optum.com',
+        '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
         'optum.webex.com','twitter.com','facebook.com','linkedin.com'
       ];
       LO.line = line + 1;
       LO.context = context;
       LO.queryStrings = [];
       LO.errors = [];
-      LO.whiteListedUrl = "";
+      LO.whiteListedUrl = "~~whitelist~~";
       this.mailto = {email:"", subject: "", body:""};
       this.urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
       this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -29,7 +41,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       var re2 = /href\=\"([^\s\>]*)\"/g;
       var href = context.match(re2);
       if(href.length>0){
-        console.log('reading',href[0]);
+
         if(href[0]=="href=\"\"") {
           LO.new =  (LO.old = "");
         } else {
@@ -69,11 +81,12 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       var parts = this.new.split("?");
       var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
       this.new = parts[0] + (strs=="" ? "" : "?"+strs);
+      this.isLinkComplete();
     };
 
     LinkObject.prototype.overrideTrackingRequirements = function(){
       this.whiteListedUrl = this.new;
-      window.ga('send', 'event', "Tracking-Optout", "override", this.new);
+
     };
     LinkObject.prototype.displayFormattedURL = function(){
       var content = this.context;
@@ -105,18 +118,18 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       if(this.mailto === undefined) this.mailto = {};
       var a = this.new.substr(7, this.new.length-7);
       var b = a.split("?");
-      console.log('mailto:',b);
+
       this.mailto.email = b[0];
       if(b.length>1){
         var params = b[1].split("&");
         for(var n = 0; n<params.length; n++){
           var c = params[n].match(/subject=([^&]*)/g);
           if(c){
-            this.mailto.subject = window.decodeURI(c[0].substr(8,c[0].length-8));
+            this.mailto.subject = window.decodeURIComponent(c[0].substr(8,c[0].length-8));
           }
           var d = params[n].match(/body=([^&]*)/g);
           if(d){
-            this.mailto.body = window.decodeURI(d[0].substr(5,d[0].length-5));
+            this.mailto.body = window.decodeURIComponent(d[0].substr(5,d[0].length-5));
           }
         }
       }
@@ -126,33 +139,101 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
 
     LinkObject.prototype.isLinkComplete = function(){
       output = true;
+
       this.errors = [];
       // if(!this.new.match(/^https?:\/\/|mailto:/)){
       //   this.errors.push("This is not a valid URL");
       //   output = false;
       // }
       if(this.needsTrackingCode()){
-        this.errors.push("This URL needs a tracking code.");
+        this.errors.push(
+          new self.errorObject("<strong>FIX:</strong> This URL needs a tracking code.",
+            {
+            severity: 'high',
+            handler: function(link){
+              link.overrideTrackingRequirements();
+              link.isLinkComplete();
+              },
+            ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
+          }));
+      }
+      if(!this.isLinkType('mailto') && !this.urlRegex.test(this.new)){
+        this.errors.push(new self.errorObject(
+          "<strong>FIX:</strong> This is not a valid URL",
+          {
+            severity: "high"
+          }
+        ));
+        output = false;
       }
       if(this.isLinkType('mailto')){
+        this.initEmailEditor();
         if(this.mailto.email.trim()==""){
-          this.errors.push("WARN: This mailto link does not have an email address set.");
+          if(this.mailto.subject.trim()!=="" && this.mailto.body.trim()!=="" && (this.mailto.body.indexOf("https://")>-1||this.mailto.body.indexOf("http://")>-1)){
+            this.errors.push({message:
+              "<strong>SUGGESTION:</strong> It looks like you're trying to implement a Forward to a Colleague (FTAC) feature. Use the Mailto Editor to adjust your subject line, email body, and link you're including."});
+          } else {
+            this.errors.push({message:
+              "<strong>WARN:</strong> This mailto link does not have an email address set."});
+          }
+
         } else if(!this.emailRegex.test(this.mailto.email.trim())){
-          this.errors.push("Fix invalid email address.");
+          this.errors.push({message:"Fix invalid email address."});
           output = false;
         }
         if(this.mailto.subject.trim()==""){
-          this.errors.push("BEST PRACTICE: It is a best practice to always include a subject line. You can add a subject line using the Editor button.");
+          this.errors.push({
+            message: "<strong>BEST PRACTICE:</strong> Always include a subject line. You can add a subject line using the Editor button."});
         }
       } else {
-        if(this.__requiresTrackingCodeRegExp.test(this.new) && !this.hasQueryStringParameter("s")){
-          this.errors.push("BEST PRACTICE: If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track source.");
+
+        if(this.new.indexOf(".pdf")>-1){
+          this.errors.push({
+            message:"<strong>BEST PRACTICE:</strong> When you are directing email traffic to a PDF, it's generally a good idea to serve the PDF on a landing page with more information about the asset. This will also give you more analytics data, like session/visit duration and promote browsing other content."});
+        } else if(this.new.indexOf(".oft")>-1){
+          this.errors.push(new self.errorObject(
+            "<strong>BEST PRACTICE:</strong> You should not be sending OFTs to external contacts. OFTs only work with Outlook on PCs, and that is less than half of the population of email clients these days."
+          ));
+          this.errors.push(new self.errorObject(
+            "<strong>SUGGESTION:</strong> If you are trying to do a Forward to a Colleague (FTAC) feature, forget doing that with an OFT. You can achieve the same effect by using a mailto link. <br><br><em>NOTE: You can leave the email address field blank for this one. When the user clicks the link the email field will be empty, so he/she can add their own recipients.</em>",
+            {handler:function(link){
+              link.new = "mailto:?subject=" +window.encodeURIComponent("I wanted you to see this") + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
+              link.initEmailEditor();
+              link.isLinkComplete();
+              window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
+            },
+            severity: "suggestion",
+            ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
+          }
+          ));
+        } else if(this.new.indexOf("optum.co/")>-1){
+          output = false;
+          this.errors.push(new self.errorObject(
+            "<strong>FIX:</strong> We do not use shortlinks in emails. Use the long link instead."
+          ));
+        }
+
+        if(this.context&&this.context.indexOf("click here")>-1||this.context.indexOf("click")>-1){
+          this.errors.push(new self.errorObject(
+            "<strong>BEST PRACTICE:</strong> \"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
+          ));
+        }
+        if(this.requiresTrackingCode() && !this.hasQueryStringParameter("s")){
+          this.errors.push(new self.errorObject(
+            "<strong>SUGGESTION:</strong> If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track source.<br><br><em>NOTE: You can change the value of the s-code to whatever you'd like, but we'll add <code>s=email</code> by default.</em>",
+            {handler:function(link){
+              link.queryStrings.push("s=email");
+              link.refreshURL();
+              window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
+            },
+            severity: 'suggestion',
+            ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
+          }
+          ));
         }
       }
-      if(!this.isLinkType('mailto') && !this.urlRegex.test(this.new)){
-        this.errors.push("This is not a valid URL");
-        output = false;
-      }
+
+      this.__isComplete= output;
       return output;
     };
     LinkObject.prototype.hasQueryStringParameter = function(id){
@@ -189,10 +270,8 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       var a = /[a-z]{1,4}=(.*?:){3,9}/ig;
       return a.test(this.new);
     };
-    LinkObject.prototype.needsTrackingCode = function(){
+    LinkObject.prototype.requiresTrackingCode = function(){
       var output = false;
-      if(this.whiteListedUrl==this.new) return false;
-      // determine links that need special tracking
       if(this.__requiresTrackingCodeRegExp.test(this.new)) {
         output = true;
         // iterate ofer whitelist
@@ -204,11 +283,19 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
           }
         }
 
-        if(output && this.hasTrackingCode() ){
-          output = false;
-        }
+
 
       }
+      return output;
+    };
+    LinkObject.prototype.needsTrackingCode = function(){
+      var output = this.requiresTrackingCode();
+      if(this.whiteListedUrl==this.new) return false;
+      // determine links that need special tracking
+      if(this.hasTrackingCode() ){
+        output = false;
+      }
+
       return output;
       };
     return LinkObject;
@@ -242,6 +329,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
     }
 
     Workspace.prototype.downloadEml = function(){
+      this.generateOutputCode();
       this.outputCode = this.__replaceEloquaMergeFields(this.outputCode);
       var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.outputCode);
       window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".eml");
@@ -318,9 +406,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       location.href="#/links";
 
     };
-    Workspace.prototype.areLinksComplete = function(){
-
-      };
+    // Workspace.prototype.areLinksComplete = function(){};
     Workspace.prototype.addNewHeaderField = function(value) {
       this.header[value] = "";
     };
@@ -352,6 +438,11 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       this.linkData.forEach(function(link){
         var line = link.line - 1;
         // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
+        if(link.whiteListedUrl==link.new){
+          //report the non tracked link;
+          window.ga('send', 'event', "Tracking-Optout", "override", this.new);
+        }
+
         var start = codeLines[line].indexOf("href=\"" + link.old);
         codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + link.new + codeLines[line].substr(start+6+link.old.length, codeLines[line].length);
       });
@@ -372,15 +463,28 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       }
         location.href="#/export";
         window.scrollTo(0,0);
-        this.generateOutputCode();
+        // this.generateOutputCode();
 
     };
     Workspace.prototype.areLinksComplete = function(){
       if (this.linkData.length ==0) return true;
       var output = true;
+      // clearTimeout(this.linksCompleteDecayTimer);
+      // var Wksp= this;
+      // this.linksCompleteDecayTimer = setTimeout(function(){
+      //   if(Wksp.linksCompleteDecay)
+      //   delete Wksp.linksCompleteDecay;
+      //   // this.scope.$apply();
+      // },300);
+      // if(this.linksCompleteDecay !== undefined) console.log('fromlinkdecay');
+      // if(this.linksCompleteDecay !== undefined) return this.linksCompleteDecay;
+
+
+
       if(this.linkData.length>0) {
+        // console.log('isLinkComplete');
         this.linkData.forEach(function(link){
-            if(!link.isLinkComplete()){
+            if(!link.__isComplete){
               output = false;
             }
             if(link.needsTrackingCode()){
@@ -388,6 +492,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
             }
         });
       }
+      // this.linksCompleteDecay = output;
       return output;
     };
     Workspace.prototype.getLinksSummary = function(){

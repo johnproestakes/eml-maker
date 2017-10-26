@@ -164,7 +164,7 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
 
         var func = function(){
           if(scope.isScrolling && scope.isScrolling ==1) return false;
-          var id = $(el).attr("id").split("-").pop();
+          var id = jQuery(el).attr("id").split("-").pop();
           scope.$apply(function(){
             scope.activeLinkId =id*1;
             console.log(id*1);
