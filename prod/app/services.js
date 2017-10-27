@@ -4,21 +4,38 @@ angular.module('EMLMaker').factory(
     return window.CryptoJS;
   });
 
-angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce, saveAs){
+angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
+ function($sce, saveAs,$filter){
 
   var self = this;
 
   this.errorObject = /**@class*/ (function(){
-    function ErrorObject(message, args){
-      this.message = $sce.trustAsHtml(message);
+    function ErrorObject(type, message, args){
+
       if(args===undefined) args = {};
       this.handler = args.handler ===undefined ? function(){} : args.handler;
       this.ctaLabel = args.ctaLabel === undefined ? "" : $sce.trustAsHtml(args.ctaLabel);
       this.severity = args.severity === undefined ? "low" : args.severity;
+      this.message = $sce.trustAsHtml("<span class=\"ui tiny " +(this.severity=="high" ? "red" : (this.severity=="warn"  ? "orange" : (this.severity=="suggestion"  ? "violet" : "grey")))+ " label\">"+type+"</span><div style=\"padding-top:.5em;\">" + message + "</div>");
     }
     ErrorObject.prototype.clear = function(){};
     return ErrorObject;
   })();
+
+
+  // this.LinkAIEngine = /**@class*/ (function(){
+  //   function LinkAIEngine(link){
+  //     this.rules= [];
+  //     this.link = link;
+  //   }
+  //   LinkAIEngine.prototype.addRule = function(when, doThis){};
+  //   LinkAIEngine.prototype.execute = function(){
+  //     for(var i=0;i<this.rules.length;i++){
+  //
+  //     }
+  //   };
+  //   return LinkAIEngine;
+  // })();
 
   this.LinkObject = /**@class*/ (function(){
     function LinkObject(line, context) {
@@ -33,6 +50,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       LO.context = context;
       LO.queryStrings = [];
       LO.errors = [];
+      this.id = 0;
       LO.whiteListedUrl = "~~whitelist~~";
       this.mailto = {email:"", subject: "", body:""};
       this.urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
@@ -145,96 +163,101 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       //   this.errors.push("This is not a valid URL");
       //   output = false;
       // }
-      if(this.needsTrackingCode()){
-        this.errors.push(
-          new self.errorObject("<strong>FIX:</strong> This URL needs a tracking code.",
-            {
-            severity: 'high',
-            handler: function(link){
-              link.overrideTrackingRequirements();
-              link.isLinkComplete();
-              },
-            ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
-          }));
-      }
-      if(!this.isLinkType('mailto') && !this.urlRegex.test(this.new)){
-        this.errors.push(new self.errorObject(
-          "<strong>FIX:</strong> This is not a valid URL",
-          {
-            severity: "high"
-          }
-        ));
-        output = false;
-      }
-      if(this.isLinkType('mailto')){
-        this.initEmailEditor();
-        if(this.mailto.email.trim()==""){
-          if(this.mailto.subject.trim()!=="" && this.mailto.body.trim()!=="" && (this.mailto.body.indexOf("https://")>-1||this.mailto.body.indexOf("http://")>-1)){
-            this.errors.push({message:
-              "<strong>SUGGESTION:</strong> It looks like you're trying to implement a Forward to a Colleague (FTAC) feature. Use the Mailto Editor to adjust your subject line, email body, and link you're including."});
-          } else {
-            this.errors.push({message:
-              "<strong>WARN:</strong> This mailto link does not have an email address set."});
-          }
 
-        } else if(!this.emailRegex.test(this.mailto.email.trim())){
-          this.errors.push({message:"Fix invalid email address."});
-          output = false;
-        }
-        if(this.mailto.subject.trim()==""){
-          this.errors.push({
-            message: "<strong>BEST PRACTICE:</strong> Always include a subject line. You can add a subject line using the Editor button."});
-        }
-      } else {
+      //
+      var errors = $filter("LinkAIEngine")(this, self.errorObject);
+      this.errors = errors.messages;
+      // if(this.needsTrackingCode()){
+      //   this.errors.push(
+      //     new self.errorObject("<strong>FIX:</strong> This URL needs a tracking code.",
+      //       {
+      //       severity: 'high',
+      //       handler: function(link){
+      //         link.overrideTrackingRequirements();
+      //         link.isLinkComplete();
+      //         },
+      //       ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
+      //     }));
+      // }
+      // if(!this.isLinkType('mailto') && !this.urlRegex.test(this.new)){
+      //   this.errors.push(new self.errorObject(
+      //     "<strong>FIX:</strong> This is not a valid URL",
+      //     {
+      //       severity: "high"
+      //     }
+      //   ));
+      //   output = false;
+      // }
+      // if(this.isLinkType('mailto')){
+      //   //mailto links;
+      //   this.initEmailEditor();
+      //   if(this.mailto.email.trim()==""){
+      //     if(this.mailto.subject.trim()!=="" && this.mailto.body.trim()!=="" && (this.mailto.body.indexOf("https://")>-1||this.mailto.body.indexOf("http://")>-1)){
+      //       this.errors.push({message:
+      //         "<strong>SUGGESTION:</strong> It looks like you're trying to implement a Forward to a Colleague (FTAC) feature. Use the Mailto Editor to adjust your subject line, email body, and link you're including."});
+      //     } else {
+      //       this.errors.push({message:
+      //         "<strong>WARN:</strong> This mailto link does not have an email address set."});
+      //     }
+      //
+      //   } else if(!this.emailRegex.test(this.mailto.email.trim())){
+      //     this.errors.push({message:"Fix invalid email address."});
+      //     output = false;
+      //   }
+      //   if(this.mailto.subject.trim()==""){
+      //     this.errors.push({
+      //       message: "<strong>BEST PRACTICE:</strong> Always include a subject line. You can add a subject line using the Editor button."});
+      //   }
+      // } else {
+      //
+      //   if(this.new.indexOf(".pdf")>-1){
+      //     this.errors.push({
+      //       message:"<strong>BEST PRACTICE:</strong> When you are directing email traffic to a PDF, it's generally a good idea to serve the PDF on a landing page with more information about the asset. This will also give you more analytics data, like session/visit duration and promote browsing other content."});
+      //   } else if(this.new.indexOf(".oft")>-1){
+      //     this.errors.push(new self.errorObject(
+      //       "<strong>BEST PRACTICE:</strong> You should not be sending OFTs to external contacts. OFTs only work with Outlook on PCs, and that is less than half of the population of email clients these days."
+      //     ));
+      //     this.errors.push(new self.errorObject(
+      //       "<strong>SUGGESTION:</strong> If you are trying to do a Forward to a Colleague (FTAC) feature, forget doing that with an OFT. You can achieve the same effect by using a mailto link. <br><br><em>NOTE: You can leave the email address field blank for this one. When the user clicks the link the email field will be empty, so he/she can add their own recipients.</em>",
+      //       {handler:function(link){
+      //         link.new = "mailto:?subject=" +window.encodeURIComponent("I wanted you to see this") + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
+      //         link.initEmailEditor();
+      //         link.isLinkComplete();
+      //         window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
+      //       },
+      //       severity: "suggestion",
+      //       ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
+      //     }
+      //     ));
+      //   } else if(this.new.indexOf("optum.co/")>-1){
+      //     output = false;
+      //     this.errors.push(new self.errorObject(
+      //       "<strong>FIX:</strong> We do not use shortlinks in emails. Use the long link instead."
+      //     ));
+      //   }
+      //
+      //   if(this.context&&this.context.indexOf("click here")>-1||this.context.indexOf("click")>-1){
+      //     this.errors.push(new self.errorObject(
+      //       "<strong>BEST PRACTICE:</strong> \"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
+      //     ));
+      //   }
+      //   if(this.requiresTrackingCode() && !this.hasQueryStringParameter("s")){
+      //     this.errors.push(new self.errorObject(
+      //       "<strong>SUGGESTION:</strong> If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track source.<br><br><em>NOTE: You can change the value of the s-code to whatever you'd like, but we'll add <code>s=email</code> by default.</em>",
+      //       {handler:function(link){
+      //         link.queryStrings.push("s=email");
+      //         link.refreshURL();
+      //         window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
+      //       },
+      //       severity: 'suggestion',
+      //       ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
+      //     }
+      //     ));
+      //   }
+      // }
 
-        if(this.new.indexOf(".pdf")>-1){
-          this.errors.push({
-            message:"<strong>BEST PRACTICE:</strong> When you are directing email traffic to a PDF, it's generally a good idea to serve the PDF on a landing page with more information about the asset. This will also give you more analytics data, like session/visit duration and promote browsing other content."});
-        } else if(this.new.indexOf(".oft")>-1){
-          this.errors.push(new self.errorObject(
-            "<strong>BEST PRACTICE:</strong> You should not be sending OFTs to external contacts. OFTs only work with Outlook on PCs, and that is less than half of the population of email clients these days."
-          ));
-          this.errors.push(new self.errorObject(
-            "<strong>SUGGESTION:</strong> If you are trying to do a Forward to a Colleague (FTAC) feature, forget doing that with an OFT. You can achieve the same effect by using a mailto link. <br><br><em>NOTE: You can leave the email address field blank for this one. When the user clicks the link the email field will be empty, so he/she can add their own recipients.</em>",
-            {handler:function(link){
-              link.new = "mailto:?subject=" +window.encodeURIComponent("I wanted you to see this") + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
-              link.initEmailEditor();
-              link.isLinkComplete();
-              window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
-            },
-            severity: "suggestion",
-            ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
-          }
-          ));
-        } else if(this.new.indexOf("optum.co/")>-1){
-          output = false;
-          this.errors.push(new self.errorObject(
-            "<strong>FIX:</strong> We do not use shortlinks in emails. Use the long link instead."
-          ));
-        }
-
-        if(this.context&&this.context.indexOf("click here")>-1||this.context.indexOf("click")>-1){
-          this.errors.push(new self.errorObject(
-            "<strong>BEST PRACTICE:</strong> \"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
-          ));
-        }
-        if(this.requiresTrackingCode() && !this.hasQueryStringParameter("s")){
-          this.errors.push(new self.errorObject(
-            "<strong>SUGGESTION:</strong> If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track source.<br><br><em>NOTE: You can change the value of the s-code to whatever you'd like, but we'll add <code>s=email</code> by default.</em>",
-            {handler:function(link){
-              link.queryStrings.push("s=email");
-              link.refreshURL();
-              window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
-            },
-            severity: 'suggestion',
-            ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
-          }
-          ));
-        }
-      }
-
-      this.__isComplete= output;
-      return output;
+      this.__isComplete= errors.canContinue;
+      return this.__isComplete;
     };
     LinkObject.prototype.hasQueryStringParameter = function(id){
       var output = false;
@@ -264,6 +287,15 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
 
       }
       return output;
+    };
+    LinkObject.prototype.openMailtoEditor = function(){
+      this.initEmailEditor();
+      jQuery("html,body").animate({scrollTop: jQuery('#link-'+this.id).offset().top - 75}, 300);
+      var LO = this;
+      setTimeout(function(){
+        window.jQuery("#link-"+LO.id).find(".mailtoEditor").popup("show");
+      },400);
+
     };
     LinkObject.prototype.hasTrackingCode = function(){
       // if(this.whiteListedUrl==this.new) return true;
@@ -392,12 +424,17 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
       var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
       var codeLines = this.sourceCode.split("\n");
       var _super = this;
+      var n =1;
       for(var line=0; line<codeLines.length;line++){
         var found = codeLines[line].match(re1);
         if(found){
+
           found.forEach(function(context){
             if(/(href\=\"([^\s\>]*)\"?)/g.test(context)){
-              _super.linkData.push(new self.LinkObject(line, context));
+              var a = new self.LinkObject(line, context);
+              a.id = n;
+              _super.linkData.push(a);
+              n++;
             }
           });
         }
@@ -605,6 +642,171 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs', function($sce
 
   return this;
 }]);
+
+angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
+
+  return function(LinkObject, errorObject, optional2) {
+
+    // console.log(LinkObject,errorObject,optional2);
+    var errors = {messages:[], canContinue: true};
+
+    if(LinkObject.needsTrackingCode()&&LinkObject.new.indexOf("optum.co/")==-1){
+      errors.messages.push(
+        new errorObject("FIX","This URL needs a tracking code.",
+          {
+          severity: 'high',
+          handler: function(link){
+            console.log(link);
+            link.overrideTrackingRequirements();
+            link.isLinkComplete();
+            },
+          ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
+        }));
+    }
+    if(!LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new)){
+      errors.messages.push(new errorObject('FIX',
+        "This is not a valid URL",
+        {
+          severity: "high"
+        }
+      ));
+      errors.canContinue = false;
+    }
+    if(LinkObject.isLinkType('mailto')){
+      //mailto links;
+      LinkObject.initEmailEditor();
+      if(LinkObject.mailto.email===undefined || LinkObject.mailto.email.trim()==""){
+        if(LinkObject.mailto.subject.trim()!=="" && LinkObject.mailto.body.trim()!=="" && (LinkObject.mailto.body.indexOf("https://")>-1||LinkObject.mailto.body.indexOf("http://")>-1)){
+          errors.messages.push(
+            new errorObject("BEST PRACTICE",
+            ["It looks like you're trying to implement a Forward to a ",
+            "Colleague (FTAC) feature. Use the Mailto Editor to adjust ",
+            "your subject line, email body, and link you're including. ",
+            "With an FTAC, don't worry about including a recipient email address.",
+            " The intention is to open a new email with an empty To: line so",
+            " the user can fill it in from his/her address book."].join("")
+          ));
+        } else {
+          errors.messages.push(
+            new errorObject("WARN",
+            "This mailto link does not have an email address set."));
+        }
+
+      } else if(!LinkObject.emailRegex.test(LinkObject.mailto.email.trim())){
+        errors.messages.push(new errorObject(
+          "FIX",
+          "Fix invalid email address.", {severity: 'high'}));
+        errors.canContinue = false;
+      }
+      if(LinkObject.mailto.subject===undefined ||LinkObject.mailto.subject.trim()==""){
+        errors.messages.push(new errorObject(
+          "BEST PRACTICE",
+          "Always include a subject line. You can add a subject line using the Editor button."));
+      }
+    } else {
+
+
+      if(/.pdf|.oft|.ics/g.test(LinkObject.new) && LinkObject.hasTrackingCode() ){
+        errors.messages.push(new errorObject("SUGGESTION",
+          "<h4>Unnecessary tracking link</h4>It looks like you added a tracking code to an asset that you didn't need to. You can only really track web pages, other assets you might link to (PDF, ICS, etc) do not track the same way.",
+          {handler: function(link){
+            for(var i = 0; i<link.queryStrings.length;i++){
+              if(/[a-z]{1,4}=(.*?:){3,9}/ig.test(link.queryStrings[i])){
+                link.removeQueryAtIndex(i);
+              }
+            }
+            link.updateQueryString();
+            link.refreshURL();
+          },
+          ctaLabel: "<i class=\"wizard icon\"></i>Fix it now",
+          severity: "suggestion"
+        }
+        ));
+      }
+
+
+      if (/\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf/g.test(LinkObject.new)){
+        var match = LinkObject.new.match(/(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g);
+        if(match.length>0){
+          var ext = match[0].toUpperCase().substr(1,match[0].length);
+          errors.messages.push(new errorObject("BEST PRACTICE",
+            "<h4>Landing page preferred</h4>When you are directing email traffic to a "+ext+", it's generally a good idea to serve the "+ext+" on a landing page with more information about the asset. This will also give you more analytics data, like session/visit duration and promote browsing other content."
+          ));
+        }
+
+      } else if(LinkObject.new.indexOf(".oft")>-1){
+        errors.messages.push(new errorObject("BEST PRACTICE",
+          "<h4>You oft not use OFTs.</h4> You should not be sending OFTs to external contacts. OFTs only work with Outlook on PCs, and that is less than half of the population of email clients these days."
+        ));
+        errors.messages.push(new errorObject("SUGGESTION",
+          "If you are trying to do a Forward to a Colleague (FTAC) feature, forget doing that with an OFT. You can achieve the same effect by using a mailto link. <br><br><em>NOTE: You can leave the email address field blank for this one. When the user clicks the link the email field will be empty, so he/she can add their own recipients.</em>",
+          {handler:function(link){
+            link.new = "mailto:?subject=" +window.encodeURIComponent("I wanted you to see this") + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
+            link.initEmailEditor();
+            link.openMailtoEditor();
+            link.isLinkComplete();
+
+            window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
+          },
+          severity: "suggestion",
+          ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
+        }
+        ));
+      } else if(LinkObject.new.indexOf("optum.co/")>-1){
+        errors.canContinue = false;
+        errors.messages.push(new errorObject("FIX",
+          "We do not use shortlinks in emails. Use the long link instead."
+        ));
+      }
+
+      if(LinkObject.context
+        && /click|click\shere/g.test(LinkObject.context)){
+        errors.messages.push(new errorObject("BEST PRACTICE",
+          "\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
+        ));
+      }
+//jump links
+      if(/^http(.*)#/g.test(LinkObject.new)){
+        errors.messages.push(new errorObject("SUGGESTION",
+          ["<h4>Email links can't jump.</h4> It looks like you're trying to send traffic to a ",
+          "<em>Jump link</em> AKA <em>Anchor link</em>. The only time that is acceptible is when the destination is on the same page. You see,",
+          " the assumption is that all the content is loaded, but when you click from an email",
+          " into another page with a jump link, you're sending someone to a loading page.",
+          " The page may or may not send them to the location you're intending, or there may be an awkward user experience."].join(""),
+          {
+            handler: function(link){
+              link.new = link.new.replace(/\#(.*)/g, "");
+              link.updateQueryString();
+              link.refreshURL();
+              console.log("NEW LINK", link.new);
+            },
+            severity: "suggestion",
+            ctaLabel: "<i class=\"wizard icon\"></i> Fix it"
+          }
+        ));
+      }
+
+//s-code?
+      if(LinkObject.requiresTrackingCode()
+      && /resource|campaign/g.test(LinkObject.new)
+      && !LinkObject.hasQueryStringParameter("s")){
+        errors.messages.push(new errorObject("SUGGESTION",
+          "<h4>Are you tracking channel source with your form?</h4>If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track the channel source of the form submission.<br><br><em>NOTE: You can change the value of the s-code to whatever you'd like, but we'll add <code>s=email</code> by default.</em>",
+          {handler:function(link){
+            link.queryStrings.push("s=email");
+            link.refreshURL();
+            window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
+          },
+          severity: 'suggestion',
+          ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
+        }
+        ));
+      }
+    }
+      return errors;
+
+    }
+});
 
 angular.module('EMLMaker').factory(
   "$PersistJS",

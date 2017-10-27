@@ -9,7 +9,7 @@ angular.module('EMLMaker')
 
   // $scope.sessionToken = 0;
   $scope.sessionUserEmail = "";
-  $scope.versionNumber = "1.0.2";
+  $scope.versionNumber = "1.1.0";
   $scope.navigateTo = function( section){
     var s = {
       'main':0,

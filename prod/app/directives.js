@@ -100,14 +100,17 @@ angular.module('EMLMaker')
     scope: {popupId:"@",popupBehavior:"@"},
     link: function(scope, el, attr){
       $timeout(function(){
-        jQuery(el).find('.ui.icon.button').popup({
-          popup: el.find('.ui.popup').get(0),
+        var thePopup = jQuery(el).find('.ui.popup');
+        var theButton = jQuery(el).find('.ui.button');
+        theButton.popup({
+          popup: thePopup.get(0),
           position: 'top right',
-          on: 'click'
+          on: 'manual'
         });
 
         jQuery(el).find('.ui.icon.button').on('click', function(){
           //track this event;
+          theButton.popup("toggle");
           window.ga('send', 'event', "Mailto Editor", "Click", "Clicked Mailto Editor");
 
         });
