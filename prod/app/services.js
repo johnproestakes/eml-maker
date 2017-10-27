@@ -706,7 +706,7 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
     } else {
 
 
-      if(/.pdf|.oft|.ics/g.test(LinkObject.new) && LinkObject.hasTrackingCode() ){
+      if(/\.pdf|\.oft|\.ics/g.test(LinkObject.new) && LinkObject.hasTrackingCode() ){
         errors.messages.push(new errorObject("SUGGESTION",
           "<h4>Unnecessary tracking link</h4>It looks like you added a tracking code to an asset that you didn't need to. You can only really track web pages, other assets you might link to (PDF, ICS, etc) do not track the same way.",
           {handler: function(link){
