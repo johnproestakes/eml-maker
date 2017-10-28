@@ -60,7 +60,9 @@ pre {background-color: #fafafa;padding: .5em;}
       padding-left: 2em;}
     .content {
       &.red-color {color: #DB2828}
+      h4 {margin-bottom:0}
       margin: .5em 0;
+      line-height: 1.4em;
 
     }
   }
