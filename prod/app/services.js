@@ -104,12 +104,27 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       this.queryStrings = parts.length >1 ? parts[1].split("&") : [];
     };
     LinkObject.prototype.refreshURL = function(){
+
+      if(this.new.indexOf("#")>-1){
+        var urlParts = this.new.split("#");
+        var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
+        var parts = (urlParts.join("#")).split("?");
+      } else {
+        var parts = this.new.split("?");
+      }
+
+      var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
+      this.new = parts[0] + (strs=="" ? "" : "?"+strs) ;
+      if(jumpLink.length>0) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
+      this.isLinkComplete();
+    };
+    LinkObject.prototype.removeJumpLink = function(){
       var parts = this.new.split("?");
       var urlParts = this.new.split("#");
       var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
       var parts = (urlParts.join("#")).split("?");
       var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
-      this.new = parts[0] + (strs=="" ? "" : "?"+strs) + (jumpLink!=="" ? "#"+jumpLink : "");
+      this.new = parts[0] + (strs=="" ? "" : "?"+strs);
       this.isLinkComplete();
     };
 
@@ -741,9 +756,9 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
           " The page may or may not send them to the location you're intending, or there may be an awkward user experience."].join(""),
           {
             handler: function(link){
-              link.new = link.new.replace(/\#(.*)/g, "");
-              link.updateQueryString();
-              link.refreshURL();
+              
+              // link.updateQueryString();
+              link.removeJumpLink();
               // console.log("NEW LINK", link.new);
               window.ga('send', 'event', "Suggestion", "Remove Anchor Link", "Remove Anchor Link");
             },
