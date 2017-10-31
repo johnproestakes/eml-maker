@@ -114,15 +114,19 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       }
 
       var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
+      var hasJumpLink = this.new.indexOf("#")>1;
       this.new = parts[0] + (strs=="" ? "" : "?"+strs) ;
-      if(jumpLink.length>0) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
+      if(hasJumpLink) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
       this.isLinkComplete();
     };
     LinkObject.prototype.removeJumpLink = function(){
       var parts = this.new.split("?");
       var urlParts = this.new.split("#");
-      var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
-      var parts = (urlParts.join("#")).split("?");
+      if(urlParts.length>0){
+        var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
+        var parts = (urlParts.join("#")).split("?");
+      }
+
       var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
       this.new = parts[0] + (strs=="" ? "" : "?"+strs);
       this.isLinkComplete();
@@ -277,8 +281,9 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       this.fileName = "untitled";
       this.linkData = [];
       this.header = {"subject":""};
-      this.__emlHeaders = [];
+      this.errors = {messages:[], canProceed:true};
       this.exportForEloqua  = "Yes";
+      this.__emlHeaders = [];
       this.__allowableHeaderFields = {
         "to": {syntax:"To: ", label:"To", instructions: "A list of email addresses separated by commas."},
         "subject": {syntax: "Subject: ", label:"Subject", instructions: ""},
@@ -293,11 +298,14 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       ];
 
     }
-
+    Workspace.prototype.composeEML = function(){
+      location.href= "#/export-compose-eml";
+    };
     Workspace.prototype.downloadEml = function(){
       this.generateOutputCode();
       this.outputCode = this.__replaceEloquaMergeFields(this.outputCode);
       var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.outputCode);
+      this.fileName = this.__formatFileName(this.fileName);
       window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".eml");
       window.ga('send', 'event', "EML", "download", "EML Export");
       location.href= "#/export-eml";
@@ -307,11 +315,13 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       this.linkData.forEach(function(link) {
         output += link.context.replace(/,/g, "(comma)") + "," + link.old + "," +link.new + "\n";
       });
+      this.fileName = this.__formatFileName(this.fileName);
       window.saveAs(new Blob([output], {type:"text/csv"}), this.fileName+"_links.csv");
       window.ga('send', 'event', "CSV", "download", "CSV Export");
     };
     Workspace.prototype.downloadHtml = function(){
       var output = this.outputCode;
+      this.fileName = this.__formatFileName(this.fileName);
       window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".html");
       window.ga('send', 'event', "HTML", "download", "HTML Export");
     };
@@ -432,7 +442,13 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       if(!this.areLinksComplete()) {
         return false;
       }
-        location.href="#/export";
+
+        //get errors;
+        var Wksp = this;
+
+          this.errors = $filter("EmailAIEngine")(this, self.errorObject);
+
+          location.href="#/export";
         window.scrollTo(0,0);
         // this.generateOutputCode();
 
@@ -501,6 +517,13 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       }
     };
 
+    Workspace.prototype.__formatFileName = function(name){
+      _slugify_strip_re = /[^\w\s-]/g;
+      _slugify_hyphenate_re = /[-\s]+/g;
+      name = name.replace(_slugify_strip_re, '').trim().toLowerCase();
+      name = name.replace(_slugify_hyphenate_re, '-');
+      return name;
+    };
     Workspace.prototype.__replaceEloquaMergeFields = function(content){
       var re4 = /<span(%20|\s)class="?eloquaemail"?\s?>(.*?)<\/span>/ig;
       content = content.replace(re4, "#$2#");
@@ -576,6 +599,46 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
 
   return this;
 }]);
+
+angular.module('EMLMaker').filter('EmailAIEngine', function($filter){
+
+  return function(EMLWorkspace, errorObject, optional2) {
+
+    // console.log("FILTER", EMLWorkspace,errorObject,optional2);
+    var errors = {messages:[], canContinue: true};
+
+    // var jQueryObject = jQuery(EMLWorkspace.sourceCode);
+    // var preheader = jQueryObject.find(".preheader");
+    // console.log("preheader", preheader);
+    // if( preheader.length == 0 || preheader.text().trim()!==""){
+    //   errors.messages.push(new errorObject('BEST PRACTICE',
+    //   "<h4>Missing preheader</h4>Your email doesn't look like it has a preheader. Preheaders are great for improving open rates in some email clients so you should generally always include a preheader. If you cannot come up with new a preheader for each email, consider something generic that you can reuse."));
+    // }
+
+
+    //all images need alt tags?
+
+
+    //personalization?
+
+    /* Your subscribers will appreciate your messages even more if they're personalized. Adding personalized product recommendations into marketing emails can increase sales conversion rates by 15-25%, and click-through rates by 25-35%.*/
+
+    // var links = [];
+    // for (var i = 0; i<EMLWorkspace.linkData.length;i++){
+    //   if(links.indexOf(EMLWorkspace.linkData[i].old)>-1){
+    //
+    //   }
+    // }
+    // errors.messages.push(new errorObject('BEST PRACTICE', "You have too many links in this email."));
+    // console.log(errors);
+    return errors;
+
+
+};
+
+}
+
+);
 
 angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
 
@@ -756,7 +819,7 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
           " The page may or may not send them to the location you're intending, or there may be an awkward user experience."].join(""),
           {
             handler: function(link){
-              
+
               // link.updateQueryString();
               link.removeJumpLink();
               // console.log("NEW LINK", link.new);
