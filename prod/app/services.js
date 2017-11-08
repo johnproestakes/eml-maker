@@ -83,6 +83,23 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
 
 
     }
+    LinkObject.prototype.hasDuplicateQueryStrings = function(){
+      var result = []; var usedStrings = [];
+      if(this.queryStrings.length>0){
+        for (var i = 0; i<this.queryStrings.length;i++){
+          var b = (this.queryStrings[i].split("=")).shift();
+          if(usedStrings.indexOf(b)>-1 && result.indexOf(b)==-1){
+            result.push(b);
+          }
+          usedStrings.push(b);
+        }
+      }
+      if(result.length>0){
+        return result;
+      } else {
+        return false;
+      }
+    };
     LinkObject.prototype.removeQueryStrings = function(){
       this.queryStrings = [];
       this.refreshURL();
@@ -329,7 +346,9 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       if(this.exportForEloqua && this.exportForEloqua == "Yes") {
         var Wksp = this;
         for(var i =0;i< this.linkData.length;i++){
-          if(!Wksp.linkData[i].isLinkType("mailto") && Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")==-1){
+          if(!Wksp.linkData[i].isLinkType("mailto")
+          && Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")==-1
+          && Wksp.linkData[i].new.indexOf("app.info.optum.com")==-1){
             Wksp.linkData[i].queryStrings.push("elqTrack=true");
             Wksp.linkData[i].refreshURL();
 
@@ -662,33 +681,26 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
         }));
     }
 
-    if(LinkObject.queryStrings.length>0){
-      var usedStrings = []; var result = [];
-      for (var i = 0; i<LinkObject.queryStrings.length;i++){
-        var b = (LinkObject.queryStrings[i].split("=")).shift();
-        if(usedStrings.indexOf(b)>-1 && result.indexOf(b)==-1){
-          result.push(b);
-        }
-        usedStrings.push(b);
-      }
-      if(result.length>0){
+var duplicateQueryStrings = LinkObject.hasDuplicateQueryStrings()
+    if(LinkObject.queryStrings.length>0&&duplicateQueryStrings){
         errors.canContinue = false;
         errors.messages.push(new errorObject("FIX",
-          "It looks like you have duplicate query strings. Pay attention to these parameters: " + result.join(", "),
+          "It looks like you have duplicate query strings. Pay attention to these parameters: " + duplicateQueryStrings.join(", "),
           {severity:'high'}
         ));
+    }
+// is mailto email valid?
+  if(!LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new)){
+    errors.messages.push(new errorObject('FIX',
+      "This is not a valid URL",
+      {
+        severity: "high"
       }
-    }
+    ));
+    errors.canContinue = false;
+  }
 
-    if(!LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new)){
-      errors.messages.push(new errorObject('FIX',
-        "This is not a valid URL",
-        {
-          severity: "high"
-        }
-      ));
-      errors.canContinue = false;
-    }
+
     if(LinkObject.isLinkType('mailto')){
       //mailto links;
       LinkObject.initEmailEditor();
@@ -793,7 +805,8 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
           ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
         }
         ));
-      } else if(LinkObject.new.indexOf("optum.co/")>-1){
+      }
+      if(LinkObject.new.indexOf("optum.co/")>-1){
         errors.canContinue = false;
         errors.messages.push(new errorObject("FIX",
           "We do not use shortlinks in emails. Use the long link instead."
@@ -809,7 +822,7 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
           "\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
         ));
       }
-//jump links
+// jump links
       if(/^http(.*)#/g.test(LinkObject.new)){
         errors.messages.push(new errorObject("SUGGESTION",
           ["<h4>Email links can't jump.</h4> It looks like you're trying to send traffic to a ",
