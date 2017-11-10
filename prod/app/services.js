@@ -681,6 +681,16 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
         }));
     }
 
+
+    if(/http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new)){
+      errors.messages.push(
+        new errorObject("FIX","This URL is not correct. /content/optum3/en/ is only for use in AEM, not on the live site.",
+          {
+          severity: 'high'
+        }));
+      errors.canContinue = false;
+    }
+
 var duplicateQueryStrings = LinkObject.hasDuplicateQueryStrings()
     if(LinkObject.queryStrings.length>0&&duplicateQueryStrings){
         errors.canContinue = false;
