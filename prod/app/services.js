@@ -345,10 +345,10 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
     Workspace.prototype.exportCodeToHTML = function(){
       if(this.exportForEloqua && this.exportForEloqua == "Yes") {
         var Wksp = this;
-        for(var i =0;i< this.linkData.length;i++){
+        for(var i =0;i< Wksp.linkData.length;i++){
           if(!Wksp.linkData[i].isLinkType("mailto")
           && Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")==-1
-          && Wksp.linkData[i].new.indexOf("app.info.optum.com")==-1){
+          && !/app\.info\.optum\.com/gi.test(Wksp.linkData[i].new)){
             Wksp.linkData[i].queryStrings.push("elqTrack=true");
             Wksp.linkData[i].refreshURL();
 
