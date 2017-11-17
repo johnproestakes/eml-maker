@@ -56,14 +56,14 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       this.urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
       this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-      var re2 = /href\=\"([^\s\>]*)\"/g;
+      var re2 = /href\=\"([^\"\>]*)\"/g;
       var href = context.match(re2);
       if(href.length>0){
 
         if(href[0]=="href=\"\"") {
           LO.new =  (LO.old = "");
         } else {
-          LO.new = (LO.old = href[0].substr(6, href[0].length-7));
+          LO.new = (LO.old = href[0].substr(6, href[0].length-7)).trim();
         }
 
 
@@ -293,6 +293,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
       if( html === undefined) html = "";
 
       var Workspace = this;
+      this.linksView = 'advanced'; //advanced shows all
       this.sourceCode = html; //inital
       this.outputCode = ""; //final
       this.fileName = "untitled";
@@ -393,7 +394,7 @@ angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
         if(found){
 
           found.forEach(function(context){
-            if(/(href\=\"([^\s\>]*)\"?)/g.test(context)){
+            if(/(href\=\"([^\"\>]*)\"?)/g.test(context)){
               var a = new self.LinkObject(line, context);
               a.id = n;
               _super.linkData.push(a);
@@ -669,6 +670,7 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
     if(LinkObject.needsTrackingCode()&&LinkObject.new.indexOf("optum.co/")==-1){
       errors.messages.push(
         new errorObject("FIX","This URL needs a tracking code.",
+        !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
           {
           severity: 'high',
           handler: function(link){
@@ -676,9 +678,9 @@ angular.module('EMLMaker').filter('LinkAIEngine', function($filter){
             link.overrideTrackingRequirements();
             link.isLinkComplete();
 
-            },
+          } ,
           ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
-        }));
+        }: {severity: 'high'}));
     }
 
 
@@ -901,7 +903,7 @@ angular.module('EMLMaker').factory(
         this.loginCallback = loginCallback;
         this.loginTimer = null;
         this.sessionUserEmail = "";
-        this.timerDelay = 1000;
+        this.timerDelay = 500;
         this.salt = "47dafea9aae3b28ab5c39eb7f7d2c924";
         this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         this.sessionIdLocalStorageKey = "EMLMaker.emlUserID";
