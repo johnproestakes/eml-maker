@@ -44,7 +44,7 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
         "This might be a mistake; you can remove it from",
         "the code, or by clicking the button to the right,",
         "and this link will be removed when you export the code."].join(" "),
-        !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
+
           {
           severity: 'high',
           handler: function(link){
@@ -54,7 +54,7 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
 
           } ,
           ctaLabel:'<i class="trash icon"></i> Remove link'
-        }: {severity: 'high'}));
+        }));
     }
 
     if(!LinkObject.isLinkType('mailto')&&LinkObject.new.indexOf(" ")>-1){
@@ -238,6 +238,14 @@ var duplicateQueryStrings = LinkObject.hasDuplicateQueryStrings()
       }
 
 //s-code?
+if(LinkObject.linkImage&& LinkObject.linkImage.length>0){
+  var img = jQuery(LinkObject.context).find("img").get(0);
+  if(img.alt === undefined ||  img.alt == ""){
+    errors.messages.push(
+      new errorObject("BEST PRACTICE",
+      ["Linked image should have an ALT tag."].join(" ")));
+  }
+}
       if(LinkObject.requiresTrackingCode()
       && /resource|campaign/g.test(LinkObject.new)
       && !LinkObject.hasQueryStringParameter("s")){
