@@ -6,6 +6,7 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
     var errors = {messages:[], canContinue: true};
 
     if(LinkObject.needsTrackingCode()&&LinkObject.new.indexOf("optum.co/")==-1){
+      errors.canContinue = false;
       errors.messages.push(
         new errorObject("FIX","This URL needs a tracking code.",
         !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
@@ -22,6 +23,10 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
     }
 
 
+
+
+
+
     if(/http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new)){
       errors.messages.push(
         new errorObject("FIX","This URL is not correct. /content/optum3/en/ is only for use in AEM, not on the live site.",
@@ -29,6 +34,44 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
           severity: 'high'
         }));
       errors.canContinue = false;
+    }
+
+    if(jQuery(LinkObject.context).text().trim() =="" && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender)){
+      errors.canContinue = false;
+      errors.messages.push(
+        new errorObject("FIX",
+        ["<h4>Missing content</h4>This link doesn't contain any text or image.",
+        "This might be a mistake; you can remove it from",
+        "the code, or by clicking the button to the right,",
+        "and this link will be removed when you export the code."].join(" "),
+        !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
+          {
+          severity: 'high',
+          handler: function(link){
+            link.new = "";
+            link.deleteOnRender = true;
+            link.isLinkComplete();
+
+          } ,
+          ctaLabel:'<i class="trash icon"></i> Remove link'
+        }: {severity: 'high'}));
+    }
+
+    if(!LinkObject.isLinkType('mailto')&&LinkObject.new.indexOf(" ")>-1){
+      errors.canContinue = false;
+      errors.messages.push(
+        new errorObject("FIX",
+        ["<h4>Link has spaces</h4>You should not have spaces in your link, either rename the asset so that it does not contain spaces, or convert the spaces to %20s.",
+        ].join(" "),
+        !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
+          {
+          severity: 'high',
+          handler: function(link){
+            link.new = link.new.replace(/\s/g, "%20");
+            link.isLinkComplete();
+          } ,
+          ctaLabel:'<i class="wizard icon"></i> Encode Spaces'
+        }: {severity: 'high'}));
     }
 
 var duplicateQueryStrings = LinkObject.hasDuplicateQueryStrings()

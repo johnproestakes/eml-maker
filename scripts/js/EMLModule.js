@@ -151,7 +151,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       content = content.replace(new RegExp(">","g"), "&gt;");
       var start = content.indexOf("href=\"");
 
-      content = content.substr(0, start) + "href=\"<strong>"+ this.new + "</strong>" +
+      content = content.substr(0, start) + "href=\"<strong>"+ (this.hasOwnProperty("deleteOnRender")&&this.deleteOnRender ? this.old : this.new) + "</strong>" +
       content.substr(start + ("href=\""+this.old).length, content.length ) ;
       content = $sce.trustAsHtml(content);
       return content;
@@ -204,6 +204,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
 
       this.__isComplete= errors.canContinue;
+      if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
       return this.__isComplete;
     };
     LinkObject.prototype.hasQueryStringParameter = function(id){
@@ -285,7 +286,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if( html === undefined) html = "";
 
       var Workspace = this;
-      this.linksView = 'advanced'; //advanced shows all
+      this.linksView = 'experimental'; //advanced shows all
       this.sourceCode = html; //inital
       this.outputCode = ""; //final
       this.fileName = "untitled";
@@ -366,7 +367,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       this.linkData = [];
       window.scrollTo(0,0);
 
-      this.sourceCode = this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n");
+      var workingCode = this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n");
       //determine charset
 
       //determine email headers
@@ -378,7 +379,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
 
       var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
-      var codeLines = this.sourceCode.split("\n");
+      var codeLines = workingCode.split("\n");
       var _super = this;
       var n =1;
       for(var line=0; line<codeLines.length;line++){
@@ -427,7 +428,8 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
     Workspace.prototype.generateOutputCode = function(){
       // this.outputCode = this.sourceCode;
-      var codeLines = this.sourceCode.split("\n");
+      var workingCode = this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n");
+      var codeLines = workingCode.split("\n");
       this.linkData.forEach(function(link){
         var line = link.line - 1;
         // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
@@ -436,14 +438,22 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
           window.ga('send', 'event', "Tracking-Optout", "override", this.new);
         }
 
-        var start = codeLines[line].indexOf("href=\"" + link.old);
-        codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + link.new + codeLines[line].substr(start+6+link.old.length, codeLines[line].length);
+
+        if(link.hasOwnProperty("deleteOnRender")&&link.deleteOnRender){
+          var contextStart = codeLines[line].indexOf(link.context);
+          codeLines[line] = codeLines[line].replace(new RegExp(link.context, "gi"), "");
+        } else {
+          var start = codeLines[line].indexOf("href=\"" + link.old);
+          codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + link.new + codeLines[line].substr(start+6+link.old.length, codeLines[line].length);
+        }
+
       });
 
       this.outputCode = codeLines.join("\n");
+      this.outputCode = this.outputCode.replace(new RegExp("</a>\n","ig"), "</a>");
       try {
         // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
-        this.outputCode = this.outputCode.replace(/<\/a>\n(\.|,|\?)/g, "</a>$1");
+        this.outputCode = this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
       } catch(e){
         console.log(e);
         console.log("error merging lines with links that previously had punctuation.");

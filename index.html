@@ -1,9 +1,7 @@
 <html>
 <head>
   <title>EML Maker</title>
-
-  <script type="text/javascript">var Dependency;!function(e){var t=function(){function e(e,t,i){void 0===e&&(e=""),void 0===i&&(i=[]),this.id=e,this.href=t.href,this.requires=i,this.if=void 0===t.if||t.if}return e}();e.script=t}(Dependency||(Dependency={}));var DependencyJS=function(){function e(e,t){void 0===t&&(t=function(){}),this.pointer=0,this.manifest=e,this.loaded=[],this.watchers={},this.callback=t,this.mode=!1,this.progress=0}return e.prototype.loadedRequired=function(e,t){var i=!0;if(0==t.requires.length);else for(var r in t.requires)e.loaded.indexOf(t.requires[r])==-1&&(i=!1);return i},e.prototype.didComplete=function(){this.callback()},e.prototype.startImport=function(e){var t,i=this,r=e.href,n=r.split("?").shift().split(".").pop();switch(n){case"css":t=document.createElement("link"),t.setAttribute("type","text/css"),t.setAttribute("href",r),t.setAttribute("rel","stylesheet");break;case"js":t=document.createElement("script"),t.setAttribute("type","text/javascript"),t.setAttribute("src",r)}!this.beforeDidLoad||this.beforeDidLoad(e),t.addEventListener("load",function(){!i.afterDidLoad||i.afterDidLoad(e),i.progress=i.loaded.length/i.manifest.length,i.loaded.push(e.id),!i.mode||console.timeEnd(e.id),i.loaded.length==i.manifest.length&&setTimeout(function(){i.didComplete()},200)}),document.head.appendChild(t)},e.prototype.import=function(){var e=this;this.manifest.forEach(function(t){t.if?e.watchers[t.id]=setInterval(function(){e.loadedRequired(e,t)&&(!e.mode||console.time(t.id),clearInterval(e.watchers[t.id]),e.startImport(t))},10+Math.floor(100*Math.random())):e.loaded.push(t.id)})},e}();
-</script>
+  <script type="text/javascript">var Dependency;!function(e){var t=function(){function e(e,t,i){void 0===e&&(e=""),void 0===i&&(i=[]),this.id=e,this.href=t.href,this.requires=i,this.if=void 0===t.if||t.if}return e}();e.script=t}(Dependency||(Dependency={}));var DependencyJS=function(){function e(e,t){void 0===t&&(t=function(){}),this.pointer=0,this.manifest=e,this.loaded=[],this.watchers={},this.callback=t,this.mode=location.href.indexOf("localhost")>-1,this.progress=0}return e.prototype.loadedRequired=function(e,t){var i=!0;if(0==t.requires.length);else for(var o in t.requires)e.loaded.indexOf(t.requires[o])==-1&&(i=!1);return i},e.prototype.didComplete=function(){this.callback()},e.prototype.startImport=function(e){var t,i=this,o=e.href,n=o.split("?").shift().split(".").pop();switch(!i.mode||console.time(e.id),n){case"css":t=document.createElement("link"),t.setAttribute("type","text/css"),t.setAttribute("href",o+(location.href.indexOf("localhost")>-1?"?v="+(new Date).getTime():"")),t.setAttribute("rel","stylesheet");break;case"js":t=document.createElement("script"),t.setAttribute("type","text/javascript"),t.setAttribute("src",o+(location.href.indexOf("localhost")>-1?"?v="+(new Date).getTime():""))}!this.beforeDidLoad||this.beforeDidLoad(e),t.addEventListener("load",function(){!i.afterDidLoad||i.afterDidLoad(e),i.progress=Math.round(i.loaded.length/i.manifest.length*100),i.loaded.push(e.id),!i.mode||console.timeEnd(e.id),i.loaded.length==i.manifest.length&&setTimeout(function(){i.didComplete()},200)}),document.head.appendChild(t)},e.prototype.import=function(){var e=this;this.manifest.forEach(function(t){t.if?e.watchers[t.id]=setInterval(function(){e.loadedRequired(e,t)&&(!e.mode||console.time(t.id),clearInterval(e.watchers[t.id]),e.startImport(t))},5+Math.floor(100*Math.random())):e.loaded.push(t.id)})},e}();</script>
 <style id="loadingStyle">
 body {
   margin:0;
@@ -37,51 +35,34 @@ var DJS = new DependencyJS([
     // new Dependency.script("", {href:""}, []),
 
   ], function(){
-    angular.element(function() {
-      angular.bootstrap(document, ['EMLMaker']);
-    });
-    document.getElementById('hide-while-loading').style.visibility = "visible";
-    document.getElementById('loading-text').style.display= "none";
-    var s = document.getElementById('loadingStyle');
-    s.parentNode.removeChild(s);
-    //remove loader;
-    console.log('end');
+    document.getElementById('loading-text').innerHTML = "Loading 100% ";
+    setTimeout(function(){
+
+      angular.element(function() {
+
+        angular.bootstrap(document, ['EMLMaker']);
+      });
+      document.getElementById('hide-while-loading').style.visibility = "visible";
+      document.getElementById('loading-text').style.display= "none";
+      var s = document.getElementById('loadingStyle');
+      s.parentNode.removeChild(s);
+      //remove loader;
+      console.log('end');
+
+    },100);
+
   });
-  DJS.beforeDidLoad = function(item){
-    console.log(DJS.progress);
-    document.getElementById('loading-text').innerHTML = "Loading "+Math.round(DJS.progress*100)+ "% ";
-  };
+  DJS.beforeDidLoad = function(item){ };
   DJS.afterDidLoad = function(item){
     // document.getElementById('loading-text').innerHTML = "Loaded "+item.href + " ...";
-    document.getElementById('loading-text').innerHTML = "Loading "+Math.round(DJS.progress*100)+ "% ";
+    document.getElementById('loading-text').innerHTML = "Loading "+Math.round(DJS.progress)+ "% ";
   };
   DJS.import();
   </script>
-  <!-- <script src="scripts/js/libs/ace-noconflict/ace.js" type="text/javascript" charset="utf-8"></script> -->
-  <!-- <script src="scripts/js/libs/md5.js" type="text/javascript"></script> -->
-  <!-- <script src="scripts/js/libs/persistjs-min.js" type="text/javascript"></script> -->
 
   <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/png" href="assets/logo.png" />
-
-<!-- <link rel="icon" type="image/gif" href="http://example.com/favicon.gif" />	 -->
-  <!-- <link rel="stylesheet" href="scripts/css/libs/semantic.min.css"/> -->
-  <!-- <link rel="stylesheet" href="scripts/css/libs/codemirror.css"/> -->
-  <!-- <link rel="stylesheet" href="scripts/css/main.css"/> -->
-
-  <!-- <script src="scripts/js/libs/jquery.min.js" type="text/javascript"></script>
-  <script src="scripts/js/libs/semantic.min.js" type="text/javascript"></script>
-  <script src="scripts/js/libs/angular.min.js" type="text/javascript"></script>
-  <script src="scripts/js/libs/angular-route.min.js" type="text/javascript"></script>
-  <script src="scripts/js/libs/angular-sanitize.min.js" type="text/javascript"></script> -->
-
-  <!-- <script src="prod/app/app.js" type="text/javascript"></script>
-  <script src="prod/app/services.js" type="text/javascript"></script>
-  <script src="prod/app/controllers.js" type="text/javascript"></script>
-  <script src="prod/app/directives.js" type="text/javascript"></script>
-  <script src="prod/app/routes.js" type="text/javascript"></script> -->
-
 
 </head>
 
