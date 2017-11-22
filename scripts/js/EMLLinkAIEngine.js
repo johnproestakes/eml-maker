@@ -36,7 +36,7 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
       errors.canContinue = false;
     }
 
-    if(jQuery(LinkObject.context).text().trim() =="" && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender)){
+    if((jQuery(LinkObject.context).find("img").length ==0 && jQuery(LinkObject.context).text().trim() =="" ) && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender)){
       errors.canContinue = false;
       errors.messages.push(
         new errorObject("FIX",
