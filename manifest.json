@@ -1,0 +1,25 @@
+{
+  "scripts":[
+    "scripts/js/libs/ace-noconflict/ace.js",
+    "scripts/js/libs/md5.js",
+    "scripts/js/libs/persistjs-min.js",
+    "scripts/js/libs/jquery.min.js",
+    "scripts/js/libs/semantic.min.js",
+    "scripts/js/EMLLinkAIEngine.js",
+    "scripts/js/EMLEmailAIEngine.js",
+    "scripts/js/EMLModule.js",
+    "scripts/js/libs/angular.min.js",
+    "scripts/js/libs/angular-route.min.js",
+    "scripts/js/libs/angular-sanitize.min.js",
+    "prod/app/app.js",
+    "prod/app/services.js",
+    "prod/app/controllers.js",
+    "prod/app/directives.js",
+    "prod/app/routes.js"
+  ],
+  "css":[
+    "scripts/css/libs/semantic.min.css",
+    "scripts/css/libs/codemirror.css",
+    "scripts/css/main.css"
+  ]
+}
