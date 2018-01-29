@@ -12,7 +12,7 @@
     window.PAGE_TITLE = document.title;
 
     (function(){
-      window.LOCALHOST = !(location.href.indexOf('johnproestakes.github.io')==-1);
+      window.LOCALHOST = location.href.indexOf('johnproestakes.github.io')==-1;
       var params = new URLSearchParams(window.location.search);
       if(params.has('offline_version')) {
         window.OFFLINE_VERSION = params.get('offline_version');
