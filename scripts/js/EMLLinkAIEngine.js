@@ -249,10 +249,39 @@ if(LinkObject.linkImage&& LinkObject.linkImage.length>0){
       if(LinkObject.requiresTrackingCode()
       && /resource|campaign/g.test(LinkObject.new)
       && !LinkObject.hasQueryStringParameter("s")){
+        var old = LinkObject._super.defaultScode;
+        for(var i=0;i<LinkObject._super.linkData.length;i++){
+
+          if(LinkObject._super.linkData[i].hasOwnProperty("queryStrings")
+          && LinkObject._super.linkData[i].queryStrings.length>0){
+            for(var n=0; n<LinkObject._super.linkData[i].queryStrings.length; n++){
+              if(LinkObject._super.linkData[i].hasQueryStringParameter("s")){
+                LinkObject._super.defaultScode = LinkObject._super.linkData[i].hasQueryStringParameter("s");
+                break;
+              }
+            }
+
+          }
+        }
+
+          if(LinkObject._super.defaultScode!==old){
+            for(var i=0;i<LinkObject._super.linkData.length;i++){
+              LinkObject._super.linkData[i].refreshURL();
+            }
+          }
+
+
+
         errors.messages.push(new errorObject("SUGGESTION",
-          "<h4>Are you tracking channel source with your form?</h4>If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track the channel source of the form submission.<br><br><em>NOTE: You can change the value of the s-code to whatever you'd like, but we'll add <code>s=email</code> by default.</em>",
+          "<h4>Are you tracking channel source with your form?</h4>If\
+           this link directs to a page with a form, consider adding\
+            an s-code to the URL so you can populate a form field with\
+             a value from the query string to track the channel source\
+              of the form submission.<br><br><em>NOTE: You can change\
+               the value of the s-code to whatever you'd like, but we'll\
+                add <code>"+LinkObject._super.defaultScode+"</code> by default.</em>",
           {handler:function(link){
-            link.queryStrings.push("s=email");
+            link.queryStrings.push(LinkObject._super.defaultScode);
             link.refreshURL();
             window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
           },

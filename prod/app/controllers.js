@@ -8,6 +8,12 @@ angular.module('EMLMaker')
   function($scope, saveAs, $EMLModule, $routeParams, $UserManagement){
 
   // $scope.sessionToken = 0;
+
+  $scope.update_version = false;
+  $scope.accessingFromOffline = false;
+  if(window.OFFLINE_VERSION){ $scope.accessingFromOffline = true; }
+  if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){$scope.update_version = true;  }
+
   $scope.sessionUserEmail = "";
   $scope.versionNumber = "1.1.0";
   $scope.navigateTo = function( section){

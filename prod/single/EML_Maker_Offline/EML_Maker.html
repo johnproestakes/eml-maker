@@ -1,12 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>EML Maker</title>
 
   <script type="text/javascript">
-    (function(){ window.LOCALHOST = location.href.indexOf('johnproestakes.github.io')==-1; if(window.LOCALHOST){ (function(i,s,o,g,r,a,m){ i.redirectJsonpCallback = function(result){ if(result == true) { s.href=o;}else{console.log('not github');}}; r = g.createElement('script'),a= g.getElementsByTagName('script')[0]; r.type="text/javascript"; i.LOCALHOST && console.warn("simulating server blockage"); r.src=s.href.indexOf("localhost")>-1?"canredirect.js":"http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";a.parentNode.insertBefore(r,m);})(window,location,"http://johnproestakes.github.io/eml-maker",document);
-    document.title = document.title + " (Offline Mode)";
-      } })();
+  /* -------------------------
+       ALWAYS BE UPDATING.
+    -------------------------- */
+    window.CURRENT_VERSION= "1.0.1";
+    window.PAGE_TITLE = document.title;
+
+    (function(){
+      window.LOCALHOST = !(location.href.indexOf('johnproestakes.github.io')==-1);
+      var params = new URLSearchParams(window.location.search);
+      if(params.has('offline_version')) {
+        window.OFFLINE_VERSION = params.get('offline_version');
+      }
+     if(window.LOCALHOST){
+       (function(i,s,o,g,r,a,m){ i.redirectJsonpCallback = function(result){ if(result == true) { s.href=o;}else{console.log('not github');}}; r = g.createElement('script'),a= g.getElementsByTagName('script')[0]; r.type="text/javascript"; i.LOCALHOST && console.warn("simulating server blockage"); r.src=s.href.indexOf("localhost")>-1?"canredirect.js":"http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";a.parentNode.insertBefore(r,m);})(window,location,"http://johnproestakes.github.io/eml-maker?offline_version="+window.CURRENT_VERSION,document);
+       document.title = window.PAGE_TITLE + " (Offline Mode)";
+    } else {
+       document.title = window.PAGE_TITLE;
+    } })();
 
   </script>
 
@@ -358,10 +374,39 @@ if(LinkObject.linkImage&& LinkObject.linkImage.length>0){
       if(LinkObject.requiresTrackingCode()
       && /resource|campaign/g.test(LinkObject.new)
       && !LinkObject.hasQueryStringParameter("s")){
+        var old = LinkObject._super.defaultScode;
+        for(var i=0;i<LinkObject._super.linkData.length;i++){
+
+          if(LinkObject._super.linkData[i].hasOwnProperty("queryStrings")
+          && LinkObject._super.linkData[i].queryStrings.length>0){
+            for(var n=0; n<LinkObject._super.linkData[i].queryStrings.length; n++){
+              if(LinkObject._super.linkData[i].hasQueryStringParameter("s")){
+                LinkObject._super.defaultScode = LinkObject._super.linkData[i].hasQueryStringParameter("s");
+                break;
+              }
+            }
+
+          }
+        }
+
+          if(LinkObject._super.defaultScode!==old){
+            for(var i=0;i<LinkObject._super.linkData.length;i++){
+              LinkObject._super.linkData[i].refreshURL();
+            }
+          }
+
+
+
         errors.messages.push(new errorObject("SUGGESTION",
-          "<h4>Are you tracking channel source with your form?</h4>If this link directs to a page with a form, consider adding an s-code to the URL so you can populate a form field with a value from the query string to track the channel source of the form submission.<br><br><em>NOTE: You can change the value of the s-code to whatever you'd like, but we'll add <code>s=email</code> by default.</em>",
+          "<h4>Are you tracking channel source with your form?</h4>If\
+           this link directs to a page with a form, consider adding\
+            an s-code to the URL so you can populate a form field with\
+             a value from the query string to track the channel source\
+              of the form submission.<br><br><em>NOTE: You can change\
+               the value of the s-code to whatever you'd like, but we'll\
+                add <code>"+LinkObject._super.defaultScode+"</code> by default.</em>",
           {handler:function(link){
-            link.queryStrings.push("s=email");
+            link.queryStrings.push(LinkObject._super.defaultScode);
             link.refreshURL();
             window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
           },
@@ -415,12 +460,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
   }
   var self = this;
 
-//$sce / saveAs
 
-
-//backup $sce;
-
-  // if(args.$sce== undefined) $sce = Backup$Sce;
   if(args.saveAs== undefined) saveAs = function(){console.warn('saveAs is not available.')};
 
   this.errorObject = /**@class*/ (function(){
@@ -437,9 +477,10 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
   })();
 
   this.LinkObject = /**@class*/ (function(){
-    function LinkObject(line, context) {
+    function LinkObject(line, context, parent) {
       var LO = this;
       this.__isComplete = false;
+      this._super = parent;
       this.__requiresTrackingCodeRegExp = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
       this.__requiredTrackingCodeWhitelist = [
         '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
@@ -482,6 +523,15 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
 
     }
+    Object.defineProperty(LinkObject, 'defaultScode', {
+      get: function(){
+        return this.defaultScode;
+      },
+      set: function(val){
+        this.defaultScode = val;
+        console.log('you set defaultScode');
+      }
+    });
     LinkObject.prototype.hasDuplicateQueryStrings = function(){
       var result = []; var usedStrings = [];
       if(this.queryStrings.length>0){
@@ -499,6 +549,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         return false;
       }
     };
+
     LinkObject.prototype.removeQueryStrings = function(){
       this.queryStrings = [];
       this.refreshURL();
@@ -606,7 +657,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
       this.errors = [];
 
-      var errors = window.EMLMaker_LinkAIEngine(this, self.errorObject);
+      var errors = window.EMLMaker_LinkAIEngine(this, self.errorObject );
       this.errors = errors.messages;
 
 
@@ -619,7 +670,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if(this.queryStrings.length>0){
         for(var i = 0;i<this.queryStrings.length;i++){
           if(this.queryStrings[i].substr(0,id.length+1)== id + "="){
-            output = true;
+            output = this.queryStrings[i];
           }
         }
       }
@@ -693,11 +744,13 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if( html === undefined) html = "";
 
       var Workspace = this;
+      this.buffer = null;
       this.linksView = 'experimental'; //advanced shows all
       this.sourceCode = html; //inital
       this.outputCode = ""; //final
       this.fileName = "untitled";
       this.linkData = [];
+      this.defaultScode = "s=email";
       this.header = {"subject":""};
       this.errors = {messages:[], canProceed:true};
       this.exportForEloqua  = "Yes";
@@ -795,7 +848,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
           found.forEach(function(context){
             if(/(href\=\"([^\"\>]*)\"?)/g.test(context)){
-              var a = new self.LinkObject(line, context);
+              var a = new self.LinkObject(line, context, _super);
               a.id = n;
               _super.linkData.push(a);
               n++;
@@ -1547,6 +1600,12 @@ angular.module('EMLMaker')
   function($scope, saveAs, $EMLModule, $routeParams, $UserManagement){
 
   // $scope.sessionToken = 0;
+
+  $scope.update_version = false;
+  $scope.accessingFromOffline = false;
+  if(window.OFFLINE_VERSION){ $scope.accessingFromOffline = true; }
+  if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){$scope.update_version = true;  }
+
   $scope.sessionUserEmail = "";
   $scope.versionNumber = "1.1.0";
   $scope.navigateTo = function( section){
@@ -1839,8 +1898,11 @@ angular.module('EMLMaker')
             .when('/login', {
             template: "<style type=\"text/css\">\n    body { background-color: #DADADA; background-image: url(assets/bg.png); background-repeat:no-repeat; background-position: top right;}\n    body > .grid { height: 100% !important; }\n    .image { margin-top: -100px; }\n    .column {max-width: 450px; }\n    ng-view{height:100%;}\n  </style><div class=\"ui middle aligned center aligned grid\" style=\"height: 100%;\">\n  <div class=\"column\">\n    <h2 class=\"ui blue center aligned image header\">\n      <img class=\"ui image\" src=\"assets/logo128.png\" class=\"logo\"/>\n      <div class=\"content\">\n      {{ SecureGateway.loginTimer ? \"Logging you in to EML Maker ...\" : \"EML Maker\"}}\n      <div class=\"sub header\">Version {{versionNumber}}</div>\n      </div>\n    </h2>\n    <form class=\"ui large form\">\n      <div>\n        <div class=\"field\">\n          <div class=\"ui left icon input\" ng-class=\"{disabled: SecureGateway.loginTimer}\">\n            <i class=\"user icon\"></i>\n\n            <input type=\"text\" placeholder=\"Enter your email address\" ng-model=\"SecureGateway.sessionUserEmail\" >\n\n          </div>\n        </div>\n        <i class=\"circular help icon link\" ui-popup popup-id=\"help-popup\"></i>\n        <div class=\"ui large blue button\" ng-if=\"!SecureGateway.loginTimer\" ng-click=\"SecureGateway.sessionUpdateUserEmail(SecureGateway.sessionUserEmail)\">Login</div>\n        <div class=\"ui large blue button\" ng-if=\"SecureGateway.loginTimer\" ng-click=\"SecureGateway.loginAsOther()\">Cancel login</div>\n        <div class=\"ui small inline loader\" ng-class=\"{active: SecureGateway.loginTimer}\"></div>\n      </div>\n\n      <div class=\"ui red message\" ng-if=\"SecureGateway.errorMessage\">{{errorMessage}}</div>\n      <div class=\"ui popup\" id=\"help-popup\" ng-if=\"!SecureGateway.loginTimer\" style=\"text-align: left;\">\n      <div class=\"header\">Great news: You do not need a password.</div>\n      <div class=\"content\" style=\"width:330px\">\n      However, you will have to provide a valid email address before using EML Maker. You should only need to do this one time; Your email address will be stored in your browser and used to log you in next time. If you clear your cache or your browser loses your saved email address, you will need to input it again. Your email address is not tracked or saved in Google Analytics, a hash is generated and identifies you as a single user across browsers and dynamic IP Addresses.\n      </div>\n      </div>\n    </form>\n\n\n  </div>\n</div>"
         })
+            .when('/offline', {
+            template: "\n    <a href=\"javascript:history.back()\"><i class=\"arrow left icon\"></i> Go back</a>\n      <h1>Using EML Maker offline</h1>\n      <p>Let's face it. EML Maker has had some down time.\n      And, it was difficult to come up with a perfect solution, but this new feature is very close.</p>\n\n      <h2>What you need to do:</h2>\n      <p>You'll want to download the zip file, extract its contents into a safe folder on your computer.</p>\n\n      <p>You bookmark that file on your computer, in your browser. The offline version of EML Maker has the right\n      equipment to run directly from your machine without accessing the online version.</p>\n\n      <p>BUT, the best version is always the most up-to-date; so, what the offline version will do: it will ping the online version and see if it can access it.\n      If it can access the online version it will redirect you there. So, everyone wins.</p>\n\n      <p>If you have the \"old version\" of EML Maker saved locally on your computer, EML Maker will tell you the next time you access the online version that there is a new version available,\n      and you'll simply need to overwrite the file you downloaded on your computer with a new one.</p>\n\n      <div ng-if=\"!accessingFromOffline\"><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Install Now</a></div>\n      <div ng-if=\"update_version\" ><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a></div>\n    "
+        })
             .when('/main', {
-            template: "<div class=\"ui form\">\n\n\n\n\n      <div class=\"field\">\n        <label>HTML Source Code</label>\n        <div ace-editor class=\"aceEditor\" id=\"editor\" editor-id=\"editor\" >{{workspace.sourceCode}}</div>\n\n        <file-dropper ondrop=\"workspace.importHtmlFromFileDrop(evt)\" label=\"Drop file here to import html\"></file-dropper>\n        </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n\n        <button class=\"ui button\" ng-click=\"blankSlate()\">Clear</button>\n        <button class=\"ui right floated primary button\" ng-click=\"workspace.processHtml()\">Continue <i class=\"ui long arrow right icon\"></i></button>\n        </div>\n      </div>\n      </div>"
+            template: "\n\n    <div class=\"ui icon message\" ng-if=\"!accessingFromOffline\">\n    <i class=\"info circle icon\"></i>\n\n    <div class=\"content\">\n    <div class=\"header\">You can now use EML Maker offline.</div>\n      Get EML Maker now with (hopefully) ZERO downtime.\n      <a href=\"#/offline\">Learn more <i class=\"arrow right icon\"></i></a>\n      </div>\n      </div>\n\n\n\n    <div class=\"ui warning icon message\" ng-if=\"update_version\" style=\"align-items:flex-start;\">\n    <i class=\"warning sign icon\"></i>\n      <div class=\"content\">\n      <div class=\"header\">Update to latest version</div>\n      It looks like you have an older version of EML Maker that you are running on your local machine. If you'd like to use the most up to date version and make this message go away, you should update your version today.\n      <div style=\"padding-top:.5em;\">\n      <a href=\"prod/single/EML_Maker_Offline.zip\" target=\"_blank\" class=\"ui primary compact button\" >Update Now</a>\n      <a href=\"#/offline\" class=\"ui primary compact button\" >Learn more</a>\n      </div>\n      </div>\n    </div>\n\n    <div class=\"ui form\">\n\n\n\n\n      <div class=\"field\">\n        <label>HTML Source Code</label>\n        <div ace-editor class=\"aceEditor\" id=\"editor\" editor-id=\"editor\" >{{workspace.sourceCode}}</div>\n\n        <file-dropper ondrop=\"workspace.importHtmlFromFileDrop(evt)\" label=\"Drop file here to import html\"></file-dropper>\n        </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n\n        <button class=\"ui button\" ng-click=\"blankSlate()\">Clear</button>\n        <button class=\"ui right floated primary button\" ng-click=\"workspace.processHtml()\">Continue <i class=\"ui long arrow right icon\"></i></button>\n        </div>\n      </div>\n      </div>"
         }).when('/links', {
             template: "\n    <div style=\"float:right\">\n    <span style=\"display:inline-block;font-weight:bold; padding-right: 1em\">View </span>\n    <div class=\"ui mini compact menu\">\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='experimental'}\" ng-click=\"workspace.linksView='experimental'\">Experimental</a>\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='advanced'}\" ng-click=\"workspace.linksView='advanced'\">Advanced</a>\n    </div>\n    </div>\n    <h1>{{workspace.linkData.length>0 ? \"Review Links\" : \"Review\"}}</h1>\n    <p ng-if=\"workspace.linkData.length>0\">This section will find and replace the urls.</p>\n\n    <div ng-if=\"workspace.linkData.length==0\">\n\n\n\n    <div class=\"ui warning icon message\">\n  <i class=\"warning sign icon\"></i>\n  <div class=\"content\">\n    <div class=\"header\">\n      Did not find any links\n    </div>\n    <p>Although you can export your EML without links, if you intended to include links, you'll want to go back and make sure you've included some.</p>\n  </div>\n</div><br/>\n      </div>\n\n\n<div class=\"ui grid\">\n<div class=\"eleven wide column\">\n    <div class=\"ui form\">\n\n      <div ng-repeat=\"item in workspace.linkData\" class=\"field\" id=\"link-{{$index+1}}\" scrollspy>\n\n\n      <h4 class=\"ui horizontal divider header\">Link {{$index+1}}</h4>\n      <div class=\"link-section\" ng-class=\"{forRemoval:item.deleteOnRender, orange: item.needsTrackingCode(), green: item.hasTrackingCode()}\">\n        <div class=\"ui blue message\" ng-if=\"workspace.linksView=='advanced'||!item.__isComplete\" style=\"min-height:3.25em;\"><div class=\"old-url\"><strong>URL:</strong> <div class=\"url\">{{item.old}}&nbsp;</div></div></div>\n        <div class=\"ui message context\">\n          <div ><span class=\"line\"><i class=\"red cancel icon\" ng-if=\"item.deleteOnRender\"></i>{{item.line}}:</span> <div class=\"code prettyprint lang-js\" prettify ng-bind-html=\"item.displayFormattedURL()\"></div></div>\n        </div>\n        <div ng-if=\"item.linkImage&&(workspace.linksView=='advanced'||!item.__isComplete)\" class=\"ui message context\" style=\"background:#fff !important; min-height:90px\">\n          <div >\n          <span class=\"line\">Linked image preview:</span>\n\n          <div class=\"code\" style=\"background-image: url(assets/grid_bg.png);\">\n          <img ng-src=\"{{item.linkImage}}\" style=\"max-width:100%;\"/>\n          </div>\n          </div>\n          </div>\n\n        <div class=\"field\" ng-class=\"{error: !item.__isComplete}\" ng-if=\"!item.isLinkType('mailto')\">\n        <label>{{workspace.linksView=='experimental'&&item.__isComplete ? \"URL\" : \"New URL\" }}</label>\n        <input type=\"text\" ng-hide=\"item.deleteOnRender\" ng-model=\"item.new\" ng-keyup=\"item.updateQueryString();item.isLinkComplete()\" ng-blur=\"item.updateQueryString()\"/>\n        <div ng-show=\"item.deleteOnRender\">{{item.old==\"\"? \"Blank link\" : item.old}}</div>\n        <div ng-hide=\"item.deleteOnRender\" ng-if=\"item.queryStrings.length>0\" class=\"query-string-editor\">\n        <strong>QUERY STRING EDITOR</strong> <a href=\"javascript:angular.noop()\" style=\"float:right;\" ng-click=\"item.removeQueryStrings()\">Remove all</a>\n        <div ng-if=\"item.queryStrings.length==1&&item.queryStrings[0].length==0\">Query strings will appear here.</div>\n          <ul class=\"tags-layout\">\n          <li ng-if=\"str.length>0\" ng-repeat=\"str in item.queryStrings track by $index\">{{str}} <a href=\"javascript:angular.noop()\" ng-click=\"item.removeQueryAtIndex($index)\"><i class=\"close icon\"></i></a></li>\n          </ul>\n          </div>\n\n\n        </div>\n        <div ng-if=\"item.isLinkType('mailto')\" mailto-link-editor>\n        <div class=\"ui field\" >\n        <label>New Email Link</label>\n          <div class=\"ui action input\" >\n            <input type=\"text\" ng-change=\"item.deinitEmailEditor();item.isLinkComplete()\" ng-model=\"item.new\">\n            <button class=\"ui icon button mailtoEditor\" ng-click=\"item.initEmailEditor()\">\n               Editor <i class=\"pencil icon\"></i>\n            </button>\n          </div>\n\n\n        </div>\n        <div class=\"ui flowing top right popup\" style=\"min-width: 300px;\">\n\n            <div class=\"ui field\">\n              <label>Email Address</label>\n              <input ng-change=\"item.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.email\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Subject Line</label>\n              <input ng-change=\"item.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.subject\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Body Text</label>\n              <textarea ng-change=\"item.composeEmail();item.isLinkComplete()\" style=\"width: 100%; height: 150px;\" ng-model=\"item.mailto.body\"></textarea>\n              </div>\n        </div>\n        </div>\n        <div ng-hide=\"item.deleteOnRender\" style=\"padding-top:1em\" ng-if=\"item.errors.length>0\"><strong>{{item.__isComplete ? \"MESSAGES:\" : \"NEEDS ATTENTION:\" }}</strong>\n        <div id=\"error-messages-list\" ng-hide=\"item.deleteOnRender\" class=\"ui middle aligned divided list\">\n        <div class=\"item\" ng-repeat=\"error in item.errors\">\n        <div ng-show=\"error.ctaLabel!==''\" style=\"margin-top: .5em;\" class=\"right floated content\">\n          <div class=\"ui small compact\" ng-class=\"{'violet button':error.severity=='suggestion','red button': error.severity=='high', 'orange button': error.severity=='warn', 'grey button': error.severity=='low'}\" ng-click=\"error.handler(item)\" ng-bind-html=\"error.ctaLabel\">{{error.ctaLabel ? error.ctaLabel : \"Resolve\"}}</div>\n          </div>\n          <div class=\"content\" ng-bind-html=\"error.message\" ng-class=\"{'red-color': error.severity=='high'}\">{{error.message}}</div>\n        </div>\n        </div>\n\n        </div>\n        <div class=\"\" ng-if=\"item.whiteListedUrl==item.new\">\n        <p>This link would normally require a special tracking code, but you have chosen to override that requirement. You can undo this by clicking the button below.</p>\n        <button class=\"ui grey compact icon button\" ng-click=\"item.whiteListedUrl='~~whitelist~~';item.isLinkComplete()\">\n        <i class=\"cancel icon\"></i>\n          Cancel tracking override</button></div>\n\n\n          <div class=\"\" ng-if=\"item.deleteOnRender\">\n          <p>This link will be removed when you export the code.</p>\n          <button class=\"ui grey compact icon button\" ng-click=\"item.deleteOnRender=false;item.new=item.old;item.isLinkComplete()\">\n          <i class=\"cancel icon\"></i>\n            Keep this link</button></div>\n\n\n\n\n\n\n        </div>\n\n        </div>\n      </div>\n      </div>\n      <div class=\"five wide column\" id=\"stickyparent\" style=\"z-index:98;\">\n      <div sticky class=\"ui sticky\" style=\"display:block; margin-top:75px; margin-bottom:75px;\" >\n\n        <div class=\"ui secondary vertical pointing menu\"  style=\"margin-top: 75px; margin-bottom: 75px;\" >\n\n        <a class=\"item\" ng-repeat=\"item in workspace.linkData\" ng-class=\"{active: activeLinkId==$index+1}\" href=\"javascript:angular.noop()\" ng-click=\"scrollTo($index)\">\n        <span class=\"truncate\"><i class=\"red warning sign icon\" ng-if=\"!item.__isComplete||item.needsTrackingCode()\"></i><i class=\"red trash icon\" ng-if=\"item.deleteOnRender\"></i> {{ item.new==\"\"&&item.old==\"\" ? (item.deleteOnRender ? \"Delete: \" + (item.old==\"\"?\"Link is blank\":item.old) : \"Link is blank\") : item.new}}</span>\n        </a>\n\n        </div>\n        </div>\n\n      </div>\n\n\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\" style=\"z-index:99;\">\n      <div class=\"ui container\" style=\"padding-top:10px; padding-bottom:10px;\">\n      <div class=\"ui popup\"  id=\"error-messages\">\n        <div class=\"header\">\n          Some of these links did not pass validation.\n        </div>\n        <em>You cannot proceed until all high priority errors are&nbsp;fixed.</em>\n        </div>\n        <div>\n        <button class=\"ui right floated yellow button\" ng-if=\"!workspace.areLinksComplete()\" ui-popup popup-id=\"error-messages\" >\n        <i class=\"ui warning sign icon\"></i> {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n\n          </button>\n        <button class=\"ui right floated primary button\" ng-if=\"workspace.areLinksComplete()\" ng-click=\"workspace.updateLinksAndExport()\">\n        {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n          <i class=\"ui long arrow right icon\"></i>\n          </button>\n        <button class=\"ui button\" ng-click=\"workspace.downloadCsv()\">\n          <i class=\"ui download icon\"></i> Download Link CSV</button>\n\n        </div>\n\n\n        </div>\n      </div>\n\n    </div>"
         })
@@ -2232,9 +2294,9 @@ i.red.icon { background: #DB2828; display:inline-block }</style>
 
 </head>
 
-<body ng-controller="MainController">
+<body ng-controller="MainController" style="height:100%;">
 
-  <div  id="hide-while-loading">
+  <div  id="hide-while-loading" style="height:100%">
   <div class="ui fixed inverted menu" ng-if="showNavBar()">
     <div class="ui container">
       <div class="item"><img src="assets/logo.png" class="logo" style="overflow:hidden"/></div>
@@ -2290,8 +2352,8 @@ i.red.icon { background: #DB2828; display:inline-block }</style>
   <div style="height: 75px;" ng-if="showNavBar()"></div>
   <div id="safe-mode"></div>
 
-  <section  id="content" class="ui container"  style="padding-top: 1.5em;">
-    <div ng-view></div>
+  <section  id="content" class="ui container"  style="padding-top: 1.5em;height:100%;">
+    <div ng-view style="height:100%;"></div>
   </section>
 
   </body>

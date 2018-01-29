@@ -8,12 +8,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
   }
   var self = this;
 
-//$sce / saveAs
 
-
-//backup $sce;
-
-  // if(args.$sce== undefined) $sce = Backup$Sce;
   if(args.saveAs== undefined) saveAs = function(){console.warn('saveAs is not available.')};
 
   this.errorObject = /**@class*/ (function(){
@@ -30,9 +25,10 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
   })();
 
   this.LinkObject = /**@class*/ (function(){
-    function LinkObject(line, context) {
+    function LinkObject(line, context, parent) {
       var LO = this;
       this.__isComplete = false;
+      this._super = parent;
       this.__requiresTrackingCodeRegExp = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
       this.__requiredTrackingCodeWhitelist = [
         '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
@@ -75,6 +71,15 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
 
     }
+    Object.defineProperty(LinkObject, 'defaultScode', {
+      get: function(){
+        return this.defaultScode;
+      },
+      set: function(val){
+        this.defaultScode = val;
+        console.log('you set defaultScode');
+      }
+    });
     LinkObject.prototype.hasDuplicateQueryStrings = function(){
       var result = []; var usedStrings = [];
       if(this.queryStrings.length>0){
@@ -92,6 +97,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         return false;
       }
     };
+
     LinkObject.prototype.removeQueryStrings = function(){
       this.queryStrings = [];
       this.refreshURL();
@@ -199,7 +205,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
       this.errors = [];
 
-      var errors = window.EMLMaker_LinkAIEngine(this, self.errorObject);
+      var errors = window.EMLMaker_LinkAIEngine(this, self.errorObject );
       this.errors = errors.messages;
 
 
@@ -212,7 +218,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if(this.queryStrings.length>0){
         for(var i = 0;i<this.queryStrings.length;i++){
           if(this.queryStrings[i].substr(0,id.length+1)== id + "="){
-            output = true;
+            output = this.queryStrings[i];
           }
         }
       }
@@ -286,11 +292,13 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if( html === undefined) html = "";
 
       var Workspace = this;
+      this.buffer = null;
       this.linksView = 'experimental'; //advanced shows all
       this.sourceCode = html; //inital
       this.outputCode = ""; //final
       this.fileName = "untitled";
       this.linkData = [];
+      this.defaultScode = "s=email";
       this.header = {"subject":""};
       this.errors = {messages:[], canProceed:true};
       this.exportForEloqua  = "Yes";
@@ -388,7 +396,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
           found.forEach(function(context){
             if(/(href\=\"([^\"\>]*)\"?)/g.test(context)){
-              var a = new self.LinkObject(line, context);
+              var a = new self.LinkObject(line, context, _super);
               a.id = n;
               _super.linkData.push(a);
               n++;

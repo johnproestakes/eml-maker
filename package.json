@@ -10,9 +10,11 @@
   "license": "BSD-2-Clause",
   "devDependencies": {
     "angular-sanitize": "^1.6.0",
+    "del": "^3.0.0",
     "gulp": "^3.9.1",
     "gulp-concat": "~2.6.0",
     "gulp-htmlmin": "~2.0.0",
+    "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.6.1",
     "gulp-sass": "~2.3.1",
     "gulp-sourcemaps": "~1.6.0",
