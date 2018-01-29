@@ -11,7 +11,7 @@ angular.module('EMLMaker')
 
   $scope.update_version = false;
   $scope.accessingFromOffline = false;
-  if(window.OFFLINE_VERSION){ $scope.accessingFromOffline = true; }
+  if(window.OFFLINE_VERSION&&!window.LOCALHOST){ $scope.accessingFromOffline = true; }
   if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){$scope.update_version = true;  }
 
   $scope.sessionUserEmail = "";
