@@ -356,16 +356,17 @@ if(
           });
 
           link._super.mapLinkObjects(function(LO){
-            if(LO.requiresTrackingCode && !LO.hasTrackingCode()){
+            if(LO.requiresTrackingCode() && !LO.hasTrackingCode()){
               LO.queryStrings.push(trackingCode);
               LO.refreshURL();
+              LO.isLinkComplete();
               // break;
             }
           });
           link.refreshURL();
           window.ga('send', 'event', "Suggestion", "Cascade Tracking Code", "Cascade Tracking Code");
         },
-        severity: '',
+        severity: 'suggestion',
         ctaLabel: "<i class=\"wizard icon\"></i> Update all links"
       }
       ));
