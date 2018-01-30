@@ -8,7 +8,7 @@
   /* -------------------------
        ALWAYS BE UPDATING.
     -------------------------- */
-    window.CURRENT_VERSION= "1.0.1";
+    window.CURRENT_VERSION= "1.0.2";
     window.PAGE_TITLE = document.title;
 
     (function(){
@@ -362,59 +362,89 @@ var duplicateQueryStrings = LinkObject.hasDuplicateQueryStrings()
         ));
       }
 
+if(
+  LinkObject.requiresTrackingCode() && LinkObject.hasTrackingCode()){
+    //basically find the links that dont have links and add them in
+
+    var affected = false;
+
+    LinkObject._super.mapLinkObjects(function(LO){
+      if(LO.requiresTrackingCode && !LO.hasTrackingCode()){
+        affected=true;
+        console.log('affected=true');
+      }
+    });
+    if(affected){
+      errors.messages.push(new errorObject("WIZARD",
+        "<h4>Need a hand?</h4>I noticed you added a tracking code to this link, great job.\
+         If you want I can add the same tracking code to the other links in this email \
+         which require tracking codes.",
+        {handler:function(link){
+
+          var trackingCode = "";
+          LinkObject.queryStrings.forEach(function(strParameter){
+            if(LinkObject.hasTrackingCode(strParameter)){
+              trackingCode = strParameter;
+            }
+          });
+
+          link._super.mapLinkObjects(function(LO){
+            if(LO.requiresTrackingCode && !LO.hasTrackingCode()){
+              LO.queryStrings.push(trackingCode);
+              LO.refreshURL();
+              // break;
+            }
+          });
+          link.refreshURL();
+          window.ga('send', 'event', "Suggestion", "Cascade Tracking Code", "Cascade Tracking Code");
+        },
+        severity: '',
+        ctaLabel: "<i class=\"wizard icon\"></i> Update all links"
+      }
+      ));
+    }
+
+
+
+  }
+
+
+
 //s-code?
 if(LinkObject.linkImage&& LinkObject.linkImage.length>0){
   var img = jQuery(LinkObject.context).find("img").get(0);
   if(img.alt === undefined ||  img.alt == ""){
     errors.messages.push(
-      new errorObject("BEST PRACTICE",
-      ["Linked image should have an ALT tag."].join(" ")));
+      new errorObject("BEST PRACTICE", ["Linked image should have an ALT tag."].join(" ")));
   }
 }
-      if(LinkObject.requiresTrackingCode()
-      && /resource|campaign/g.test(LinkObject.new)
-      && !LinkObject.hasQueryStringParameter("s")){
-        var old = LinkObject._super.defaultScode;
-        for(var i=0;i<LinkObject._super.linkData.length;i++){
 
-          if(LinkObject._super.linkData[i].hasOwnProperty("queryStrings")
-          && LinkObject._super.linkData[i].queryStrings.length>0){
-            for(var n=0; n<LinkObject._super.linkData[i].queryStrings.length; n++){
-              if(LinkObject._super.linkData[i].hasQueryStringParameter("s")){
-                LinkObject._super.defaultScode = LinkObject._super.linkData[i].hasQueryStringParameter("s");
-                break;
-              }
-            }
-
-          }
-        }
-
-          if(LinkObject._super.defaultScode!==old){
-            for(var i=0;i<LinkObject._super.linkData.length;i++){
-              LinkObject._super.linkData[i].refreshURL();
-            }
-          }
+if(LinkObject.requiresTrackingCode()
+  && /resource|campaign/g.test(LinkObject.new)
+  && !LinkObject.hasQueryStringParameter("s")){
 
 
+    errors.messages.push(new errorObject("SUGGESTION",
+      "<h4>Are you tracking channel source with your form?</h4>If\
+       this link directs to a page with a form, consider adding\
+        an s-code to the URL so you can populate a form field with\
+         a value from the query string to track the channel source\
+          of the form submission.<br><br><em>NOTE: You can change\
+           the value of the s-code to whatever you'd like, but we'll\
+            add <code>s=email</code> by default.</em>",
+      {
+        handler:function(link){
+        link.queryStrings.push("s=email");
+        link.refreshURL();
+        window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
+      },
+      severity: 'suggestion',
+      ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
+    }
+    ));
+  }
 
-        errors.messages.push(new errorObject("SUGGESTION",
-          "<h4>Are you tracking channel source with your form?</h4>If\
-           this link directs to a page with a form, consider adding\
-            an s-code to the URL so you can populate a form field with\
-             a value from the query string to track the channel source\
-              of the form submission.<br><br><em>NOTE: You can change\
-               the value of the s-code to whatever you'd like, but we'll\
-                add <code>"+LinkObject._super.defaultScode+"</code> by default.</em>",
-          {handler:function(link){
-            link.queryStrings.push(LinkObject._super.defaultScode);
-            link.refreshURL();
-            window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
-          },
-          severity: 'suggestion',
-          ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
-        }
-        ));
-      }
+
     }
       return errors;
 
@@ -703,10 +733,11 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       },400);
 
     };
-    LinkObject.prototype.hasTrackingCode = function(){
+    LinkObject.prototype.hasTrackingCode = function(obj){
+      if(obj===undefined) obj = this.new;
       // if(this.whiteListedUrl==this.new) return true;
       var a = /[a-z]{1,4}=(.*?:){3,9}/ig;
-      return a.test(this.new);
+      return a.test(obj);
     };
     LinkObject.prototype.requiresTrackingCode = function(){
       var output = false;
@@ -769,6 +800,11 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       ];
 
     }
+    Workspace.prototype.mapLinkObjects = function(callback){
+      for(var i=0; i<this.linkData.length; i++){
+        callback(this.linkData[i]);
+        }
+      };
     Workspace.prototype.composeEML = function(){
       location.href= "#/export-compose-eml";
     };

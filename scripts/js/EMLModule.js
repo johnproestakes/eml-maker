@@ -251,10 +251,11 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       },400);
 
     };
-    LinkObject.prototype.hasTrackingCode = function(){
+    LinkObject.prototype.hasTrackingCode = function(obj){
+      if(obj===undefined) obj = this.new;
       // if(this.whiteListedUrl==this.new) return true;
       var a = /[a-z]{1,4}=(.*?:){3,9}/ig;
-      return a.test(this.new);
+      return a.test(obj);
     };
     LinkObject.prototype.requiresTrackingCode = function(){
       var output = false;
@@ -317,6 +318,11 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       ];
 
     }
+    Workspace.prototype.mapLinkObjects = function(callback){
+      for(var i=0; i<this.linkData.length; i++){
+        callback(this.linkData[i]);
+        }
+      };
     Workspace.prototype.composeEML = function(){
       location.href= "#/export-compose-eml";
     };
