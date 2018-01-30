@@ -244,7 +244,7 @@ if(
     var affected = false;
 
     LinkObject._super.mapLinkObjects(function(LO){
-      if(LO.requiresTrackingCode && !LO.hasTrackingCode()){
+      if(LO.requiresTrackingCode() && !LO.hasTrackingCode()){
         affected=true;
         console.log('affected=true');
       }
