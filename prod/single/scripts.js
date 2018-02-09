@@ -94,245 +94,286 @@ window.EMLMaker_LinkAIEngine = !window.EMLMaker_LinkAIEngine ? function(LinkObje
 
 
 
-    // console.log(LinkObject,errorObject,optional2);
-    var errors = {messages:[], canContinue: true};
+var AIModule = new ((function(){
+  function AIModule(){
+    this.LinkObject = LinkObject;
+    this.messages = [];
+    this.canContinue = true;
+  }
+  AIModule.prototype.when = function(condition, callback){
+    if(condition) callback(this.LinkObject, this);
+    return this;
+  };
+  return AIModule;
 
-    if(LinkObject.needsTrackingCode()&&LinkObject.new.indexOf("optum.co/")==-1){
-      errors.canContinue = false;
-      errors.messages.push(
-        new errorObject("FIX","This URL needs a tracking code.",
-        !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
-          {
-          severity: 'high',
-          handler: function(link){
-            console.log(link);
-            link.overrideTrackingRequirements();
-            link.isLinkComplete();
+})())();
 
-          } ,
-          ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
-        }: {severity: 'high'}));
-    }
+var landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g;
+var extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/gi;
 
+var output = AIModule
+.when(
+  LinkObject.needsTrackingCode()&&LinkObject.new.indexOf("optum.co/")==-1,
+  function(LinkObject, AIModule){
+    AIModule.canContinue = false;
+    AIModule.messages.push(
+      new errorObject("FIX","This URL needs a tracking code.",
+      !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
+        {
+        severity: 'high',
+        handler: function(link){
+          console.log(link);
+          link.overrideTrackingRequirements();
+          link.isLinkComplete();
+        } ,
+        ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
+      }: {severity: 'high'}));
+  })
+.when(
+  /http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new),
+  function(LinkObject, AIModule){
+    AIModule.messages.push(
+      new errorObject(
+        "FIX",
+        "This URL is not correct. /content/optum3/en/ is only for use in author in AEM, not on the live site.",
+        {
+        severity: 'high'
+      }));
+    AIModule.canContinue = false;
+  }
+).when(
+  (jQuery(LinkObject.context).find("img").length ==0 && jQuery(LinkObject.context).text().trim() =="" ) && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender),
+  function(LinkObject, AIModule){
+    AIModule.canContinue = false;
+    AIModule.messages.push(
+      new errorObject("FIX",
+      ["<h4>Missing content</h4>This link doesn't contain any text or image.",
+      "This might be a mistake; you can remove it from",
+      "the code, or by clicking the button to the right,",
+      "and this link will be removed when you export the code."].join(" "),
 
+        {
+        severity: 'high',
+        handler: function(link){
+          link.new = "";
+          link.deleteOnRender = true;
+          link.isLinkComplete();
 
-
-
-
-    if(/http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new)){
-      errors.messages.push(
-        new errorObject("FIX","This URL is not correct. /content/optum3/en/ is only for use in AEM, not on the live site.",
-          {
-          severity: 'high'
-        }));
-      errors.canContinue = false;
-    }
-
-    if((jQuery(LinkObject.context).find("img").length ==0 && jQuery(LinkObject.context).text().trim() =="" ) && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender)){
-      errors.canContinue = false;
-      errors.messages.push(
-        new errorObject("FIX",
-        ["<h4>Missing content</h4>This link doesn't contain any text or image.",
-        "This might be a mistake; you can remove it from",
-        "the code, or by clicking the button to the right,",
-        "and this link will be removed when you export the code."].join(" "),
-
-          {
-          severity: 'high',
-          handler: function(link){
-            link.new = "";
-            link.deleteOnRender = true;
-            link.isLinkComplete();
-
-          } ,
-          ctaLabel:'<i class="trash icon"></i> Remove link'
-        }));
-    }
-
-    if(!LinkObject.isLinkType('mailto')&&LinkObject.new.indexOf(" ")>-1){
-      errors.canContinue = false;
-      errors.messages.push(
-        new errorObject("FIX",
-        ["<h4>Link has spaces</h4>You should not have spaces in your link, either rename the asset so that it does not contain spaces, or convert the spaces to %20s.",
-        ].join(" "),
-        !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
-          {
-          severity: 'high',
-          handler: function(link){
-            link.new = link.new.replace(/\s/g, "%20");
-            link.isLinkComplete();
-          } ,
-          ctaLabel:'<i class="wizard icon"></i> Encode Spaces'
-        }: {severity: 'high'}));
-    }
-
-var duplicateQueryStrings = LinkObject.hasDuplicateQueryStrings()
-    if(LinkObject.queryStrings.length>0&&duplicateQueryStrings){
-        errors.canContinue = false;
-        errors.messages.push(new errorObject("FIX",
-          "It looks like you have duplicate query strings. Pay attention to these parameters: " + duplicateQueryStrings.join(", "),
-          {severity:'high'}
-        ));
-    }
-// is mailto email valid?
-  if(!LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new)){
-    errors.messages.push(new errorObject('FIX',
-      "This is not a valid URL",
-      {
-        severity: "high"
-      }
+        } ,
+        ctaLabel:'<i class="trash icon"></i> Remove link'
+      }));
+  }
+).when(
+  LinkObject.isLinkType('mailto')&&LinkObject.new.indexOf(" ")>-1,
+  function(LinkObject, AIModule){
+    AIModule.canContinue = false;
+    AIModule.messages.push(
+      new errorObject("FIX",
+      ["<h4>Link has spaces</h4>You should not have spaces in your link, either rename the asset so that it does not contain spaces, or convert the spaces to %20s.",
+      ].join(" "),
+      !/\/campaign\/|\/resources\//gi.test(LinkObject.new) ?
+        {
+        severity: 'high',
+        handler: function(link){
+          link.new = link.new.replace(/\s/g, "%20");
+          link.isLinkComplete();
+        } ,
+        ctaLabel:'<i class="wizard icon"></i> Encode Spaces'
+      }: {severity: 'high'}));
+})
+.when(
+  LinkObject.queryStrings.length>0&&LinkObject.hasDuplicateQueryStrings(),
+  function(LinkObject, AIModule){
+    AIModule.canContinue = false;
+    AIModule.messages.push(new errorObject("FIX",
+      "It looks like you have duplicate query strings.\
+       Pay attention to these parameters: " + LinkObject.hasDuplicateQueryStrings().join(", "),
+      {severity:'high'}
     ));
-    errors.canContinue = false;
+  }
+).when(
+  !LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new),
+  function(LinkObject, AIModule){
+    AIModule.messages.push(new errorObject('FIX',
+      "This is not a valid URL",
+      {severity: "high" }
+    ));
+    AIModule.canContinue = false;
+  }
+).when(
+  landingPagePreferred.test(LinkObject.new),
+  function(LinkObject, AIModule){
+
+    var match = LinkObject.new.match(landingPagePreferred);
+    if(match.length>0){
+      var ext = match[0].toUpperCase().substr(1,match[0].length);
+      AIModule.messages.push(new errorObject("BEST PRACTICE",
+        ["<h4>Landing page preferred</h4>When you direct email ",
+        "traffic to ", (/^[aeiouAEIOU]/gi.test(ext) ? "an " : "a "),
+        ext,", it's generally a good idea to serve the ",ext," on",
+        " a landing page with more information about the asset. This will also ",
+        "give you more analytics data, like session/visit duration and promote ",
+        "browsing other content."].join("")
+      ));
+  }
+}
+).when(
+  /.com?(\.[a-z]{2,3})?\/([a-z]*)(\?.*)?$/.test(LinkObject.new.trim()),
+  function(LinkObject, AIModule){
+    AIModule.canContinue == (LinkObject.new.indexOf("optum.co")>-1) ? true : false;
+    AIModule.messages.push(new errorObject("BEST PRACTICE",
+      "<h4>Don't use shortlinks or vanity URLs in emails</h4>\
+      Always use the long link. Adding query string parameter to a vanity\
+       url inside an email will not track appropriately."
+    ));
   }
 
 
-    if(LinkObject.isLinkType('mailto')){
-      //mailto links;
-      LinkObject.initEmailEditor();
-      if(LinkObject.mailto.email===undefined || LinkObject.mailto.email.trim()==""){
-        if(LinkObject.mailto.subject.trim()!=="" && LinkObject.mailto.body.trim()!=="" && (LinkObject.mailto.body.indexOf("https://")>-1||LinkObject.mailto.body.indexOf("http://")>-1)){
-          errors.messages.push(
-            new errorObject("BEST PRACTICE",
-            ["It looks like you're trying to implement a Forward to a ",
-            "Colleague (FTAC) feature. Use the Mailto Editor to adjust ",
-            "your subject line, email body, and link you're including. ",
-            "With an FTAC, don't worry about including a recipient email address.",
-            " The intention is to open a new email with an empty To: line so",
-            " the user can fill it in from his/her address book."].join("")
-          ));
-        } else {
-          errors.messages.push(
-            new errorObject("WARN",
-            "This mailto link does not have an email address set."));
-        }
+).when(
+  LinkObject.context && /click|click\shere/g.test(LinkObject.context),
+  function(LinkObject, AIModule){
+    AIModule.messages.push(new errorObject("BEST PRACTICE",
+      "\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
+    ));
+  }
+).when(
+  LinkObject.linkImage&& LinkObject.linkImage.length>0,
+  function(LinkObject,AIModule){
+    var img = jQuery(LinkObject.context).find("img").get(0);
+    if(img.alt === undefined ||  img.alt == ""){
+      AIModule.messages.push(
+        new errorObject("BEST PRACTICE", "Linked image should have an ALT tag.")
+      );
+    }
+  }
+).when(/^http(.*)#/g.test(LinkObject.new),
+function(LinkObject, AIModule){
+  AIModule.messages.push(new errorObject("SUGGESTION",
+    ["<h4>Email links can't jump.</h4> It looks like you're trying to send traffic to a ",
+    "<em>Jump link</em> AKA <em>Anchor link</em>. The only time that is acceptible is when the destination is on the same page. You see,",
+    " the assumption is that all the content is loaded, but when you click from an email",
+    " into another page with a jump link, you're sending someone to a loading page.",
+    " The page may or may not send them to the location you're intending, or there may be an awkward user experience."].join(""),
+    {
+      handler: function(link){
+        link.removeJumpLink();
+        link.isLinkComplete();
+        window.ga('send', 'event', "Suggestion", "Remove Anchor Link", "Remove Anchor Link");
+      },
+      severity: "suggestion",
+      ctaLabel: "<i class=\"wizard icon\"></i> Fix it"
+    }
+  ));
 
-      } else if(!LinkObject.emailRegex.test(LinkObject.mailto.email.trim())){
-        errors.messages.push(new errorObject(
-          "FIX",
-          "Fix invalid email address.", {severity: 'high'}));
-        errors.canContinue = false;
+}).when(
+  LinkObject.new.indexOf(".oft")>-1,
+  function(LinkObject, AIModule){
+      AIModule.messages.push(new errorObject("BEST PRACTICE",
+        "<h4>We don't link to OFTs in emails we send.</h4>\
+         You should not be sending OFTs to external contacts.\
+          OFTs only work with Outlook on PCs, and that is less\
+           than half of the population of email clients these days."
+      ));
+      AIModule.messages.push(new errorObject("SUGGESTION",
+        "<h4>Forward to a colleague?</h4>\
+        If you are trying to do a Forward to a Colleague (FTAC)\
+         feature, forget doing that with an OFT. You can achieve\
+          the same effect by using a mailto link. <br><br><em>NOTE:\
+           You can leave the email address field blank for this one.\
+            When the user clicks the link the email field will be empty,\
+             so he/she can add their own recipients.</em>",
+        {handler:function(link){
+          link.mailto.email = "";
+          link.mailto.subject = "I wanted you to see this";
+          link.mailto.body = "Check out this link\n\nhttps://www.yourlinkgoeshere.com";
+          // link.new = "mailto:?subject=" +window.encodeURIComponent() + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
+          link.mailto.composeEmail();
+          link.mailto.initEmailEditor();
+          link.mailto.openEditor();
+          // link.refreshURL();
+          link.isLinkComplete();
+
+          window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
+        },
+        severity: "suggestion",
+        ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
       }
-      if(LinkObject.mailto.subject===undefined ||LinkObject.mailto.subject.trim()==""){
-        errors.messages.push(new errorObject(
-          "BEST PRACTICE",
-          "Always include a subject line. You can add a subject line using the Editor button.",
-          {
-            handler: function(link){
-              link.openMailtoEditor();
-              window.ga('send', 'event', "Suggestion", "Add subject line", "Add subject line");
-            },
-            ctaLabel:"<i class=\"wizard icon\"></i> Open Editor"
+    ));
+  }
+).when(extDoesNotrequireTrackingCode.test(LinkObject.new) && LinkObject.hasTrackingCode(),
+function(LinkObject, AIModule){
+  var match = LinkObject.new.match(extDoesNotrequireTrackingCode);
+  if(match.length>0){
+    var ext = match[0].toUpperCase().substr(1,match[0].length);
+    AIModule.messages.push(new errorObject("SUGGESTION",
+      ["<h4>Unnecessary tracking link</h4>It looks like you added a tracking code to ",
+      (/^[aeiouAEIOU]/gi.test(ext) ? "an " : "a ") + ext + " file.",
+      " In fact, you can only track web pages with these tracking codes."].join(""),
+      {handler: function(link){
+        for(var i = 0; i<link.queryStrings.length;i++){
+          if(/[a-z]{1,4}=(.*?:){3,9}/ig.test(link.queryStrings[i])){
+            link.removeQueryAtIndex(i);
           }
-        ));
+          window.ga('send', 'event', "Suggestion", "Unnecessary tracking code", "Remove Tracking Code");
+        }
+        link.updateQueryString();
+        link.refreshURL();
+        link.isLinkComplete();
+      },
+      ctaLabel: "<i class=\"wizard icon\"></i>Fix it now",
+      severity: "suggestion"
+    }
+    ));
+  }
+
+}).when(
+  LinkObject.isLinkType('mailto')&&LinkObject.mailto.has('email')&&!LinkObject.mailto.isValidEmailAddress(),
+  function(LinkObject, AIModule){
+    AIModule.messages.push(new errorObject(
+      "FIX",
+      "Fix invalid email address.", {severity: 'high'}));
+    AIModule.canContinue = false;
+  }
+).when(
+  LinkObject.isLinkType('mailto') && !LinkObject.mailto.has('subject'),
+  function(LinkObject, AIModule){
+    AIModule.messages.push(new errorObject(
+      "BEST PRACTICE",
+      "Always include a subject line. You can add a subject line using the Editor button.",
+      {
+        handler: function(link){
+          link.mailto.openEditor();
+          window.ga('send', 'event', "Suggestion", "Add subject line", "Add subject line");
+        },
+        ctaLabel:"<i class=\"wizard icon\"></i> Open Editor"
       }
+    ));
+
+  }
+).when(
+  LinkObject.isLinkType('mailto')&&!LinkObject.mailto.has('email'),
+  function(LinkObject,AIModule){
+    if(LinkObject.mailto.has('subject')
+    && LinkObject.mailto.has('body')
+    && (LinkObject.mailto.body.indexOf("https://")>-1 || LinkObject.mailto.body.indexOf("http://")>-1)){
+      AIModule.messages.push(
+        new errorObject("BEST PRACTICE",
+        ["It looks like you're trying to implement a Forward to a ",
+        "Colleague (FTAC) feature. Use the Mailto Editor to adjust ",
+        "your subject line, email body, and link you're including. ",
+        "With an FTAC, don't worry about including a recipient email address.",
+        " The intention is to open a new email with an empty To: line so",
+        " the user can fill it in from his/her address book."].join("")
+      ));
     } else {
-
-      var extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/gi;
-      if(extDoesNotrequireTrackingCode.test(LinkObject.new) && LinkObject.hasTrackingCode() ){
-        var match = LinkObject.new.match(extDoesNotrequireTrackingCode);
-        if(match.length>0){
-          var ext = match[0].toUpperCase().substr(1,match[0].length);
-          errors.messages.push(new errorObject("SUGGESTION",
-            ["<h4>Unnecessary tracking link</h4>It looks like you added a tracking code to ",
-            (/^[aeiouAEIOU]/gi.test(ext) ? "an " : "a ") + ext + " file.",
-            " In fact, you can only track web pages with these tracking codes."].join(""),
-            {handler: function(link){
-              for(var i = 0; i<link.queryStrings.length;i++){
-                if(/[a-z]{1,4}=(.*?:){3,9}/ig.test(link.queryStrings[i])){
-                  link.removeQueryAtIndex(i);
-                }
-                window.ga('send', 'event', "Suggestion", "Unnecessary tracking code", "Remove Tracking Code");
-              }
-              link.updateQueryString();
-              link.refreshURL();
-            },
-            ctaLabel: "<i class=\"wizard icon\"></i>Fix it now",
-            severity: "suggestion"
-          }
-          ));
-        }
-
-      }
-
-
-
-
-      var landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g;
-      if (landingPagePreferred.test(LinkObject.new)){
-        var match = LinkObject.new.match(landingPagePreferred);
-        if(match.length>0){
-          var ext = match[0].toUpperCase().substr(1,match[0].length);
-          errors.messages.push(new errorObject("BEST PRACTICE",
-            ["<h4>Landing page preferred</h4>When you direct email ",
-            "traffic to ", (/^[aeiouAEIOU]/gi.test(ext) ? "an " : "a "),
-            ext,", it's generally a good idea to serve the ",ext," on",
-            " a landing page with more information about the asset. This will also ",
-            "give you more analytics data, like session/visit duration and promote ",
-            "browsing other content."].join("")
-          ));
-        }
-
-      } else if(LinkObject.new.indexOf(".oft")>-1){
-        errors.messages.push(new errorObject("BEST PRACTICE",
-          "<h4>You oft not use OFTs.</h4> You should not be sending OFTs to external contacts. OFTs only work with Outlook on PCs, and that is less than half of the population of email clients these days."
-        ));
-        errors.messages.push(new errorObject("SUGGESTION",
-          "<h4>Forward to a colleague?</h4>If you are trying to do a Forward to a Colleague (FTAC) feature, forget doing that with an OFT. You can achieve the same effect by using a mailto link. <br><br><em>NOTE: You can leave the email address field blank for this one. When the user clicks the link the email field will be empty, so he/she can add their own recipients.</em>",
-          {handler:function(link){
-            link.new = "mailto:?subject=" +window.encodeURIComponent("I wanted you to see this") + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
-            link.initEmailEditor();
-            link.openMailtoEditor();
-            link.isLinkComplete();
-
-            window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
-          },
-          severity: "suggestion",
-          ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
-        }
-        ));
-      }
-      if(LinkObject.new.indexOf("optum.co/")>-1){
-        errors.canContinue = false;
-        errors.messages.push(new errorObject("FIX",
-          "We do not use shortlinks in emails. Use the long link instead."
-        ));
-      }
-
-
-
-
-      if(LinkObject.context
-        && /click|click\shere/g.test(LinkObject.context)){
-        errors.messages.push(new errorObject("BEST PRACTICE",
-          "\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
-        ));
-      }
-// jump links
-      if(/^http(.*)#/g.test(LinkObject.new)){
-        errors.messages.push(new errorObject("SUGGESTION",
-          ["<h4>Email links can't jump.</h4> It looks like you're trying to send traffic to a ",
-          "<em>Jump link</em> AKA <em>Anchor link</em>. The only time that is acceptible is when the destination is on the same page. You see,",
-          " the assumption is that all the content is loaded, but when you click from an email",
-          " into another page with a jump link, you're sending someone to a loading page.",
-          " The page may or may not send them to the location you're intending, or there may be an awkward user experience."].join(""),
-          {
-            handler: function(link){
-
-              // link.updateQueryString();
-              link.removeJumpLink();
-              // console.log("NEW LINK", link.new);
-              window.ga('send', 'event', "Suggestion", "Remove Anchor Link", "Remove Anchor Link");
-            },
-            severity: "suggestion",
-            ctaLabel: "<i class=\"wizard icon\"></i> Fix it"
-          }
-        ));
-      }
-
-if(
-  LinkObject.requiresTrackingCode() && LinkObject.hasTrackingCode()){
-    //basically find the links that dont have links and add them in
-
+      AIModule.messages.push(
+        new errorObject("WARN",
+        "This mailto link does not have an email address set."));
+    }
+  }
+).when(
+  LinkObject.requiresTrackingCode() && LinkObject.hasTrackingCode(),
+  function(LinkObject, AIModule){
     var affected = false;
 
     LinkObject._super.mapLinkObjects(function(LO){
@@ -342,7 +383,7 @@ if(
       }
     });
     if(affected){
-      errors.messages.push(new errorObject("WIZARD",
+      AIModule.messages.push(new errorObject("SUGGESTION",
         "<h4>Need a hand?</h4>I noticed you added a tracking code to this link, great job.\
          If you want I can add the same tracking code to the other links in this email \
          which require tracking codes.",
@@ -355,14 +396,18 @@ if(
             }
           });
 
-          link._super.mapLinkObjects(function(LO){
-            if(LO.requiresTrackingCode() && !LO.hasTrackingCode()){
-              LO.queryStrings.push(trackingCode);
-              LO.refreshURL();
-              LO.isLinkComplete();
-              // break;
-            }
-          });
+            link._super.mapLinkObjects(function(LO){
+              if(LO.requiresTrackingCode() && !LO.hasTrackingCode()){
+                LO.queryStrings.push(trackingCode);
+                LO.refreshURL();
+              }
+            });
+
+            link._super.mapLinkObjects(function(LO){ LO.isLinkComplete(); });
+
+
+          // });
+
           link.refreshURL();
           window.ga('send', 'event', "Suggestion", "Cascade Tracking Code", "Cascade Tracking Code");
         },
@@ -371,28 +416,13 @@ if(
       }
       ));
     }
-
-
-
   }
-
-
-
-//s-code?
-if(LinkObject.linkImage&& LinkObject.linkImage.length>0){
-  var img = jQuery(LinkObject.context).find("img").get(0);
-  if(img.alt === undefined ||  img.alt == ""){
-    errors.messages.push(
-      new errorObject("BEST PRACTICE", ["Linked image should have an ALT tag."].join(" ")));
-  }
-}
-
-if(LinkObject.requiresTrackingCode()
+).when(
+  LinkObject.requiresTrackingCode()
   && /resource|campaign/g.test(LinkObject.new)
-  && !LinkObject.hasQueryStringParameter("s")){
-
-
-    errors.messages.push(new errorObject("SUGGESTION",
+  && !LinkObject.hasQueryStringParameter("s"),
+  function(LinkObject,AIModule){
+    AIModule.messages.push(new errorObject("SUGGESTION",
       "<h4>Are you tracking channel source with your form?</h4>If\
        this link directs to a page with a form, consider adding\
         an s-code to the URL so you can populate a form field with\
@@ -404,6 +434,7 @@ if(LinkObject.requiresTrackingCode()
         handler:function(link){
         link.queryStrings.push("s=email");
         link.refreshURL();
+        link.isLinkComplete();
         window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
       },
       severity: 'suggestion',
@@ -411,10 +442,13 @@ if(LinkObject.requiresTrackingCode()
     }
     ));
   }
+)
+  ;
 
 
-    }
-      return errors;
+
+
+      return output;
 
     } : window.EMLMaker_LinkAIEngine;
 
@@ -465,6 +499,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
     function ErrorObject(type, message, args){
 
       if(args===undefined) args = {};
+      this.type = type;
       this.handler = args.handler ===undefined ? function(){} : args.handler;
       this.ctaLabel = args.ctaLabel === undefined ? "" : $sce.trustAsHtml(args.ctaLabel);
       this.severity = args.severity === undefined ? "low" : args.severity;
@@ -473,6 +508,193 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
     ErrorObject.prototype.clear = function(){};
     return ErrorObject;
   })();
+
+  this.MailtoLinkObject = /**@class*/ (function(){
+    function MailtoLinkObject(LinkObject){
+      this.parent = LinkObject;
+      this.email = "";
+      this.subject = "";
+      this.body = "";
+
+      if(this.parent.isLinkType('mailto')){
+        this.initEmailEditor();
+      }
+    }
+    MailtoLinkObject.prototype.has = function(option){
+      return this[option] && this[option].trim()!=="";
+    };
+    MailtoLinkObject.prototype.isValidEmailAddress = function(){
+      return this.parent.emailRegex.test(this.email);
+    };
+    MailtoLinkObject.prototype.deinitEmailEditor = function(){
+      this.email = "";
+      this.subject = "";
+      this.body = "";
+    };
+    MailtoLinkObject.prototype.composeEmail = function () {
+      this.parent.new = "mailto:" + this.email;
+      var params = new URLSearchParams();
+      var options = ["subject","body"];
+      for(var i =0; i<options.length; i++){
+        if(this[options[i]] && this[options[i]] !== "") {
+          params.set(options[i], this[options[i]]);
+        }
+      }
+      this.parent.new = (params.toString().length>0 ? this.parent.new + "?" + params.toString() : this.parent.new );
+    };
+    MailtoLinkObject.prototype.openEditor = function () {
+      this.initEmailEditor();
+      jQuery("html,body").animate({scrollTop: jQuery('#link-'+this.parent.id).offset().top - 75}, 300);
+      var LO = this.parent;
+      setTimeout(function(){
+        window.jQuery("#link-"+LO.id).find(".mailtoEditor").popup("show");
+      },400);
+    };
+    MailtoLinkObject.prototype.initEmailEditor = function () {
+      var a = this.parent.new.substr(7, this.parent.new.length-7);
+      var b = a.split("?");
+
+      this.email = b[0];
+      if(b.length>1){
+        var params = new URLSearchParams(b[1]),
+            MLO = this;
+        ["subject","body"].forEach(function(option){
+          if(params.has(option)){
+            MLO[option] = params.get(option);
+          }
+        });
+      }
+    };
+    return MailtoLinkObject;
+  })();
+
+
+  this.URLObj = /**@class*/ (function(){
+    function URLObj(url){
+      this.href = "";
+      this.search = "";
+      this.origin = "";
+      this.hash = "";
+      this.url = url;
+
+      this.searchParams = new ((function(){
+        function searchParams(URLObj){
+          this._entries = [];
+          this.parent = URLObj;
+        }
+        searchParams.prototype.has = function(param){
+          var regex = new RegExp("^" + param + "\=","g");
+          var output = false;
+          for(var i=0;i<this.entries.length;i++){
+            if(regex.test(this.entries[i])) output = true;
+          }
+          return output;
+        };
+        searchParams.prototype.get = function(param){
+          var regex = new RegExp("^" + param + "\=","g"),
+              output = false;
+          for(var i=0;i<this.entries.length;i++){
+            if(regex.test(this.entries[i])) {
+              output = (this.entries[i].split("=")).pop();
+            }
+          }
+          return output;
+        };
+        searchParams.prototype.set = function(param, value){
+          var regex = new RegExp("^" + param + "\=","g"),
+              output = false;
+          for(var i=0;i<this.entries.length;i++){
+            if(regex.test(this.entries[i])) {
+              this.entries[i] = param + "=" + value;
+              output = true;
+            }
+          }
+          if(!output){
+            this.append(param + "=" + value);
+          }
+        };
+        searchParams.prototype.append = function(valuePair){
+          this.entries.push(valuePair);
+        };
+        searchParams.prototype.delete = function(param){
+          //wont really do this ever
+        };
+        Object.defineProperty(searchParams.prototype, "entries", {
+          set: function(val){
+            this._entries = val;
+            var output = [];
+            for(var i =0;i<this._entries.length;i++){
+              output.push(encodeURIComponent(his._entries[i]));
+            }
+
+            this.parent.search = "?"+output.join("&");
+            console.log(this.parent.search);
+          },
+          get: function(){
+            return this._entries;
+          },
+          enumerable: true,
+          configurable: true
+        });
+
+        return searchParams;
+      })(this));
+
+    }
+
+    URLObj.prototype.prepareExport = function(){
+      //finalize query strings;
+      //search could also be a getter;
+    };
+    Object.defineProperty(URLObj.prototype, "url", {
+      get: function(){
+        this.prepareExport();
+        return this.origin + this.search + this.hash;
+      },
+      set: function(url){
+        this.href = url;
+        if(url.trim()=="#"){
+          this.hash = "#";
+        }
+        else if(url.trim().length>1 && url.indexOf("#")>-1){
+          var urlParts = url.split("#");
+          this.hash = "#" + urlParts.pop(); //jump link.. need to remove it from the other stuff.
+          var parts = (urlParts.join("#")).split("?");
+          this.origin = parts[0];
+          this.search = parts.length>0 ? "?"+parts[1]:"";
+        }
+        else {
+
+          if(url.indexOf("?")>-1){
+            var parts = url.split("?");
+            this.origin = parts[0];
+            this.search = (parts.length > 0) ? "?"+parts[1]:"";
+          } else {
+            this.origin = url;
+          }
+
+        }
+        return url;
+      },
+      enumerable: true,
+      configurable:true
+    });
+    // Object.defineProperty(URLObj.prototype, "search", {
+    //   get: function(){
+    //     return "?"+this.searchParams.entries.join("&");
+    //   },
+    //   set: function(url){
+    //     this.
+    //     return
+    //   },
+    //   enumerable: true,
+    //   configurable:true
+    // });
+
+
+    return URLObj;
+  })();
+
 
   this.LinkObject = /**@class*/ (function(){
     function LinkObject(line, context, parent) {
@@ -484,13 +706,14 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
         'optum.webex.com','twitter.com','facebook.com','linkedin.com'
       ];
+
       this.line = line + 1;
       this.context = context;
       this.queryStrings = [];
       this.errors = [];
       this.id = 0;
       this.whiteListedUrl = "~~whitelist~~";
-      this.mailto = {email:"", subject: "", body:""};
+
       this.urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
       this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -499,48 +722,50 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if(href.length>0){
 
         if(href[0]=="href=\"\"") {
-          LO.new =  (LO.old = "");
+          LO.new =  (LO.old = "#");
         } else {
           LO.new = (LO.old = href[0].substr(6, href[0].length-7)).trim();
         }
 
+          var url = new self.URLObj(LO.new);
+          if(url.search.length>0){
+            var searchParams = new URLSearchParams(url.search);
+            for(var pair of searchParams.entries()) {
+              LO.queryStrings.push(pair[0]+ '='+ pair[1]);
+            }
+          }
 
-        var parts = LO.new.split("?");
-        LO.queryStrings = parts.length > 1 ? parts[1].split("&") : [];
+
       }
+
+      //find image
       if(/src=\"(.*?)\"/.test(context)){
         var found = context.match(/src=\"(.*?)\"/);
         if(found.length>0){
           LO.linkImage = found[1];
         }
       }
-      if(this.isLinkType('mailto')){
-        this.initEmailEditor();
-      }
+
+
+      //need to set the url before you do this;
+      this.mailto = new self.MailtoLinkObject(this);
       this.isLinkComplete();
-
-
     }
-    Object.defineProperty(LinkObject, 'defaultScode', {
-      get: function(){
-        return this.defaultScode;
-      },
-      set: function(val){
-        this.defaultScode = val;
-        console.log('you set defaultScode');
-      }
-    });
+
     LinkObject.prototype.hasDuplicateQueryStrings = function(){
-      var result = []; var usedStrings = [];
-      if(this.queryStrings.length>0){
-        for (var i = 0; i<this.queryStrings.length;i++){
-          var b = (this.queryStrings[i].split("=")).shift();
-          if(usedStrings.indexOf(b)>-1 && result.indexOf(b)==-1){
-            result.push(b);
+      var result = [],usedStrings = [];
+
+      var url = new self.URLObj(this.new);
+      if(url.search.length>0){
+        var searchParams = new URLSearchParams(url.search);
+        for(var a of searchParams.entries()){
+          if(usedStrings.indexOf(a[0])>-1){
+            result.push(a[0]);
           }
-          usedStrings.push(b);
+          usedStrings.push(a[0]);
         }
       }
+
       if(result.length>0){
         return result;
       } else {
@@ -564,25 +789,18 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       } else {
         var parts = this.new.split("?");
       }
-
-
       this.queryStrings = parts.length >1 ? parts[1].split("&") : [];
     };
-    LinkObject.prototype.refreshURL = function(){
-
-      if(this.new.indexOf("#")>-1){
-        var urlParts = this.new.split("#");
-        var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
-        var parts = (urlParts.join("#")).split("?");
-      } else {
-        var parts = this.new.split("?");
+    LinkObject.prototype.hasQueryStringParameter = function(id){
+      var output = false;
+      if(this.queryStrings.length>0){
+        for(var i = 0;i<this.queryStrings.length;i++){
+          if(this.queryStrings[i].substr(0,id.length+1)== id + "="){
+            output = this.queryStrings[i];
+          }
+        }
       }
-
-      var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
-      var hasJumpLink = this.new.indexOf("#")>1;
-      this.new = parts[0] + (strs=="" ? "" : "?"+strs) ;
-      if(hasJumpLink) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
-      this.isLinkComplete();
+      return output;
     };
     LinkObject.prototype.removeJumpLink = function(){
       var parts = this.new.split("?");
@@ -612,68 +830,26 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       content = $sce.trustAsHtml(content);
       return content;
     };
-    LinkObject.prototype.composeEmail = function(){
-      if(this.mailto === undefined) this.mailto = {"email":"" };
-      this.new = "mailto:" + this.mailto.email;
-      var params = [];
-      var options = ["subject","body"];
-      for(var i =0; i<options.length; i++){
-        if(this.mailto[options[i]] && this.mailto[options[i]] !== "") {
-          params.push(options[i]+"="+ window.encodeURIComponent(this.mailto[options[i]]));
-        }
-      }
-      this.new = (params.length>0 ? this.new + "?" + params.join("&") : this.new );
-    };
-    LinkObject.prototype.deinitEmailEditor = function(){
-      this.mailto = {};
-    };
-    LinkObject.prototype.initEmailEditor = function(){
-      if(this.mailto === undefined) this.mailto = {};
-      var a = this.new.substr(7, this.new.length-7);
-      var b = a.split("?");
 
-      this.mailto.email = b[0];
-      if(b.length>1){
-        var params = b[1].split("&");
-        for(var n = 0; n<params.length; n++){
-          var c = params[n].match(/subject=([^&]*)/g);
-          if(c){
-            this.mailto.subject = window.decodeURIComponent(c[0].substr(8,c[0].length-8));
-          }
-          var d = params[n].match(/body=([^&]*)/g);
-          if(d){
-            this.mailto.body = window.decodeURIComponent(d[0].substr(5,d[0].length-5));
-          }
-        }
-      }
-
-
-    };
 
     LinkObject.prototype.isLinkComplete = function(){
-      output = true;
 
-      this.errors = [];
-
+      this.errors = {
+        count: {},
+        data: []
+      };
       var errors = window.EMLMaker_LinkAIEngine(this, self.errorObject );
-      this.errors = errors.messages;
-
-
+      this.errors.data = errors.messages;
+      for(var i =0;i<errors.messages.length;i++){
+        if(this.errors.count[errors.messages[i].type] === undefined) this.errors.count[errors.messages[i].type] = 0;
+        this.errors.count[errors.messages[i].type]++;
+      }
+      // console.log(this.errors);
       this.__isComplete= errors.canContinue;
       if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
       return this.__isComplete;
     };
-    LinkObject.prototype.hasQueryStringParameter = function(id){
-      var output = false;
-      if(this.queryStrings.length>0){
-        for(var i = 0;i<this.queryStrings.length;i++){
-          if(this.queryStrings[i].substr(0,id.length+1)== id + "="){
-            output = this.queryStrings[i];
-          }
-        }
-      }
-      return output;
-    };
+
     LinkObject.prototype.isLinkType = function(type){
       var output = false;
       switch (type) {
@@ -692,15 +868,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       }
       return output;
     };
-    LinkObject.prototype.openMailtoEditor = function(){
-      this.initEmailEditor();
-      jQuery("html,body").animate({scrollTop: jQuery('#link-'+this.id).offset().top - 75}, 300);
-      var LO = this;
-      setTimeout(function(){
-        window.jQuery("#link-"+LO.id).find(".mailtoEditor").popup("show");
-      },400);
 
-    };
     LinkObject.prototype.hasTrackingCode = function(obj){
       if(obj===undefined) obj = this.new;
       // if(this.whiteListedUrl==this.new) return true;
@@ -719,9 +887,6 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
             if(this.new.indexOf(this.__requiredTrackingCodeWhitelist[i])>-1) { output = false; }
           }
         }
-
-
-
       }
       return output;
     };
@@ -735,15 +900,36 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
       return output;
       };
+    LinkObject.prototype.refreshURL = function(){
+
+      if(this.new.indexOf("#")>-1){
+        var urlParts = this.new.split("#");
+        var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
+        var parts = (urlParts.join("#")).split("?");
+      } else {
+        var parts = this.new.split("?");
+      }
+
+      var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
+      var hasJumpLink = this.new.indexOf("#")>1;
+      this.new = parts[0] + (strs=="" ? "" : "?"+strs) ;
+      if(hasJumpLink) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
+      this.isLinkComplete();
+    };
+
     return LinkObject;
   })();
 
+
+
   this.EMLWorkspace = /**@class*/ (function(){
-    function Workspace(html){
+    function Workspace(html, $scope){
       if( html === undefined) html = "";
+      if( $scope === undefined) $scope = "";
 
       var Workspace = this;
       this.buffer = null;
+      this.scope = $scope;
       this.linksView = 'experimental'; //advanced shows all
       this.sourceCode = html; //inital
       this.outputCode = ""; //final
@@ -769,9 +955,11 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
     }
     Workspace.prototype.mapLinkObjects = function(callback){
-      for(var i=0; i<this.linkData.length; i++){
-        callback(this.linkData[i]);
-        }
+      if(this.linkData.length>0){
+        for(var i=0; i<this.linkData.length; i++){
+          callback(this.linkData[i]);
+          }
+      }
       };
     Workspace.prototype.composeEML = function(){
       location.href= "#/export-compose-eml";
@@ -919,7 +1107,6 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
         this.outputCode = this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
       } catch(e){
-        console.log(e);
         console.log("error merging lines with links that previously had punctuation.");
       }
 
@@ -940,32 +1127,16 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
     };
     Workspace.prototype.areLinksComplete = function(){
-      if (this.linkData.length ==0) return true;
       var output = true;
-      // clearTimeout(this.linksCompleteDecayTimer);
-      // var Wksp= this;
-      // this.linksCompleteDecayTimer = setTimeout(function(){
-      //   if(Wksp.linksCompleteDecay)
-      //   delete Wksp.linksCompleteDecay;
-      //   // this.scope.$apply();
-      // },300);
-      // if(this.linksCompleteDecay !== undefined) console.log('fromlinkdecay');
-      // if(this.linksCompleteDecay !== undefined) return this.linksCompleteDecay;
+      this.mapLinkObjects(function(LinkObject){
+        if(!LinkObject.__isComplete){
+          output = false;
+        }
+        if(LinkObject.needsTrackingCode()){
+          output = false;
+        }
+      });
 
-
-
-      if(this.linkData.length>0) {
-        // console.log('isLinkComplete');
-        this.linkData.forEach(function(link){
-            if(!link.__isComplete){
-              output = false;
-            }
-            if(link.needsTrackingCode()){
-              output = false;
-            }
-        });
-      }
-      // this.linksCompleteDecay = output;
       return output;
     };
     Workspace.prototype.getLinksSummary = function(){
@@ -973,9 +1144,9 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         needsTracking: 0,
         invalidUrl: 0
       };
-      this.linkData.forEach(function(link){
-        if(link.needsTrackingCode()) data.needsTracking++;
-        if(link.isLinkComplete()) data.invalidUrl++;
+      this.mapLinkObjects(function(LinkObject){
+        if(LinkObject.needsTrackingCode()) data.needsTracking++;
+        if(LinkObject.isLinkComplete()) data.invalidUrl++;
       });
       return data;
     };
@@ -1603,15 +1774,37 @@ angular.module('EMLMaker')
   '$UserManagement',
   function($scope, saveAs, $EMLModule, $routeParams, $UserManagement){
 
-  // $scope.sessionToken = 0;
 
   $scope.update_version = false;
+  $scope.update_forced = false;
+  $scope.offlineVersion = window.OFFLINE_VERSION;
+  $scope.onlineVersion = window.CURRENT_VERSION;
   $scope.accessingFromOffline = false;
+
+
+  var forceUpdate = function(offline, online){
+    var offlineVersion = offline.split("."),
+    onlineVersion = online.split("."),
+    match = 0, output = false;
+    for(var i=0; i<onlineVersion.length;i++){
+      if(onlineVersion[i]== offlineVersion[i]) match++;
+    }
+    if(match<3){
+      output = true;
+    }
+    return output;
+  };
+
   if(window.OFFLINE_VERSION&&!window.LOCALHOST){ $scope.accessingFromOffline = true; }
-  if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){$scope.update_version = true;  }
+  if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
+    $scope.update_version = true;
+    $scope.update_forced = forceUpdate(window.OFFLINE_VERSION, window.CURRENT_VERSION);
+  }
+
+
 
   $scope.sessionUserEmail = "";
-  $scope.versionNumber = "1.1.0";
+  $scope.versionNumber = window.CURRENT_VERSION;
   $scope.navigateTo = function( section){
     var s = {
       'main':0,
@@ -1628,7 +1821,7 @@ angular.module('EMLMaker')
   };
 
   $scope.blankSlate = function(){
-    $scope.workspace = new $EMLModule.EMLWorkspace();
+    $scope.workspace = new $EMLModule.EMLWorkspace("", $scope);
   };
 
   //only load once!
@@ -1794,6 +1987,69 @@ angular.module('EMLMaker')
 
 }]);
 
+angular.module('EMLMaker')
+.directive('messageCenter', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div><div class="ui tiny secondary pointing menu">\
+    <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{messages.data.length}}</span></a>\
+    <a class="item" ng-show="messages.count.FIX" ng-click="search.type=\'FIX\'" ng-class="{active: search.type==\'FIX\'}">Fix <span class="ui tiny red label">{{messages.count.FIX}}</span></a>\
+    <a class="item" ng-show="messages.count.SUGGESTION" ng-click="search.type=\'SUGGESTION\'" ng-class="{active: search.type==\'SUGGESTION\'}">Suggestions <span class="ui tiny label">{{messages.count.SUGGESTION}}</span></a>\
+    <a class="item" ng-show="messages.count[\'BEST PRACTICE\']" ng-click="search.type=\'BEST PRACTICE\'" ng-class="{active: search.type==\'BEST PRACTICE\'}">Best Practices <span class="ui tiny label">{{messages.count[\'BEST PRACTICE\']}}</span></a></div>\
+    <div id="error-messages-list" class="ui divided list"><message-item item="item" class="item" ng-repeat="obj in messages.data | filter: search" error="obj"></message-item></div>\
+    </div>',
+    scope: {messages:"=", item:"="},
+    link: function(scope, el, attr){
+      $timeout(function(){
+        scope._search = {type: ""};
+        var View = (function(View){
+          View[View["DEFAULT"]=0] = "DEFAULT";
+          View[View["EDIT"]=1] = "EDIT";
+          return View;
+        })({});
+        scope.view = View.DEFAULT;
+
+        Object.defineProperty(scope, "search", {
+          get: function(){
+            if(scope.messages.count[scope._search.type]==undefined) scope._search.type = "";
+            return scope._search;
+          }
+        });
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
+angular.module('EMLMaker')
+.directive('messageItem', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div ng-show="error.ctaLabel!==\'\'" style="margin-top: .5em; float:right">\
+      <div class="ui small compact" ng-class="{\'violet button\':error.severity==\'suggestion\',\'red button\': error.severity==\'high\', \'orange button\': error.severity==\'warn\', \'grey button\': error.severity==\'low\'}" \
+      ng-click="error.handler(item)" ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
+      </div>\
+      <div class="content" ng-bind-html="error.message" ng-class="{\'red-color\': error.severity==\'high\'}">{{error.message}}</div>\
+    </div>',
+    scope: {error: "=", item:"="},
+    link: function(scope, el, attr){
+      $timeout(function(){
+
+        
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
 angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
   return {
@@ -1820,6 +2076,49 @@ angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
 }]);
 
+angular.module('EMLMaker')
+.directive('queryStringEditor', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div class="query-string-editor"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
+    <div class="ui tiny basic buttons" style="float:right;">\
+  <button class="ui icon button" ng-click="item.removeQueryStrings()">Remove all</button>\
+  <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
+</div></div>\
+     <div ng-if="item.queryStrings.length==1&&item.queryStrings[0].length==0">Query strings will appear here.</div>\
+      <div ng-show="view==1">\
+      <div style="margin-bottom:.5em;" class="ui action input" ng-if="str.length>0" ng-repeat="str in item.queryStrings track by $index">\
+      <input type="text" ng-keyup="item.refreshURL()" ng-model="item.queryStrings[$index]"/>\
+      <button class="ui icon button" ng-click="item.removeQueryAtIndex($index)">\
+      Remove</button></div>\
+      </div>\
+      <div ng-show="view==0">\
+      <ul class="tags-layout">\
+       <li ng-if="str.length>0" ng-repeat="str in item.queryStrings track by $index">\
+       {{str}} <a href="javascript:angular.noop()" ng-click="item.removeQueryAtIndex($index)">\
+       <i class="close icon"></i></a></li></ul>\
+       </div>\
+      </div>',
+    scope: {item:"="},
+    link: function(scope, el, attr){
+      $timeout(function(){
+        var View = (function(View){
+          View[View["DEFAULT"]=0] = "DEFAULT";
+          View[View["EDIT"]=1] = "EDIT";
+          return View;
+        })({});
+        scope.view = View.DEFAULT;
+
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
 angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout){
 
   return {
@@ -1835,12 +2134,8 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
           var id = jQuery(el).attr("id").split("-").pop();
           scope.$apply(function(){
             scope.activeLinkId =id*1;
-            console.log(id*1);
+
           });
-
-
-
-          console.log($(el).attr("id"));
 
         };
         jQuery(el).visibility({
@@ -1903,12 +2198,12 @@ angular.module('EMLMaker')
             template: "<style type=\"text/css\">\n    body { background-color: #DADADA; background-image: url(assets/bg.png); background-repeat:no-repeat; background-position: top right;}\n    body > .grid { height: 100% !important; }\n    .image { margin-top: -100px; }\n    .column {max-width: 450px; }\n    ng-view{height:100%;}\n  </style><div class=\"ui middle aligned center aligned grid\" style=\"height: 100%;\">\n  <div class=\"column\">\n    <h2 class=\"ui blue center aligned image header\">\n      <img class=\"ui image\" src=\"assets/logo128.png\" class=\"logo\"/>\n      <div class=\"content\">\n      {{ SecureGateway.loginTimer ? \"Logging you in to EML Maker ...\" : \"EML Maker\"}}\n      <div class=\"sub header\">Version {{versionNumber}}</div>\n      </div>\n    </h2>\n    <form class=\"ui large form\">\n      <div>\n        <div class=\"field\">\n          <div class=\"ui left icon input\" ng-class=\"{disabled: SecureGateway.loginTimer}\">\n            <i class=\"user icon\"></i>\n\n            <input type=\"text\" placeholder=\"Enter your email address\" ng-model=\"SecureGateway.sessionUserEmail\" >\n\n          </div>\n        </div>\n        <i class=\"circular help icon link\" ui-popup popup-id=\"help-popup\"></i>\n        <div class=\"ui large blue button\" ng-if=\"!SecureGateway.loginTimer\" ng-click=\"SecureGateway.sessionUpdateUserEmail(SecureGateway.sessionUserEmail)\">Login</div>\n        <div class=\"ui large blue button\" ng-if=\"SecureGateway.loginTimer\" ng-click=\"SecureGateway.loginAsOther()\">Cancel login</div>\n        <div class=\"ui small inline loader\" ng-class=\"{active: SecureGateway.loginTimer}\"></div>\n      </div>\n\n      <div class=\"ui red message\" ng-if=\"SecureGateway.errorMessage\">{{errorMessage}}</div>\n      <div class=\"ui popup\" id=\"help-popup\" ng-if=\"!SecureGateway.loginTimer\" style=\"text-align: left;\">\n      <div class=\"header\">Great news: You do not need a password.</div>\n      <div class=\"content\" style=\"width:330px\">\n      However, you will have to provide a valid email address before using EML Maker. You should only need to do this one time; Your email address will be stored in your browser and used to log you in next time. If you clear your cache or your browser loses your saved email address, you will need to input it again. Your email address is not tracked or saved in Google Analytics, a hash is generated and identifies you as a single user across browsers and dynamic IP Addresses.\n      </div>\n      </div>\n    </form>\n\n\n  </div>\n</div>"
         })
             .when('/offline', {
-            template: "\n    <a href=\"javascript:history.back()\"><i class=\"arrow left icon\"></i> Go back</a>\n      <h1>Using EML Maker offline</h1>\n      <p>Let's face it. EML Maker has had some down time.\n      And, it was difficult to come up with a perfect solution, but this new feature is very close.</p>\n\n      <h2>What you need to do:</h2>\n      <p>You'll want to download the zip file, extract its contents into a safe folder on your computer.</p>\n\n      <p>You bookmark that file on your computer, in your browser. The offline version of EML Maker has the right\n      equipment to run directly from your machine without accessing the online version.</p>\n\n      <p>BUT, the best version is always the most up-to-date; so, what the offline version will do: it will ping the online version and see if it can access it.\n      If it can access the online version it will redirect you there. So, everyone wins.</p>\n\n      <p>If you have the \"old version\" of EML Maker saved locally on your computer, EML Maker will tell you the next time you access the online version that there is a new version available,\n      and you'll simply need to overwrite the file you downloaded on your computer with a new one.</p>\n\n      <div ng-if=\"!accessingFromOffline\"><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Install Now</a></div>\n      <div ng-if=\"update_version\" ><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a></div>\n    "
+            template: "\n    <a href=\"javascript:history.back()\"><i class=\"arrow left icon\"></i> Go back</a>\n      <h1>Using EML Maker offline (BETA)</h1>\n      <p>Let's face it. EML Maker has had some down time.\n      And, it was difficult to come up with a perfect solution, but this new feature is very close.</p>\n\n      <h2>What you need to do:</h2>\n      <p>You'll want to download the zip file, extract its contents into a safe folder on your computer.</p>\n\n      <p>You bookmark that file on your computer, in your browser. The offline version of EML Maker has the right\n      equipment to run directly from your machine without accessing the online version.</p>\n\n      <p>BUT, the best version is always the most up-to-date; so, what the offline version will do: it will ping the online version and see if it can access it.\n      If it can access the online version it will redirect you there. So, everyone wins.</p>\n\n      <p>If you have the \"old version\" of EML Maker saved locally on your computer, EML Maker will tell you the next time you access the online version that there is a new version available,\n      and you'll simply need to overwrite the file you downloaded on your computer with a new one.</p>\n\n      <div ng-if=\"!accessingFromOffline\"><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Install Now</a></div>\n      <div ng-if=\"update_version\" ><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a></div>\n    "
         })
             .when('/main', {
-            template: "\n\n    <div class=\"ui icon message\" ng-if=\"!accessingFromOffline\">\n    <i class=\"info circle icon\"></i>\n\n    <div class=\"content\">\n    <div class=\"header\">You can now use EML Maker offline.</div>\n      Get EML Maker now with (hopefully) ZERO downtime.\n      <a href=\"#/offline\">Learn more <i class=\"arrow right icon\"></i></a>\n      </div>\n      </div>\n\n\n\n    <div class=\"ui warning icon message\" ng-if=\"update_version\" style=\"align-items:flex-start;\">\n    <i class=\"warning sign icon\"></i>\n      <div class=\"content\">\n      <div class=\"header\">Update to latest version</div>\n      It looks like you have an older version of EML Maker that you are running on your local machine. If you'd like to use the most up to date version and make this message go away, you should update your version today.\n      <div style=\"padding-top:.5em;\">\n      <a href=\"prod/single/EML_Maker_Offline.zip\" target=\"_blank\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a>\n      <a href=\"#/offline\" class=\"ui primary compact button\" >Learn more</a>\n      </div>\n      </div>\n    </div>\n\n    <div class=\"ui form\">\n\n\n\n\n      <div class=\"field\">\n        <label>HTML Source Code</label>\n        <div ace-editor class=\"aceEditor\" id=\"editor\" editor-id=\"editor\" >{{workspace.sourceCode}}</div>\n\n        <file-dropper ondrop=\"workspace.importHtmlFromFileDrop(evt)\" label=\"Drop file here to import html\"></file-dropper>\n        </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n\n        <button class=\"ui button\" ng-click=\"blankSlate()\">Clear</button>\n        <button class=\"ui right floated primary button\" ng-click=\"workspace.processHtml()\">Continue <i class=\"ui long arrow right icon\"></i></button>\n        </div>\n      </div>\n      </div>"
+            template: "\n\n    <div class=\"ui icon message\" ng-if=\"!accessingFromOffline\">\n    <i class=\"info circle icon\"></i>\n\n    <div class=\"content\">\n    <div class=\"header\">You can now use EML Maker offline. (BETA)</div>\n      Get EML Maker now with (hopefully) ZERO downtime.\n      <a href=\"#/offline\">Learn more <i class=\"arrow right icon\"></i></a>\n      </div>\n      </div>\n\n    <div class=\"ui warning icon message\" ng-if=\"update_version&&update_forced\" style=\"align-items:flex-start;\">\n    <i class=\"warning sign icon\"></i>\n      <div class=\"content\">\n      <div class=\"header\">Update to version {{onlineVersion}}.</div>\n      It looks like you are using version {{offlineVersion}} of EML Maker offline. If you'd like to use the most up to date version and make this message go away, you should download the latest version today.\n      <div style=\"padding-top:.5em;\">\n      <a href=\"prod/single/EML_Maker_Offline.zip\" target=\"_blank\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a>\n      <a href=\"#/offline\" class=\"ui primary compact button\" >Learn more</a>\n      </div>\n      </div>\n    </div>\n\n    <div class=\"ui form\">\n\n\n\n\n      <div class=\"field\">\n        <label>HTML Source Code</label>\n        <div ace-editor class=\"aceEditor\" id=\"editor\" editor-id=\"editor\" >{{workspace.sourceCode}}</div>\n\n        <file-dropper ondrop=\"workspace.importHtmlFromFileDrop(evt)\" label=\"Drop file here to import html\"></file-dropper>\n        </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n\n        <button class=\"ui button\" ng-click=\"blankSlate()\">Clear</button>\n        <button class=\"ui right floated primary button\" ng-click=\"workspace.processHtml()\">Continue <i class=\"ui long arrow right icon\"></i></button>\n        </div>\n      </div>\n      </div>"
         }).when('/links', {
-            template: "\n    <div style=\"float:right\">\n    <span style=\"display:inline-block;font-weight:bold; padding-right: 1em\">View </span>\n    <div class=\"ui mini compact menu\">\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='experimental'}\" ng-click=\"workspace.linksView='experimental'\">Experimental</a>\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='advanced'}\" ng-click=\"workspace.linksView='advanced'\">Advanced</a>\n    </div>\n    </div>\n    <h1>{{workspace.linkData.length>0 ? \"Review Links\" : \"Review\"}}</h1>\n    <p ng-if=\"workspace.linkData.length>0\">This section will find and replace the urls.</p>\n\n    <div ng-if=\"workspace.linkData.length==0\">\n\n\n\n    <div class=\"ui warning icon message\">\n  <i class=\"warning sign icon\"></i>\n  <div class=\"content\">\n    <div class=\"header\">\n      Did not find any links\n    </div>\n    <p>Although you can export your EML without links, if you intended to include links, you'll want to go back and make sure you've included some.</p>\n  </div>\n</div><br/>\n      </div>\n\n\n<div class=\"ui grid\">\n<div class=\"eleven wide column\">\n    <div class=\"ui form\">\n\n      <div ng-repeat=\"item in workspace.linkData\" class=\"field\" id=\"link-{{$index+1}}\" scrollspy>\n\n\n      <h4 class=\"ui horizontal divider header\">Link {{$index+1}}</h4>\n      <div class=\"link-section\" ng-class=\"{forRemoval:item.deleteOnRender, orange: item.needsTrackingCode(), green: item.hasTrackingCode()}\">\n        <div class=\"ui blue message\" ng-if=\"workspace.linksView=='advanced'||!item.__isComplete\" style=\"min-height:3.25em;\"><div class=\"old-url\"><strong>URL:</strong> <div class=\"url\">{{item.old}}&nbsp;</div></div></div>\n        <div class=\"ui message context\">\n          <div ><span class=\"line\"><i class=\"red cancel icon\" ng-if=\"item.deleteOnRender\"></i>{{item.line}}:</span> <div class=\"code prettyprint lang-js\" prettify ng-bind-html=\"item.displayFormattedURL()\"></div></div>\n        </div>\n        <div ng-if=\"item.linkImage&&(workspace.linksView=='advanced'||!item.__isComplete)\" class=\"ui message context\" style=\"background:#fff !important; min-height:90px\">\n          <div >\n          <span class=\"line\">Linked image preview:</span>\n\n          <div class=\"code\" style=\"background-image: url(assets/grid_bg.png);\">\n          <img ng-src=\"{{item.linkImage}}\" style=\"max-width:100%;\"/>\n          </div>\n          </div>\n          </div>\n\n        <div class=\"field\" ng-class=\"{error: !item.__isComplete}\" ng-if=\"!item.isLinkType('mailto')\">\n        <label>{{workspace.linksView=='experimental'&&item.__isComplete ? \"URL\" : \"New URL\" }}</label>\n        <input type=\"text\" ng-hide=\"item.deleteOnRender\" ng-model=\"item.new\" ng-keyup=\"item.updateQueryString();item.isLinkComplete()\" ng-blur=\"item.updateQueryString()\"/>\n        <div ng-show=\"item.deleteOnRender\">{{item.old==\"\"? \"Blank link\" : item.old}}</div>\n        <div ng-hide=\"item.deleteOnRender\" ng-if=\"item.queryStrings.length>0\" class=\"query-string-editor\">\n        <strong>QUERY STRING EDITOR</strong> <a href=\"javascript:angular.noop()\" style=\"float:right;\" ng-click=\"item.removeQueryStrings()\">Remove all</a>\n        <div ng-if=\"item.queryStrings.length==1&&item.queryStrings[0].length==0\">Query strings will appear here.</div>\n          <ul class=\"tags-layout\">\n          <li ng-if=\"str.length>0\" ng-repeat=\"str in item.queryStrings track by $index\">{{str}} <a href=\"javascript:angular.noop()\" ng-click=\"item.removeQueryAtIndex($index)\"><i class=\"close icon\"></i></a></li>\n          </ul>\n          </div>\n\n\n        </div>\n        <div ng-if=\"item.isLinkType('mailto')\" mailto-link-editor>\n        <div class=\"ui field\" >\n        <label>New Email Link</label>\n          <div class=\"ui action input\" >\n            <input type=\"text\" ng-change=\"item.deinitEmailEditor();item.isLinkComplete()\" ng-model=\"item.new\">\n            <button class=\"ui icon button mailtoEditor\" ng-click=\"item.initEmailEditor()\">\n               Editor <i class=\"pencil icon\"></i>\n            </button>\n          </div>\n\n\n        </div>\n        <div class=\"ui flowing top right popup\" style=\"min-width: 300px;\">\n\n            <div class=\"ui field\">\n              <label>Email Address</label>\n              <input ng-change=\"item.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.email\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Subject Line</label>\n              <input ng-change=\"item.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.subject\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Body Text</label>\n              <textarea ng-change=\"item.composeEmail();item.isLinkComplete()\" style=\"width: 100%; height: 150px;\" ng-model=\"item.mailto.body\"></textarea>\n              </div>\n        </div>\n        </div>\n        <div ng-hide=\"item.deleteOnRender\" style=\"padding-top:1em\" ng-if=\"item.errors.length>0\"><strong>{{item.__isComplete ? \"MESSAGES:\" : \"NEEDS ATTENTION:\" }}</strong>\n        <div id=\"error-messages-list\" ng-hide=\"item.deleteOnRender\" class=\"ui middle aligned divided list\">\n        <div class=\"item\" ng-repeat=\"error in item.errors\">\n        <div ng-show=\"error.ctaLabel!==''\" style=\"margin-top: .5em;\" class=\"right floated content\">\n          <div class=\"ui small compact\" ng-class=\"{'violet button':error.severity=='suggestion','red button': error.severity=='high', 'orange button': error.severity=='warn', 'grey button': error.severity=='low'}\" ng-click=\"error.handler(item)\" ng-bind-html=\"error.ctaLabel\">{{error.ctaLabel ? error.ctaLabel : \"Resolve\"}}</div>\n          </div>\n          <div class=\"content\" ng-bind-html=\"error.message\" ng-class=\"{'red-color': error.severity=='high'}\">{{error.message}}</div>\n        </div>\n        </div>\n\n        </div>\n        <div class=\"\" ng-if=\"item.whiteListedUrl==item.new\">\n        <p>This link would normally require a special tracking code, but you have chosen to override that requirement. You can undo this by clicking the button below.</p>\n        <button class=\"ui grey compact icon button\" ng-click=\"item.whiteListedUrl='~~whitelist~~';item.isLinkComplete()\">\n        <i class=\"cancel icon\"></i>\n          Cancel tracking override</button></div>\n\n\n          <div class=\"\" ng-if=\"item.deleteOnRender\">\n          <p>This link will be removed when you export the code.</p>\n          <button class=\"ui grey compact icon button\" ng-click=\"item.deleteOnRender=false;item.new=item.old;item.isLinkComplete()\">\n          <i class=\"cancel icon\"></i>\n            Keep this link</button></div>\n\n\n\n\n\n\n        </div>\n\n        </div>\n      </div>\n      </div>\n      <div class=\"five wide column\" id=\"stickyparent\" style=\"z-index:98;\">\n      <div sticky class=\"ui sticky\" style=\"display:block; margin-top:75px; margin-bottom:75px;\" >\n\n        <div class=\"ui secondary vertical pointing menu\"  style=\"margin-top: 75px; margin-bottom: 75px;\" >\n\n        <a class=\"item\" ng-repeat=\"item in workspace.linkData\" ng-class=\"{active: activeLinkId==$index+1}\" href=\"javascript:angular.noop()\" ng-click=\"scrollTo($index)\">\n        <span class=\"truncate\"><i class=\"red warning sign icon\" ng-if=\"!item.__isComplete||item.needsTrackingCode()\"></i><i class=\"red trash icon\" ng-if=\"item.deleteOnRender\"></i> {{ item.new==\"\"&&item.old==\"\" ? (item.deleteOnRender ? \"Delete: \" + (item.old==\"\"?\"Link is blank\":item.old) : \"Link is blank\") : item.new}}</span>\n        </a>\n\n        </div>\n        </div>\n\n      </div>\n\n\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\" style=\"z-index:99;\">\n      <div class=\"ui container\" style=\"padding-top:10px; padding-bottom:10px;\">\n      <div class=\"ui popup\"  id=\"error-messages\">\n        <div class=\"header\">\n          Some of these links did not pass validation.\n        </div>\n        <em>You cannot proceed until all high priority errors are&nbsp;fixed.</em>\n        </div>\n        <div>\n        <button class=\"ui right floated yellow button\" ng-if=\"!workspace.areLinksComplete()\" ui-popup popup-id=\"error-messages\" >\n        <i class=\"ui warning sign icon\"></i> {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n\n          </button>\n        <button class=\"ui right floated primary button\" ng-if=\"workspace.areLinksComplete()\" ng-click=\"workspace.updateLinksAndExport()\">\n        {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n          <i class=\"ui long arrow right icon\"></i>\n          </button>\n        <button class=\"ui button\" ng-click=\"workspace.downloadCsv()\">\n          <i class=\"ui download icon\"></i> Download Link CSV</button>\n\n        </div>\n\n\n        </div>\n      </div>\n\n    </div>"
+            template: "\n    <div style=\"float:right\">\n    <span style=\"display:inline-block;font-weight:bold; padding-right: 1em\">View </span>\n    <div class=\"ui mini compact menu\">\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='experimental'}\" ng-click=\"workspace.linksView='experimental'\">Experimental</a>\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='advanced'}\" ng-click=\"workspace.linksView='advanced'\">Advanced</a>\n    </div>\n    </div>\n    <h1>{{workspace.linkData.length>0 ? \"Review Links\" : \"Review\"}}</h1>\n    <p ng-if=\"workspace.linkData.length>0\">This section will find and replace the urls.</p>\n\n    <div ng-if=\"workspace.linkData.length==0\">\n\n\n\n    <div class=\"ui warning icon message\">\n  <i class=\"warning sign icon\"></i>\n  <div class=\"content\">\n    <div class=\"header\">\n      Did not find any links\n    </div>\n    <p>Although you can export your EML without links, if you intended to include links, you'll want to go back and make sure you've included some.</p>\n  </div>\n</div><br/>\n      </div>\n\n\n<div class=\"ui grid\">\n<div class=\"eleven wide column\">\n    <div class=\"ui form\">\n\n      <div ng-repeat=\"item in workspace.linkData\" class=\"field\" id=\"link-{{$index+1}}\" scrollspy>\n\n\n      <h4 class=\"ui horizontal divider header\">Link {{$index+1}}</h4>\n      <div class=\"link-section\" ng-class=\"{forRemoval:item.deleteOnRender, orange: item.needsTrackingCode(), green: item.hasTrackingCode()}\">\n        <div class=\"ui blue message\" ng-if=\"workspace.linksView=='advanced'||!item.__isComplete\" style=\"min-height:3.25em;\"><div class=\"old-url\"><strong>URL:</strong> <div class=\"url\">{{item.old}}&nbsp;</div></div></div>\n        <div class=\"ui message context\">\n          <div ><span class=\"line\"><i class=\"red cancel icon\" ng-if=\"item.deleteOnRender\"></i>{{item.line}}:</span> <div class=\"code prettyprint lang-js\" prettify ng-bind-html=\"item.displayFormattedURL()\"></div></div>\n        </div>\n        <div ng-if=\"item.linkImage&&(workspace.linksView=='advanced'||!item.__isComplete)\" class=\"ui message context\" style=\"background:#fff !important; min-height:90px\">\n          <div >\n          <span class=\"line\">Linked image preview:</span>\n\n          <div class=\"code\" style=\"background-image: url(assets/grid_bg.png);\">\n          <img ng-src=\"{{item.linkImage}}\" style=\"max-width:100%;\"/>\n          </div>\n          </div>\n          </div>\n\n        <div class=\"field\" ng-class=\"{error: !item.__isComplete}\" ng-if=\"!item.isLinkType('mailto')\">\n          <label>{{workspace.linksView=='experimental'&&item.__isComplete ? \"URL\" : \"New URL\" }}</label>\n          <input type=\"text\" ng-hide=\"item.deleteOnRender\" ng-model=\"item.new\" ng-keyup=\"item.updateQueryString();item.isLinkComplete()\" ng-blur=\"item.updateQueryString()\"/>\n          <div ng-show=\"item.deleteOnRender\">{{item.old==\"\"? \"Blank link\" : item.old}}</div>\n        </div   >\n\n        <query-string-editor\n          ng-hide=\"item.deleteOnRender\"\n          item=\"item\"\n          ng-if=\"item.queryStrings.length>0\">\n          </query-string-editor>\n\n        <div ng-if=\"item.isLinkType('mailto')\" mailto-link-editor>\n        <div class=\"ui field\" >\n        <label>New Email Link</label>\n          <div class=\"ui action input\" >\n            <input type=\"text\" ng-change=\"item.mailto.initEmailEditor();item.isLinkComplete()\" ng-model=\"item.new\">\n            <button class=\"ui icon button mailtoEditor\" ng-click=\"item.mailto.initEmailEditor()\">\n               Editor <i class=\"pencil icon\"></i>\n            </button>\n          </div>\n\n\n        </div>\n        <div class=\"ui flowing top right popup\" style=\"min-width: 300px;\">\n\n            <div class=\"ui field\">\n              <label>Email Address</label>\n              <input ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.email\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Subject Line</label>\n              <input ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.subject\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Body Text</label>\n              <textarea ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%; height: 150px;\" ng-model=\"item.mailto.body\"></textarea>\n              </div>\n        </div>\n        </div>\n\n        <message-center ng-hide=\"item.deleteOnRender||item.errors.data.length==0\" messages=\"item.errors\" item=\"item\"></message-center>\n\n\n\n        <div class=\"\" ng-if=\"item.whiteListedUrl==item.new\">\n        <p>This link would normally require a special tracking code, but you have chosen to override that requirement. You can undo this by clicking the button below.</p>\n        <button class=\"ui grey compact icon button\" ng-click=\"item.whiteListedUrl='~~whitelist~~';item.isLinkComplete()\">\n        <i class=\"cancel icon\"></i>\n          Cancel tracking override</button></div>\n\n\n          <div class=\"\" ng-if=\"item.deleteOnRender\">\n          <p>This link will be removed when you export the code.</p>\n          <button class=\"ui grey compact icon button\" ng-click=\"item.deleteOnRender=false;item.new=item.old;item.isLinkComplete()\">\n          <i class=\"cancel icon\"></i>\n            Keep this link</button></div>\n\n\n\n\n\n\n        </div>\n\n        </div>\n      </div>\n      </div>\n      <div class=\"five wide column\" id=\"stickyparent\" style=\"z-index:98;\">\n      <div sticky class=\"ui sticky\" style=\"display:block; margin-top:75px; margin-bottom:75px;\" >\n\n        <div class=\"ui secondary vertical pointing menu\"  style=\"margin-top: 75px; margin-bottom: 75px;\" >\n\n        <a class=\"item\" ng-repeat=\"item in workspace.linkData\" ng-class=\"{active: activeLinkId==$index+1}\" href=\"javascript:angular.noop()\" ng-click=\"scrollTo($index)\">\n        <span class=\"truncate\"><i class=\"red warning sign icon\" ng-if=\"!item.__isComplete||item.needsTrackingCode()\"></i><i class=\"red trash icon\" ng-if=\"item.deleteOnRender\"></i> {{ item.new==\"\"&&item.old==\"\" ? (item.deleteOnRender ? \"Delete: \" + (item.old==\"\"?\"Link is blank\":item.old) : \"Link is blank\") : item.new}}</span>\n        </a>\n\n        </div>\n        </div>\n\n      </div>\n\n\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\" style=\"z-index:99;\">\n      <div class=\"ui container\" style=\"padding-top:10px; padding-bottom:10px;\">\n      <div class=\"ui popup\"  id=\"error-messages\">\n        <div class=\"header\">\n          Some of these links did not pass validation.\n        </div>\n        <em>You cannot proceed until all high priority errors are&nbsp;fixed.</em>\n        </div>\n        <div>\n        <button class=\"ui right floated yellow button\" ng-if=\"!workspace.areLinksComplete()\" ui-popup popup-id=\"error-messages\" >\n        <i class=\"ui warning sign icon\"></i> {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n\n          </button>\n        <button class=\"ui right floated primary button\" ng-if=\"workspace.areLinksComplete()\" ng-click=\"workspace.updateLinksAndExport()\">\n        {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n          <i class=\"ui long arrow right icon\"></i>\n          </button>\n        <button class=\"ui button\" ng-click=\"workspace.downloadCsv()\">\n          <i class=\"ui download icon\"></i> Download Link CSV</button>\n\n        </div>\n\n\n        </div>\n      </div>\n\n    </div>"
         })
             .when('/export-eml', {
             template: "\n    <h1></h1>\n\n    <h1 class=\"ui center aligned icon header\">\n      <i class=\"download icon\"></i>\n      <div class=\"content\">\n        Convert your EML to an OFT\n      </div>\n    </h1>\n    <h2>Step 1: Locate file</h2>\n    <p>Once you've found the file in your directory, open it with Outlook.</p>\n\n    <h2>Step 2: Review make any necessary changes</h2>\n    <p>When you open the file, Outlook may render the HTML differently. Make sure to take this opportunity to review that the email has rendered as it should, including checking any links and alignments.</p>\n\n    <h2>Step 3: Save the file as an Outlook Template File</h2>\n    <p>From the file menu, select <em>Save As</em>. And make sure to set the dropdown menu for file type to <em>Outlook Template File</em>.</p>\n    <p>Next choose which directory you would like to save the file in and press <em>Save</em>.</p>\n\n    <div style=\"height: 100px;\"></div>\n    <div class=\"ui bottom fixed container\">\n      <div class=\"ui container\" style=\"padding-top:10px;padding-bottom:10px\">\n      <button class=\"ui button\" ng-click=\"navigateTo('export')\">\n        <i class=\"ui long arrow left icon\"></i>\n        Back</button>\n        <button class=\"ui button\" ng-click=\"createNewEML()\">Start Fresh</button>\n\n        </div>\n      </div>\n    </div>\n    "
@@ -1920,7 +2215,7 @@ angular.module('EMLMaker')
             template: "\n    <h1>Review EML Settings and Export<h1>\n    <div align=\"right\">\n    <div class=\"ui right pointing dropdown\" ui-dropdown>\n      <button class=\"ui icon button\"><i class=\"unordered list icon\"></i> <i class=\"dropdown icon\"></i></button>\n      <div class=\"menu\">\n        <div class=\"item\" ng-if=\"workspace.isHeaderSelected(key)\" ng-click=\"workspace.addNewHeaderField(key)\" ng-repeat=\"(key, value) in workspace.__allowableHeaderFields\">{{workspace.__allowableHeaderFields[key].label}}</div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"ui form\">\n\n\n      <div class=\"field\" ng-repeat=\"(k, v) in workspace.header\">\n        <label>{{workspace.__allowableHeaderFields[k].label}}</label>\n        <div class=\"ui input\" ng-class=\"{icon: k!='subject'}\">\n          <input type=\"text\"  ng-change=\"workspace.__buildHeaders()\" ng-model=\"workspace.header[k]\" >\n          <i ng-if=\"k!=='subject'\"class=\"circular close link icon\" ng-click=\"workspace.removeHeaderField(k)\"></i>\n          </div>\n\n        </div>\n\n    <div class=\"field\">\n      <label>EML Headers</label>\n      <textarea ng-model=\"workspace.__emlHeaders\"></textarea>\n      </div>\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top:10px;padding-bottom:10px\">\n      <button class=\"ui primary button\" ng-click=\"workspace.downloadEml()\">Download EML</button>\n      </div>\n      </div>\n    "
         })
             .when('/export', {
-            template: "\n\n\n    <h1>Export</h1>\n    <p>You can specify a file name when you export your work in one of the for formats listed below.</p>\n    <div class=\"ui form\" style=\"padding-bottom:2em;\">\n      <div class=\"field\">\n        <label>File name</label>\n        <input type=\"text\" ng-model=\"workspace.fileName\"/>\n        </div>\n      </div>\n\n    <div class=\"ui four column stacking grid\">\n\n\n\n\n\n      <div class=\"ui column\">\n      <h3>CSV file</h3>\n      <div style=\"padding-bottom:19px\">\n      <p>Download the CSV file so you can convert it to an OFT file.</p></div>\n      <button class=\"ui fluid button\" ng-click=\"workspace.downloadCsv()\">\n        <i class=\"ui download icon\"></i>\n        Export CSV\n        </button>\n      </div>\n\n      <div class=\"ui column\">\n        <h3>HTML file</h3>\n        <div style=\"padding-bottom:19px\">\n        <p>Download a copy of the html generated as an HTML file.</p></div>\n\n        <button class=\"ui fluid button\" ng-click=\"workspace.downloadHtml()\">\n        <i class=\"ui download icon\"></i>\n        HTML File</button>\n      </div>\n<div class=\"ui column\">\n      <h3>Copy &amp; Paste</h3>\n      <p>Reveal the HTML code so you can copy and paste.</p>\n      <div class=\"ui checkbox\" style=\"padding-bottom:.5em;\">\n      <input type=\"checkbox\" ng-true-value=\"'Yes'\" ng-false-value=\"'No'\" ng-model=\"workspace.exportForEloqua\"><label>Track Eloqua links</label></div>\n      <button class=\"ui fluid primary button\" ng-click=\"workspace.exportCodeToHTML()\">\n      <i class=\"ui code icon\"></i>\n      HTML Code</button></div>\n\n      <div class=\"ui column\">\n      <h3>EML file</h3>\n      <div style=\"padding-bottom:19px\">\n      <p>Download the EML file so you can convert it to an OFT file.</p></div>\n      <button class=\"ui fluid primary button\" ng-click=\"workspace.composeEML()\">\n        <i class=\"ui download icon\"></i>\n        Export EML\n        </button>\n      </div>\n\n    </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top:10px;padding-bottom:10px\">\n\n\n        <button class=\"ui button\" ng-click=\"createNewEML()\">Start Fresh</button>\n        </div>\n        </div>\n\n    </div>"
+            template: "\n\n\n    <h1>Export</h1>\n    <p>You can specify a file name when you export your work in one of the for formats listed below.</p>\n    <div class=\"ui form\" style=\"padding-bottom:2em;\">\n      <div class=\"field\">\n        <label>File name</label>\n        <input type=\"text\" ng-model=\"workspace.fileName\"/>\n        </div>\n      </div>\n\n    <div class=\"ui four column stacking grid\">\n\n\n\n\n\n      <div class=\"ui column\">\n      <h3>CSV file</h3>\n      <div style=\"padding-bottom:19px\">\n      <p>Download the CSV file so you can keep a record of the links.</p></div>\n      <button class=\"ui fluid button\" ng-click=\"workspace.downloadCsv()\">\n        <i class=\"ui download icon\"></i>\n        Export CSV\n        </button>\n      </div>\n\n      <div class=\"ui column\">\n        <h3>HTML file</h3>\n        <div style=\"padding-bottom:19px\">\n        <p>Download a copy of the html generated as an HTML file.</p></div>\n\n        <button class=\"ui fluid button\" ng-click=\"workspace.downloadHtml()\">\n        <i class=\"ui download icon\"></i>\n        HTML File</button>\n      </div>\n<div class=\"ui column\">\n      <h3>Copy &amp; Paste</h3>\n      <p>Reveal the HTML code so you can copy and paste.</p>\n      <div class=\"ui checkbox\" style=\"padding-bottom:.5em;\">\n      <input type=\"checkbox\" ng-true-value=\"'Yes'\" ng-false-value=\"'No'\" ng-model=\"workspace.exportForEloqua\"><label>Track Eloqua links</label></div>\n      <button class=\"ui fluid primary button\" ng-click=\"workspace.exportCodeToHTML()\">\n      <i class=\"ui code icon\"></i>\n      HTML Code</button></div>\n\n      <div class=\"ui column\">\n      <h3>EML file</h3>\n      <div style=\"padding-bottom:19px\">\n      <p>Download the EML file so you can convert it to an OFT file.</p></div>\n      <button class=\"ui fluid primary button\" ng-click=\"workspace.composeEML()\">\n        <i class=\"ui download icon\"></i>\n        Export EML\n        </button>\n      </div>\n\n    </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top:10px;padding-bottom:10px\">\n\n\n        <button class=\"ui button\" ng-click=\"createNewEML()\">Start Fresh</button>\n        </div>\n        </div>\n\n    </div>"
         })
             .when('/convert-to-oft', {
             template: "<h1>Convert to OFT<h1>\n    <h2>Open the file</h2>\n\n    Find the file in your downloads folder.\n\n\n    <h2>Save as OFT</h2>\n\n    File > Save As <br>\n\n    Change type to \"Outlook Template\"<br>\n\n    Choose the directory you would like to save it in.<br>\n\n    Press save.\n\n  "

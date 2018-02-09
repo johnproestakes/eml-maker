@@ -15,6 +15,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
     function ErrorObject(type, message, args){
 
       if(args===undefined) args = {};
+      this.type = type;
       this.handler = args.handler ===undefined ? function(){} : args.handler;
       this.ctaLabel = args.ctaLabel === undefined ? "" : $sce.trustAsHtml(args.ctaLabel);
       this.severity = args.severity === undefined ? "low" : args.severity;
@@ -23,6 +24,193 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
     ErrorObject.prototype.clear = function(){};
     return ErrorObject;
   })();
+
+  this.MailtoLinkObject = /**@class*/ (function(){
+    function MailtoLinkObject(LinkObject){
+      this.parent = LinkObject;
+      this.email = "";
+      this.subject = "";
+      this.body = "";
+
+      if(this.parent.isLinkType('mailto')){
+        this.initEmailEditor();
+      }
+    }
+    MailtoLinkObject.prototype.has = function(option){
+      return this[option] && this[option].trim()!=="";
+    };
+    MailtoLinkObject.prototype.isValidEmailAddress = function(){
+      return this.parent.emailRegex.test(this.email);
+    };
+    MailtoLinkObject.prototype.deinitEmailEditor = function(){
+      this.email = "";
+      this.subject = "";
+      this.body = "";
+    };
+    MailtoLinkObject.prototype.composeEmail = function () {
+      this.parent.new = "mailto:" + this.email;
+      var params = new URLSearchParams();
+      var options = ["subject","body"];
+      for(var i =0; i<options.length; i++){
+        if(this[options[i]] && this[options[i]] !== "") {
+          params.set(options[i], this[options[i]]);
+        }
+      }
+      this.parent.new = (params.toString().length>0 ? this.parent.new + "?" + params.toString() : this.parent.new );
+    };
+    MailtoLinkObject.prototype.openEditor = function () {
+      this.initEmailEditor();
+      jQuery("html,body").animate({scrollTop: jQuery('#link-'+this.parent.id).offset().top - 75}, 300);
+      var LO = this.parent;
+      setTimeout(function(){
+        window.jQuery("#link-"+LO.id).find(".mailtoEditor").popup("show");
+      },400);
+    };
+    MailtoLinkObject.prototype.initEmailEditor = function () {
+      var a = this.parent.new.substr(7, this.parent.new.length-7);
+      var b = a.split("?");
+
+      this.email = b[0];
+      if(b.length>1){
+        var params = new URLSearchParams(b[1]),
+            MLO = this;
+        ["subject","body"].forEach(function(option){
+          if(params.has(option)){
+            MLO[option] = params.get(option);
+          }
+        });
+      }
+    };
+    return MailtoLinkObject;
+  })();
+
+
+  this.URLObj = /**@class*/ (function(){
+    function URLObj(url){
+      this.href = "";
+      this.search = "";
+      this.origin = "";
+      this.hash = "";
+      this.url = url;
+
+      this.searchParams = new ((function(){
+        function searchParams(URLObj){
+          this._entries = [];
+          this.parent = URLObj;
+        }
+        searchParams.prototype.has = function(param){
+          var regex = new RegExp("^" + param + "\=","g");
+          var output = false;
+          for(var i=0;i<this.entries.length;i++){
+            if(regex.test(this.entries[i])) output = true;
+          }
+          return output;
+        };
+        searchParams.prototype.get = function(param){
+          var regex = new RegExp("^" + param + "\=","g"),
+              output = false;
+          for(var i=0;i<this.entries.length;i++){
+            if(regex.test(this.entries[i])) {
+              output = (this.entries[i].split("=")).pop();
+            }
+          }
+          return output;
+        };
+        searchParams.prototype.set = function(param, value){
+          var regex = new RegExp("^" + param + "\=","g"),
+              output = false;
+          for(var i=0;i<this.entries.length;i++){
+            if(regex.test(this.entries[i])) {
+              this.entries[i] = param + "=" + value;
+              output = true;
+            }
+          }
+          if(!output){
+            this.append(param + "=" + value);
+          }
+        };
+        searchParams.prototype.append = function(valuePair){
+          this.entries.push(valuePair);
+        };
+        searchParams.prototype.delete = function(param){
+          //wont really do this ever
+        };
+        Object.defineProperty(searchParams.prototype, "entries", {
+          set: function(val){
+            this._entries = val;
+            var output = [];
+            for(var i =0;i<this._entries.length;i++){
+              output.push(encodeURIComponent(his._entries[i]));
+            }
+
+            this.parent.search = "?"+output.join("&");
+            console.log(this.parent.search);
+          },
+          get: function(){
+            return this._entries;
+          },
+          enumerable: true,
+          configurable: true
+        });
+
+        return searchParams;
+      })(this));
+
+    }
+
+    URLObj.prototype.prepareExport = function(){
+      //finalize query strings;
+      //search could also be a getter;
+    };
+    Object.defineProperty(URLObj.prototype, "url", {
+      get: function(){
+        this.prepareExport();
+        return this.origin + this.search + this.hash;
+      },
+      set: function(url){
+        this.href = url;
+        if(url.trim()=="#"){
+          this.hash = "#";
+        }
+        else if(url.trim().length>1 && url.indexOf("#")>-1){
+          var urlParts = url.split("#");
+          this.hash = "#" + urlParts.pop(); //jump link.. need to remove it from the other stuff.
+          var parts = (urlParts.join("#")).split("?");
+          this.origin = parts[0];
+          this.search = parts.length>0 ? "?"+parts[1]:"";
+        }
+        else {
+
+          if(url.indexOf("?")>-1){
+            var parts = url.split("?");
+            this.origin = parts[0];
+            this.search = (parts.length > 0) ? "?"+parts[1]:"";
+          } else {
+            this.origin = url;
+          }
+
+        }
+        return url;
+      },
+      enumerable: true,
+      configurable:true
+    });
+    // Object.defineProperty(URLObj.prototype, "search", {
+    //   get: function(){
+    //     return "?"+this.searchParams.entries.join("&");
+    //   },
+    //   set: function(url){
+    //     this.
+    //     return
+    //   },
+    //   enumerable: true,
+    //   configurable:true
+    // });
+
+
+    return URLObj;
+  })();
+
 
   this.LinkObject = /**@class*/ (function(){
     function LinkObject(line, context, parent) {
@@ -34,13 +222,14 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
         'optum.webex.com','twitter.com','facebook.com','linkedin.com'
       ];
+
       this.line = line + 1;
       this.context = context;
       this.queryStrings = [];
       this.errors = [];
       this.id = 0;
       this.whiteListedUrl = "~~whitelist~~";
-      this.mailto = {email:"", subject: "", body:""};
+
       this.urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
       this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -49,48 +238,50 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       if(href.length>0){
 
         if(href[0]=="href=\"\"") {
-          LO.new =  (LO.old = "");
+          LO.new =  (LO.old = "#");
         } else {
           LO.new = (LO.old = href[0].substr(6, href[0].length-7)).trim();
         }
 
+          var url = new self.URLObj(LO.new);
+          if(url.search.length>0){
+            var searchParams = new URLSearchParams(url.search);
+            for(var pair of searchParams.entries()) {
+              LO.queryStrings.push(pair[0]+ '='+ pair[1]);
+            }
+          }
 
-        var parts = LO.new.split("?");
-        LO.queryStrings = parts.length > 1 ? parts[1].split("&") : [];
+
       }
+
+      //find image
       if(/src=\"(.*?)\"/.test(context)){
         var found = context.match(/src=\"(.*?)\"/);
         if(found.length>0){
           LO.linkImage = found[1];
         }
       }
-      if(this.isLinkType('mailto')){
-        this.initEmailEditor();
-      }
+
+
+      //need to set the url before you do this;
+      this.mailto = new self.MailtoLinkObject(this);
       this.isLinkComplete();
-
-
     }
-    Object.defineProperty(LinkObject, 'defaultScode', {
-      get: function(){
-        return this.defaultScode;
-      },
-      set: function(val){
-        this.defaultScode = val;
-        console.log('you set defaultScode');
-      }
-    });
+
     LinkObject.prototype.hasDuplicateQueryStrings = function(){
-      var result = []; var usedStrings = [];
-      if(this.queryStrings.length>0){
-        for (var i = 0; i<this.queryStrings.length;i++){
-          var b = (this.queryStrings[i].split("=")).shift();
-          if(usedStrings.indexOf(b)>-1 && result.indexOf(b)==-1){
-            result.push(b);
+      var result = [],usedStrings = [];
+
+      var url = new self.URLObj(this.new);
+      if(url.search.length>0){
+        var searchParams = new URLSearchParams(url.search);
+        for(var a of searchParams.entries()){
+          if(usedStrings.indexOf(a[0])>-1){
+            result.push(a[0]);
           }
-          usedStrings.push(b);
+          usedStrings.push(a[0]);
         }
       }
+
       if(result.length>0){
         return result;
       } else {
@@ -114,25 +305,18 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       } else {
         var parts = this.new.split("?");
       }
-
-
       this.queryStrings = parts.length >1 ? parts[1].split("&") : [];
     };
-    LinkObject.prototype.refreshURL = function(){
-
-      if(this.new.indexOf("#")>-1){
-        var urlParts = this.new.split("#");
-        var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
-        var parts = (urlParts.join("#")).split("?");
-      } else {
-        var parts = this.new.split("?");
+    LinkObject.prototype.hasQueryStringParameter = function(id){
+      var output = false;
+      if(this.queryStrings.length>0){
+        for(var i = 0;i<this.queryStrings.length;i++){
+          if(this.queryStrings[i].substr(0,id.length+1)== id + "="){
+            output = this.queryStrings[i];
+          }
+        }
       }
-
-      var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
-      var hasJumpLink = this.new.indexOf("#")>1;
-      this.new = parts[0] + (strs=="" ? "" : "?"+strs) ;
-      if(hasJumpLink) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
-      this.isLinkComplete();
+      return output;
     };
     LinkObject.prototype.removeJumpLink = function(){
       var parts = this.new.split("?");
@@ -162,68 +346,26 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       content = $sce.trustAsHtml(content);
       return content;
     };
-    LinkObject.prototype.composeEmail = function(){
-      if(this.mailto === undefined) this.mailto = {"email":"" };
-      this.new = "mailto:" + this.mailto.email;
-      var params = [];
-      var options = ["subject","body"];
-      for(var i =0; i<options.length; i++){
-        if(this.mailto[options[i]] && this.mailto[options[i]] !== "") {
-          params.push(options[i]+"="+ window.encodeURIComponent(this.mailto[options[i]]));
-        }
-      }
-      this.new = (params.length>0 ? this.new + "?" + params.join("&") : this.new );
-    };
-    LinkObject.prototype.deinitEmailEditor = function(){
-      this.mailto = {};
-    };
-    LinkObject.prototype.initEmailEditor = function(){
-      if(this.mailto === undefined) this.mailto = {};
-      var a = this.new.substr(7, this.new.length-7);
-      var b = a.split("?");
 
-      this.mailto.email = b[0];
-      if(b.length>1){
-        var params = b[1].split("&");
-        for(var n = 0; n<params.length; n++){
-          var c = params[n].match(/subject=([^&]*)/g);
-          if(c){
-            this.mailto.subject = window.decodeURIComponent(c[0].substr(8,c[0].length-8));
-          }
-          var d = params[n].match(/body=([^&]*)/g);
-          if(d){
-            this.mailto.body = window.decodeURIComponent(d[0].substr(5,d[0].length-5));
-          }
-        }
-      }
-
-
-    };
 
     LinkObject.prototype.isLinkComplete = function(){
-      output = true;
 
-      this.errors = [];
-
+      this.errors = {
+        count: {},
+        data: []
+      };
       var errors = window.EMLMaker_LinkAIEngine(this, self.errorObject );
-      this.errors = errors.messages;
-
-
+      this.errors.data = errors.messages;
+      for(var i =0;i<errors.messages.length;i++){
+        if(this.errors.count[errors.messages[i].type] === undefined) this.errors.count[errors.messages[i].type] = 0;
+        this.errors.count[errors.messages[i].type]++;
+      }
+      // console.log(this.errors);
       this.__isComplete= errors.canContinue;
       if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
       return this.__isComplete;
     };
-    LinkObject.prototype.hasQueryStringParameter = function(id){
-      var output = false;
-      if(this.queryStrings.length>0){
-        for(var i = 0;i<this.queryStrings.length;i++){
-          if(this.queryStrings[i].substr(0,id.length+1)== id + "="){
-            output = this.queryStrings[i];
-          }
-        }
-      }
-      return output;
-    };
+
     LinkObject.prototype.isLinkType = function(type){
       var output = false;
       switch (type) {
@@ -242,15 +384,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       }
       return output;
     };
-    LinkObject.prototype.openMailtoEditor = function(){
-      this.initEmailEditor();
-      jQuery("html,body").animate({scrollTop: jQuery('#link-'+this.id).offset().top - 75}, 300);
-      var LO = this;
-      setTimeout(function(){
-        window.jQuery("#link-"+LO.id).find(".mailtoEditor").popup("show");
-      },400);
 
-    };
     LinkObject.prototype.hasTrackingCode = function(obj){
       if(obj===undefined) obj = this.new;
       // if(this.whiteListedUrl==this.new) return true;
@@ -269,9 +403,6 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
             if(this.new.indexOf(this.__requiredTrackingCodeWhitelist[i])>-1) { output = false; }
           }
         }
-
-
-
       }
       return output;
     };
@@ -285,15 +416,36 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
       return output;
       };
+    LinkObject.prototype.refreshURL = function(){
+
+      if(this.new.indexOf("#")>-1){
+        var urlParts = this.new.split("#");
+        var jumpLink = urlParts.pop(); //jump link.. need to remove it from the other stuff.
+        var parts = (urlParts.join("#")).split("?");
+      } else {
+        var parts = this.new.split("?");
+      }
+
+      var strs = (this.queryStrings.length>0) ? this.queryStrings.join("&") : "";
+      var hasJumpLink = this.new.indexOf("#")>1;
+      this.new = parts[0] + (strs=="" ? "" : "?"+strs) ;
+      if(hasJumpLink) this.new = this.new + (jumpLink!=="" ? "#"+jumpLink : "");
+      this.isLinkComplete();
+    };
+
     return LinkObject;
   })();
 
+
+
   this.EMLWorkspace = /**@class*/ (function(){
-    function Workspace(html){
+    function Workspace(html, $scope){
       if( html === undefined) html = "";
+      if( $scope === undefined) $scope = "";
 
       var Workspace = this;
       this.buffer = null;
+      this.scope = $scope;
       this.linksView = 'experimental'; //advanced shows all
       this.sourceCode = html; //inital
       this.outputCode = ""; //final
@@ -319,9 +471,11 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
     }
     Workspace.prototype.mapLinkObjects = function(callback){
-      for(var i=0; i<this.linkData.length; i++){
-        callback(this.linkData[i]);
-        }
+      if(this.linkData.length>0){
+        for(var i=0; i<this.linkData.length; i++){
+          callback(this.linkData[i]);
+          }
+      }
       };
     Workspace.prototype.composeEML = function(){
       location.href= "#/export-compose-eml";
@@ -469,7 +623,6 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
         this.outputCode = this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
       } catch(e){
-        console.log(e);
         console.log("error merging lines with links that previously had punctuation.");
       }
 
@@ -490,32 +643,16 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
     };
     Workspace.prototype.areLinksComplete = function(){
-      if (this.linkData.length ==0) return true;
       var output = true;
-      // clearTimeout(this.linksCompleteDecayTimer);
-      // var Wksp= this;
-      // this.linksCompleteDecayTimer = setTimeout(function(){
-      //   if(Wksp.linksCompleteDecay)
-      //   delete Wksp.linksCompleteDecay;
-      //   // this.scope.$apply();
-      // },300);
-      // if(this.linksCompleteDecay !== undefined) console.log('fromlinkdecay');
-      // if(this.linksCompleteDecay !== undefined) return this.linksCompleteDecay;
+      this.mapLinkObjects(function(LinkObject){
+        if(!LinkObject.__isComplete){
+          output = false;
+        }
+        if(LinkObject.needsTrackingCode()){
+          output = false;
+        }
+      });
 
-
-
-      if(this.linkData.length>0) {
-        // console.log('isLinkComplete');
-        this.linkData.forEach(function(link){
-            if(!link.__isComplete){
-              output = false;
-            }
-            if(link.needsTrackingCode()){
-              output = false;
-            }
-        });
-      }
-      // this.linksCompleteDecay = output;
       return output;
     };
     Workspace.prototype.getLinksSummary = function(){
@@ -523,9 +660,9 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
         needsTracking: 0,
         invalidUrl: 0
       };
-      this.linkData.forEach(function(link){
-        if(link.needsTrackingCode()) data.needsTracking++;
-        if(link.isLinkComplete()) data.invalidUrl++;
+      this.mapLinkObjects(function(LinkObject){
+        if(LinkObject.needsTrackingCode()) data.needsTracking++;
+        if(LinkObject.isLinkComplete()) data.invalidUrl++;
       });
       return data;
     };

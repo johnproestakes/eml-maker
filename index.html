@@ -8,7 +8,7 @@
   /* -------------------------
        ALWAYS BE UPDATING.
     -------------------------- */
-    window.CURRENT_VERSION= "1.0.2.2";
+    window.CURRENT_VERSION= "1.0.3.0";
     window.PAGE_TITLE = document.title;
 
     (function(){
@@ -30,6 +30,9 @@
 <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
 <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
 <link rel="icon" type="image/png" href="assets/logo.png"  />
+
+
+
 
 <link href="scripts/css/libs/semantic.min.css" type="text/css" rel="stylesheet"/>
 <link href="scripts/css/libs/codemirror.css" type="text/css" rel="stylesheet"/>
@@ -67,7 +70,12 @@
   <div  id="hide-while-loading" style="height:100%">
   <div class="ui fixed inverted menu" ng-if="showNavBar()">
     <div class="ui container">
-      <div class="item"><img src="assets/logo.png" class="logo" style="overflow:hidden"/></div>
+      <div class="item">
+        
+        
+        <img src="assets/logo.png" class="logo" style="overflow:hidden"/>
+        
+        </div>
       <a href="javascript:angular.noop()" class="item" ng-click="createNewEML()">Start Fresh</a>
       <div class="right menu">
         <div class="narrow-view ui pointing dropdown item" ui-dropdown>

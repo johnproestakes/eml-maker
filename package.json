@@ -9,7 +9,6 @@
   "author": "John Proestakes",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "angular-sanitize": "^1.6.0",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
     "gulp-concat": "~2.6.0",
@@ -24,6 +23,7 @@
     "gulp-zip": "~3.2.0"
   },
   "dependencies": {
+    "angular-sanitize": "^1.6.0",
     "angular": "~1.5.8",
     "angular-route": "~1.5.8",
     "jquery": "~>3.0.0"

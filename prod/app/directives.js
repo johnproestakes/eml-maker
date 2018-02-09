@@ -129,6 +129,69 @@ angular.module('EMLMaker')
 
 }]);
 
+angular.module('EMLMaker')
+.directive('messageCenter', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div><div class="ui tiny secondary pointing menu">\
+    <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{messages.data.length}}</span></a>\
+    <a class="item" ng-show="messages.count.FIX" ng-click="search.type=\'FIX\'" ng-class="{active: search.type==\'FIX\'}">Fix <span class="ui tiny red label">{{messages.count.FIX}}</span></a>\
+    <a class="item" ng-show="messages.count.SUGGESTION" ng-click="search.type=\'SUGGESTION\'" ng-class="{active: search.type==\'SUGGESTION\'}">Suggestions <span class="ui tiny label">{{messages.count.SUGGESTION}}</span></a>\
+    <a class="item" ng-show="messages.count[\'BEST PRACTICE\']" ng-click="search.type=\'BEST PRACTICE\'" ng-class="{active: search.type==\'BEST PRACTICE\'}">Best Practices <span class="ui tiny label">{{messages.count[\'BEST PRACTICE\']}}</span></a></div>\
+    <div id="error-messages-list" class="ui divided list"><message-item item="item" class="item" ng-repeat="obj in messages.data | filter: search" error="obj"></message-item></div>\
+    </div>',
+    scope: {messages:"=", item:"="},
+    link: function(scope, el, attr){
+      $timeout(function(){
+        scope._search = {type: ""};
+        var View = (function(View){
+          View[View["DEFAULT"]=0] = "DEFAULT";
+          View[View["EDIT"]=1] = "EDIT";
+          return View;
+        })({});
+        scope.view = View.DEFAULT;
+
+        Object.defineProperty(scope, "search", {
+          get: function(){
+            if(scope.messages.count[scope._search.type]==undefined) scope._search.type = "";
+            return scope._search;
+          }
+        });
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
+angular.module('EMLMaker')
+.directive('messageItem', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div ng-show="error.ctaLabel!==\'\'" style="margin-top: .5em; float:right">\
+      <div class="ui small compact" ng-class="{\'violet button\':error.severity==\'suggestion\',\'red button\': error.severity==\'high\', \'orange button\': error.severity==\'warn\', \'grey button\': error.severity==\'low\'}" \
+      ng-click="error.handler(item)" ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
+      </div>\
+      <div class="content" ng-bind-html="error.message" ng-class="{\'red-color\': error.severity==\'high\'}">{{error.message}}</div>\
+    </div>',
+    scope: {error: "=", item:"="},
+    link: function(scope, el, attr){
+      $timeout(function(){
+
+        
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
 angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
   return {
@@ -155,6 +218,49 @@ angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
 }]);
 
+angular.module('EMLMaker')
+.directive('queryStringEditor', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div class="query-string-editor"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
+    <div class="ui tiny basic buttons" style="float:right;">\
+  <button class="ui icon button" ng-click="item.removeQueryStrings()">Remove all</button>\
+  <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
+</div></div>\
+     <div ng-if="item.queryStrings.length==1&&item.queryStrings[0].length==0">Query strings will appear here.</div>\
+      <div ng-show="view==1">\
+      <div style="margin-bottom:.5em;" class="ui action input" ng-if="str.length>0" ng-repeat="str in item.queryStrings track by $index">\
+      <input type="text" ng-keyup="item.refreshURL()" ng-model="item.queryStrings[$index]"/>\
+      <button class="ui icon button" ng-click="item.removeQueryAtIndex($index)">\
+      Remove</button></div>\
+      </div>\
+      <div ng-show="view==0">\
+      <ul class="tags-layout">\
+       <li ng-if="str.length>0" ng-repeat="str in item.queryStrings track by $index">\
+       {{str}} <a href="javascript:angular.noop()" ng-click="item.removeQueryAtIndex($index)">\
+       <i class="close icon"></i></a></li></ul>\
+       </div>\
+      </div>',
+    scope: {item:"="},
+    link: function(scope, el, attr){
+      $timeout(function(){
+        var View = (function(View){
+          View[View["DEFAULT"]=0] = "DEFAULT";
+          View[View["EDIT"]=1] = "EDIT";
+          return View;
+        })({});
+        scope.view = View.DEFAULT;
+
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
 angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout){
 
   return {
@@ -170,12 +276,8 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
           var id = jQuery(el).attr("id").split("-").pop();
           scope.$apply(function(){
             scope.activeLinkId =id*1;
-            console.log(id*1);
+
           });
-
-
-
-          console.log($(el).attr("id"));
 
         };
         jQuery(el).visibility({
