@@ -56,7 +56,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
           params.set(options[i], this[options[i]]);
         }
       }
-      this.parent.new = (params.toString().length>0 ? this.parent.new + "?" + params.toString() : this.parent.new );
+      this.parent.new = (params.toString().length>0 ? this.parent.new + "?" + params.toString() : this.parent.new ).replace(/\+/g, "%20");
     };
     MailtoLinkObject.prototype.openEditor = function () {
       this.initEmailEditor();
@@ -535,9 +535,36 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
       this.linkData = [];
       window.scrollTo(0,0);
 
-      var workingCode = this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n");
+
       //determine charset
 
+      var replace = {
+        174: ["&reg;"],
+        169: ["&copy;"],
+        8211 : ["&ndash;"],
+        8212 : ["&mdash;"],
+        8220 : ["&ldquo;"],
+        8221 : ["&rdquo;"],
+        8216 : ["&lsquo;"],
+        8217 : ["&rsquo;"],
+        8482 : ["&trade;"]
+      };
+      for(var i in replace){
+        if(replace.hasOwnProperty(i)){
+          var regexp = new RegExp(String.fromCharCode(i),"g");
+          console.log(regexp);
+          if(regexp.test(this.sourceCode)){
+            console.log("found character", replace[i][0]);
+            this.sourceCode = this.sourceCode.replace(regexp, replace[i][0]);
+            console.log(this.sourceCode);
+          } else {
+            console.log("did not find character");
+          }
+
+        }
+      }
+
+      var workingCode = this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n");
       //determine email headers
       this.__emlHeaders = this.__buildHeaders();
       //   $scope.data.header,
@@ -685,7 +712,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
           WS.processHtml();
           location.href = "#/links";
         };
-        reader.readAsBinaryString(files[0]);
+        reader.readAsText(files[0]);
         window.ga('send', 'event', "HTML", "import", "HTML Import File Drop");
       }
     };

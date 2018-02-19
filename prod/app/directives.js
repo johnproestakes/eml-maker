@@ -108,9 +108,30 @@ angular.module('EMLMaker')
           on: 'manual'
         });
 
+        theButton.visibility({
+          once: true,
+          onBottomPassed: function(){
+            theButton.popup("hide");
+          console.log("offscreen");
+
+        },onTopPassed: function(){
+          theButton.popup("hide");
+        console.log("offscreen");
+      }});
+
         jQuery(el).find('.ui.icon.button').on('click', function(){
           //track this event;
           theButton.popup("toggle");
+          theButton.visibility({
+            once: true,
+            onBottomPassed: function(){
+              theButton.popup("hide");
+            console.log("offscreen");
+
+          },onTopPassed: function(){
+            theButton.popup("hide");
+          console.log("offscreen");
+        }});
           window.ga('send', 'event', "Mailto Editor", "Click", "Clicked Mailto Editor");
 
         });

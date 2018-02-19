@@ -540,7 +540,7 @@ window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
           params.set(options[i], this[options[i]]);
         }
       }
-      this.parent.new = (params.toString().length>0 ? this.parent.new + "?" + params.toString() : this.parent.new );
+      this.parent.new = (params.toString().length>0 ? this.parent.new + "?" + params.toString() : this.parent.new ).replace(/\+/g, "%20");
     };
     MailtoLinkObject.prototype.openEditor = function () {
       this.initEmailEditor();
@@ -1795,7 +1795,7 @@ angular.module('EMLMaker')
     return output;
   };
 
-  if(window.OFFLINE_VERSION&&!window.LOCALHOST){ $scope.accessingFromOffline = true; }
+  if(window.OFFLINE_VERSION&&window.LOCALHOST){ $scope.accessingFromOffline = true; }
   if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
     $scope.update_version = true;
     $scope.update_forced = forceUpdate(window.OFFLINE_VERSION, window.CURRENT_VERSION);
@@ -1966,9 +1966,30 @@ angular.module('EMLMaker')
           on: 'manual'
         });
 
+        theButton.visibility({
+          once: true,
+          onBottomPassed: function(){
+            theButton.popup("hide");
+          console.log("offscreen");
+
+        },onTopPassed: function(){
+          theButton.popup("hide");
+        console.log("offscreen");
+      }});
+
         jQuery(el).find('.ui.icon.button').on('click', function(){
           //track this event;
           theButton.popup("toggle");
+          theButton.visibility({
+            once: true,
+            onBottomPassed: function(){
+              theButton.popup("hide");
+            console.log("offscreen");
+
+          },onTopPassed: function(){
+            theButton.popup("hide");
+          console.log("offscreen");
+        }});
           window.ga('send', 'event', "Mailto Editor", "Click", "Clicked Mailto Editor");
 
         });

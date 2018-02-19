@@ -28,7 +28,7 @@ angular.module('EMLMaker')
     return output;
   };
 
-  if(window.OFFLINE_VERSION&&!window.LOCALHOST){ $scope.accessingFromOffline = true; }
+  if(window.OFFLINE_VERSION&&window.LOCALHOST){ $scope.accessingFromOffline = true; }
   if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
     $scope.update_version = true;
     $scope.update_forced = forceUpdate(window.OFFLINE_VERSION, window.CURRENT_VERSION);
