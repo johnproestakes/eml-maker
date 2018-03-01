@@ -4,13 +4,6 @@ angular.module('EMLMaker').factory(
     return window.CryptoJS;
   });
 
-angular.module('EMLMaker').factory('$EMLModule', ['$sce','saveAs','$filter',
- function($sce, saveAs,$filter){
-
-   return new window.EMLMaker_EMLModule({$sce: $sce, saveAs: saveAs});
-
-}]);
-
 angular.module('EMLMaker').factory(
   "$PersistJS",
   function $PersistJS(){

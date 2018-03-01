@@ -8,7 +8,7 @@
   /* -------------------------
        ALWAYS BE UPDATING.
     -------------------------- */
-    window.CURRENT_VERSION= "1.0.3.0";
+    window.CURRENT_VERSION= "1.0.3.1";
     window.PAGE_TITLE = document.title;
 
     (function(){
@@ -65,7 +65,7 @@
 
 </head>
 
-<body ng-controller="MainController" style="height:100%;">
+<body ng-controller="MainController" style="height:100%;" >
 
   <div  id="hide-while-loading" style="height:100%">
   <div class="ui fixed inverted menu" ng-if="showNavBar()">
@@ -125,12 +125,14 @@
 
   </div>
   </div>
-  <div style="height: 75px;" ng-if="showNavBar()"></div>
+  <div style="height: 55px;" ng-if="showNavBar()"></div>
   <div id="safe-mode"></div>
 
-  <section  id="content" class="ui container"  style="padding-top: 1.5em;height:100%;">
-    <div ng-view style="height:100%;"></div>
-  </section>
+  <div class="drop-enable" drop-enable ondropfile="workspace.importHtmlFromFileDrop(evt)" style="height:100%;">
+    <section  id="content" class="ui container"  style="padding-top: 1.5em;height:100%;" >
+      <div ng-view style="height:100%;"></div>
+    </section>
+  </div>
 
   </body>
   <script type="text/javascript">

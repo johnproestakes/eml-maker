@@ -34,6 +34,73 @@ angular.module('EMLMaker').directive('aceEditor', ['$timeout', function($timeout
 
 }]);
 
+angular.module('EMLMaker')
+.directive('dropEnable', ['$timeout', function($timeout){
+	return {
+		restrict: "A",
+		// transclude: true,
+		scope: {
+			ondropfile:"&",
+			dataTransferEvt:"="
+		},
+		link: function(scope, el, attr){
+			var fileDropper = el;
+			var timer = null;
+			//reset
+			var dropperReset = function(evt){
+				clearTimeout(timer);
+				timer = setTimeout(function(){
+				fileDropper.removeClass('active');
+				setTimeout(function(){window.jQuery('.ui.sticky').sticky("refresh");},100);
+				fileDropper.css({border: "",color:"", background: ""});
+
+					// evt.preventDefault();
+				}, 100);
+				evt.stopPropagation();
+    			evt.preventDefault();
+
+				};
+
+				var counter = 0;
+			$timeout(function(){
+
+			fileDropper.get(0).addEventListener('drop', function(evt){
+
+				evt.stopPropagation();
+    			evt.preventDefault();
+					counter++;
+					dropperReset(evt);
+					scope.ondropfile({"evt":evt});
+					setTimeout(function(){
+
+					},100);
+
+				}, false);
+			fileDropper.get(0).addEventListener('dragend', dropperReset, false);
+			fileDropper.get(0).addEventListener('dragleave', dropperReset, false);
+			fileDropper.get(0).addEventListener('dragover', function(evt){
+
+				// evt.stopPropagation();
+
+				clearTimeout(timer);
+				evt.dataTransfer.dropEffect = 'copy';
+				fileDropper.addClass("active");
+				fileDropper.css({border: "solid 3px blue", color:"blue", background: "lightblue"});
+				timer = setTimeout(function(){
+
+					// evt.preventDefault();
+				}, 100);
+
+				evt.preventDefault();
+				}, false);
+
+
+				});
+
+			}
+		};
+	}]);
+
 angular.module('EMLMaker').directive('uiDropdown', ['$timeout', function($timeout){
 
   return {
@@ -55,7 +122,7 @@ angular.module('EMLMaker')
 	return {
 		restrict: "E",
 		transclude: true,
-		scope: {label: "@", ondrop:"&", dataTransferEvt:"="},
+		scope: {label: "@", ondropfile:"&", dataTransferEvt:"="},
 		template: "<div class=\"file-dropper\">{{label}}</div>",
 		link: function(scope, el, attr){
 			var fileDropper = el.find('.file-dropper');
@@ -74,8 +141,8 @@ angular.module('EMLMaker')
 			fileDropper.get(0).addEventListener('drop', function(evt){
 				evt.stopPropagation();
     			evt.preventDefault();
-					scope.ondrop({"evt":evt});
-					
+					scope.ondropfile({"evt":evt});
+
 					dropperReset(evt);
 				}, false);
 			fileDropper.get(0).addEventListener('dragend', dropperReset, false);
@@ -156,9 +223,9 @@ angular.module('EMLMaker')
     restrict: "E",
     template: '<div><div class="ui tiny secondary pointing menu">\
     <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{messages.data.length}}</span></a>\
-    <a class="item" ng-show="messages.count.FIX" ng-click="search.type=\'FIX\'" ng-class="{active: search.type==\'FIX\'}">Fix <span class="ui tiny red label">{{messages.count.FIX}}</span></a>\
-    <a class="item" ng-show="messages.count.SUGGESTION" ng-click="search.type=\'SUGGESTION\'" ng-class="{active: search.type==\'SUGGESTION\'}">Suggestions <span class="ui tiny label">{{messages.count.SUGGESTION}}</span></a>\
-    <a class="item" ng-show="messages.count[\'BEST PRACTICE\']" ng-click="search.type=\'BEST PRACTICE\'" ng-class="{active: search.type==\'BEST PRACTICE\'}">Best Practices <span class="ui tiny label">{{messages.count[\'BEST PRACTICE\']}}</span></a></div>\
+    <a class="item" ng-show="messages.count.Fix" ng-click="search.type=1" ng-class="{active: search.type==1}">Fix <span class="ui tiny red label">{{messages.count.Fix}}</span></a>\
+    <a class="item" ng-show="messages.count.Suggestion" ng-click="search.type=3" ng-class="{active: search.type==3}">Suggestions <span class="ui tiny label">{{messages.count.Suggestion}}</span></a>\
+    <a class="item" ng-show="messages.count.BestPractice" ng-click="search.type=2" ng-class="{active: search.type==2}">Best Practices <span class="ui tiny label">{{messages.count.BestPractice}}</span></a></div>\
     <div id="error-messages-list" class="ui divided list"><message-item item="item" class="item" ng-repeat="obj in messages.data | filter: search" error="obj"></message-item></div>\
     </div>',
     scope: {messages:"=", item:"="},
@@ -174,7 +241,8 @@ angular.module('EMLMaker')
 
         Object.defineProperty(scope, "search", {
           get: function(){
-            if(scope.messages.count[scope._search.type]==undefined) scope._search.type = "";
+            var b = ["","Fix", "BestPractice", "Suggestion"];
+            if(scope.messages.count[b[scope._search.type]]==undefined) scope._search.type = "";
             return scope._search;
           }
         });
@@ -193,16 +261,20 @@ angular.module('EMLMaker')
   return {
     restrict: "E",
     template: '<div ng-show="error.ctaLabel!==\'\'" style="margin-top: .5em; float:right">\
-      <div class="ui small compact" ng-class="{\'violet button\':error.severity==\'suggestion\',\'red button\': error.severity==\'high\', \'orange button\': error.severity==\'warn\', \'grey button\': error.severity==\'low\'}" \
-      ng-click="error.handler(item)" ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
+      <div class="ui small compact" \
+      ng-class="{\'red button\':error.cleanType==\'Fix\',\'violet button\':error.cleanType==\'Suggestion\',\'orange button\':error.cleanType==\'Warn\',\'button\':error.cleanType==\'BestPractice\'}" \
+      \ ng-click="error.handler(item)" \
+       ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
       </div>\
-      <div class="content" ng-bind-html="error.message" ng-class="{\'red-color\': error.severity==\'high\'}">{{error.message}}</div>\
+      <div class="content"> \
+        <h4><span class="ui tiny" ng-class="{\'red label\':error.cleanType==\'Fix\',\'orange label\':error.cleanType==\'Warn\',\'violet label\':error.cleanType==\'Suggestion\',\'label\':error.cleanType==\'BestPractice\'}">{{error.cleanType}}</span><br> {{error.title}}</h4>\
+        <div ng-bind-html="error.description"></div></div>\
     </div>',
     scope: {error: "=", item:"="},
     link: function(scope, el, attr){
       $timeout(function(){
 
-        
+
         scope.$on('$destroy', function(){
           // jQuery(el).popup("destroy");
         });
@@ -212,6 +284,31 @@ angular.module('EMLMaker')
 
 
 }]);
+
+angular.module('EMLMaker')
+.directive('onReturnPress', ['$timeout', function($timeout){
+	return {
+		restrict: "A",
+		// transclude: true,
+		scope: {
+			onReturnPress:"&",
+			dataTransferEvt:"="
+		},
+		link: function(scope, el, attr){
+
+			$timeout(function(){
+				el.on('keypress', function(e){
+					if(e.keyCode==13){
+						scope.onReturnPress();
+					}
+				});
+
+
+				});
+
+			}
+		};
+	}]);
 
 angular.module('EMLMaker').directive('uiPopup', ['$timeout', function($timeout){
 
@@ -243,22 +340,22 @@ angular.module('EMLMaker')
 .directive('queryStringEditor', ['$timeout', function($timeout){
   return {
     restrict: "E",
-    template: '<div class="query-string-editor"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
+    template: '<div class="query-string-editor" ng-hide="item.isLinkType(\'mailto\')"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
     <div class="ui tiny basic buttons" style="float:right;">\
-  <button class="ui icon button" ng-click="item.removeQueryStrings()">Remove all</button>\
+  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll()">Remove all</button>\
   <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
 </div></div>\
-     <div ng-if="item.queryStrings.length==1&&item.queryStrings[0].length==0">Query strings will appear here.</div>\
+     <div ng-if="item.new.searchParams._entries.length==1&&item.new.searchParams._entries[0].length==0">Query strings will appear here.</div>\
       <div ng-show="view==1">\
-      <div style="margin-bottom:.5em;" class="ui action input" ng-if="str.length>0" ng-repeat="str in item.queryStrings track by $index">\
-      <input type="text" ng-keyup="item.refreshURL()" ng-model="item.queryStrings[$index]"/>\
-      <button class="ui icon button" ng-click="item.removeQueryAtIndex($index)">\
+      <div style="margin-bottom:.5em;" class="ui action input" ng-if="str.length>0" ng-repeat="str in item.new.searchParams.entries track by $index">\
+      <input type="text" ng-keyup="item.refreshURL();item.new.searchParams.updateSearchProp();item.isLinkComplete()" ng-model="item.new.searchParams._entries[$index]"/>\
+      <button class="ui icon button" ng-click="item.new.searchParams.deleteAtIndex($index)">\
       Remove</button></div>\
       </div>\
       <div ng-show="view==0">\
       <ul class="tags-layout">\
-       <li ng-if="str.length>0" ng-repeat="str in item.queryStrings track by $index">\
-       {{str}} <a href="javascript:angular.noop()" ng-click="item.removeQueryAtIndex($index)">\
+       <li ng-if="str.length>0" ng-repeat="str in item.new.searchParams.entries track by $index">\
+       {{str}} <a href="javascript:angular.noop()" ng-click="item.new.searchParams.deleteAtIndex($index);item.isLinkComplete()">\
        <i class="close icon"></i></a></li></ul>\
        </div>\
       </div>',

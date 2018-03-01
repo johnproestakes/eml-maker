@@ -2,10 +2,9 @@ angular.module('EMLMaker')
 .controller('MainController', [
   '$scope',
   'saveAs',
-  '$EMLModule',
   '$routeParams',
   '$UserManagement',
-  function($scope, saveAs, $EMLModule, $routeParams, $UserManagement){
+  function($scope, saveAs, $routeParams, $UserManagement){
 
 
   $scope.update_version = false;
@@ -54,7 +53,7 @@ angular.module('EMLMaker')
   };
 
   $scope.blankSlate = function(){
-    $scope.workspace = new $EMLModule.EMLWorkspace("", $scope);
+    $scope.workspace = new EMLWorkspace("", $scope);
   };
 
   //only load once!

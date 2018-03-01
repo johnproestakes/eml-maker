@@ -14,6 +14,20 @@
   text-overflow: ellipsis;
 }
 
+.drop-enable.active {
+  &:before {
+    content:"DROP FILE HERE";
+    text-align: center;
+    position: absolute;
+    width: 200px;
+    margin-left:-100px;
+    left: 50%;
+    top: 50%;
+  }
+  * {visibility: hidden !important;}
+}
+
+
 .ui.vertical.menu {width: 100%;}
 .ui.inverted.steps {
   border-color: rgba(255,255,255,.35);
