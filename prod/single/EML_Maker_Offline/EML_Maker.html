@@ -274,7 +274,7 @@ var EMLMakerAIEngine;
                             }
                             window.ga('send', 'event', "Suggestion", "Unnecessary tracking code", "Remove Tracking Code");
                         }
-                        link.updateQueryString();
+                        link.new.searchParams.updateEntries();
                         link.refreshURL();
                         link.isLinkComplete();
                     },

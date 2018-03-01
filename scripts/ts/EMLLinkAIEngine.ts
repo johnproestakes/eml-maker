@@ -281,7 +281,7 @@ namespace EMLMakerAIEngine {
               }
               window.ga('send', 'event', "Suggestion", "Unnecessary tracking code", "Remove Tracking Code");
             }
-            link.updateQueryString();
+            link.new.searchParams.updateEntries();
             link.refreshURL();
             link.isLinkComplete();
           },
@@ -354,7 +354,7 @@ namespace EMLMakerAIEngine {
           }
         });
         if(affected){
-          LinkObject._super.messages.messages.push(new errorObject(ErrorType.Suggestion,
+          AIModule.messages.push(new errorObject(ErrorType.Suggestion,
             "Need a hand?",
             "I noticed you added a tracking code to this link, great job.\
              If you want I can add the same tracking code to the other links in this email \

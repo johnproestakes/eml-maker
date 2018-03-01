@@ -147,7 +147,7 @@ var EMLMakerAIEngine;
                             }
                             window.ga('send', 'event', "Suggestion", "Unnecessary tracking code", "Remove Tracking Code");
                         }
-                        link.updateQueryString();
+                        link.new.searchParams.updateEntries();
                         link.refreshURL();
                         link.isLinkComplete();
                     },
@@ -189,7 +189,7 @@ var EMLMakerAIEngine;
                 }
             });
             if (affected) {
-                LinkObject._super.messages.messages.push(new errorObject(ErrorType.Suggestion, "Need a hand?", "I noticed you added a tracking code to this link, great job.\
+                AIModule.messages.push(new errorObject(ErrorType.Suggestion, "Need a hand?", "I noticed you added a tracking code to this link, great job.\
              If you want I can add the same tracking code to the other links in this email \
              which require tracking codes.", { handler: function (link) {
                         var trackingCode = "";
