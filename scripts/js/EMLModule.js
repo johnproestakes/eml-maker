@@ -601,10 +601,13 @@ var EMLWorkspace = (function () {
         return output;
     };
     EMLWorkspace.prototype.generateOutputCode = function () {
-        var workingCode = this.replaceSpecialCharacters(this.sourceCode.replace(new RegExp("</a>", "ig"), "</a>\n"));
+        var workingCode = this.replaceSpecialCharacters(this.sourceCode);
+        workingCode = workingCode.replace(new RegExp("</a>", "ig"), "</a>\n");
         var codeLines = workingCode.split("\n");
         this.linkData.forEach(function (link) {
             var line = link.line - 1;
+            if (codeLines[line] === undefined)
+                return false;
             // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
             if (link.whiteListedUrl == link.new.url) {
                 //report the non tracked link;
