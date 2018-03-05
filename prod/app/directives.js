@@ -221,28 +221,28 @@ angular.module('EMLMaker')
 .directive('messageCenter', ['$timeout', function($timeout){
   return {
     restrict: "E",
-    template: '<div><div class="ui tiny secondary pointing menu">\
-    <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{messages.data.length}}</span></a>\
-    <a class="item" ng-show="messages.count.Fix" ng-click="search.type=1" ng-class="{active: search.type==1}">Fix <span class="ui tiny red label">{{messages.count.Fix}}</span></a>\
-    <a class="item" ng-show="messages.count.Suggestion" ng-click="search.type=3" ng-class="{active: search.type==3}">Suggestions <span class="ui tiny label">{{messages.count.Suggestion}}</span></a>\
-    <a class="item" ng-show="messages.count.BestPractice" ng-click="search.type=2" ng-class="{active: search.type==2}">Best Practices <span class="ui tiny label">{{messages.count.BestPractice}}</span></a></div>\
-    <div id="error-messages-list" class="ui divided list"><message-item item="item" class="item" ng-repeat="obj in messages.data | filter: search" error="obj"></message-item></div>\
+    template: '<div class="message-center"><div class="ui tiny secondary pointing menu">\
+    <div class="item mnu-title">MESSAGES:</div>\
+    <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{errors.messages.length}}</span></a>\
+    <a class="item" ng-repeat="(tab,value) in errors.tabs track by $index" ng-show="errors.count[tab]" ng-click="search.type=value" ng-class="{active: search.type==value}">{{tab | uncamelize}} <span class="ui tiny label">{{errors.count[tab]}}</span></a>\
+    </div>\
+    <div id="error-messages-list" class="ui middle aligned divided list">\
+      <message-item item="item" class="item" ng-repeat="obj in errors.messages | filter: search" error="obj"></message-item>\
+      </div>\
     </div>',
-    scope: {messages:"=", item:"="},
+    scope: {
+      errors:"=",
+      item:"="
+    },
     link: function(scope, el, attr){
       $timeout(function(){
         scope._search = {type: ""};
-        var View = (function(View){
-          View[View["DEFAULT"]=0] = "DEFAULT";
-          View[View["EDIT"]=1] = "EDIT";
-          return View;
-        })({});
-        scope.view = View.DEFAULT;
+        //scope.tabs = ["Fix", "BestPractice", "Suggestion"];
 
         Object.defineProperty(scope, "search", {
           get: function(){
             var b = ["","Fix", "BestPractice", "Suggestion"];
-            if(scope.messages.count[b[scope._search.type]]==undefined) scope._search.type = "";
+            if(scope.errors.count[b[scope._search.type]]==undefined) scope._search.type = "";
             return scope._search;
           }
         });
@@ -260,21 +260,23 @@ angular.module('EMLMaker')
 .directive('messageItem', ['$timeout', function($timeout){
   return {
     restrict: "E",
-    template: '<div ng-show="error.ctaLabel!==\'\'" style="margin-top: .5em; float:right">\
-      <div class="ui small compact" \
-      ng-class="{\'red button\':error.cleanType==\'Fix\',\'violet button\':error.cleanType==\'Suggestion\',\'orange button\':error.cleanType==\'Warn\',\'button\':error.cleanType==\'BestPractice\'}" \
-      \ ng-click="error.handler(item)" \
-       ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
-      </div>\
+    template: '<div ng-class="messageCls">\
+    <div class="right floated content" ng-show="error.ctaLabel!==\'\'" >\
+    <div class="ui small compact" \
+    ng-class="buttonCls" \
+    \ ng-click="error.handler(item)" \
+     ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
+    </div>\
       <div class="content"> \
-        <h4><span class="ui tiny" ng-class="{\'red label\':error.cleanType==\'Fix\',\'orange label\':error.cleanType==\'Warn\',\'violet label\':error.cleanType==\'Suggestion\',\'label\':error.cleanType==\'BestPractice\'}">{{error.cleanType}}</span><br> {{error.title}}</h4>\
+        <h4>{{error.title}}</h4>\
         <div ng-bind-html="error.description"></div></div>\
     </div>',
     scope: {error: "=", item:"="},
     link: function(scope, el, attr){
       $timeout(function(){
-
-
+        var cls = ["", "red", "orange","violet","yellow",""];
+        scope.buttonCls = [cls[scope.error.severity],"button"].join(" ");
+        scope.messageCls = "type-"+ scope.error.type +" level-"+scope.error.severity;
         scope.$on('$destroy', function(){
           // jQuery(el).popup("destroy");
         });
@@ -284,6 +286,36 @@ angular.module('EMLMaker')
 
 
 }]);
+
+angular.module('EMLMaker')
+.directive('ngChangeLazy', ['$timeout', function($timeout){
+	return {
+		restrict: "A",
+		// transclude: true,
+		scope: {
+			ngChangeLazy:"&",
+			dataTransferEvt:"="
+		},
+		link: function(scope, el, attr){
+			var timer = null;
+			$timeout(function(){
+				el.on('keyup', function(e){
+					clearTimeout(timer);
+					timer = setTimeout(function(){
+						scope.$apply(function(){
+							scope.ngChangeLazy();
+						});
+					},300);
+				});
+
+				scope.$on('$destroy', function(){
+					el.off('keyup');
+				});
+			});
+
+			}
+		};
+	}]);
 
 angular.module('EMLMaker')
 .directive('onReturnPress', ['$timeout', function($timeout){
@@ -303,8 +335,10 @@ angular.module('EMLMaker')
 					}
 				});
 
-
+				scope.$on('$destroy', function(){
+					el.off('keypress');
 				});
+			});
 
 			}
 		};
@@ -342,7 +376,7 @@ angular.module('EMLMaker')
     restrict: "E",
     template: '<div class="query-string-editor" ng-hide="item.isLinkType(\'mailto\')"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
     <div class="ui tiny basic buttons" style="float:right;">\
-  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll()">Remove all</button>\
+  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll(); item.isLinkComplete()">Remove all</button>\
   <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
 </div></div>\
      <div ng-if="item.new.searchParams._entries.length==1&&item.new.searchParams._entries[0].length==0">Query strings will appear here.</div>\

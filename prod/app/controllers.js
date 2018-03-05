@@ -3,36 +3,11 @@ angular.module('EMLMaker')
   '$scope',
   'saveAs',
   '$routeParams',
-  '$UserManagement',
-  function($scope, saveAs, $routeParams, $UserManagement){
+
+  function($scope, saveAs, $routeParams){
 
 
-  $scope.update_version = false;
-  $scope.update_forced = false;
-  $scope.offlineVersion = window.OFFLINE_VERSION;
-  $scope.onlineVersion = window.CURRENT_VERSION;
-  $scope.accessingFromOffline = false;
-
-
-  var forceUpdate = function(offline, online){
-    var offlineVersion = offline.split("."),
-    onlineVersion = online.split("."),
-    match = 0, output = false;
-    for(var i=0; i<onlineVersion.length;i++){
-      if(onlineVersion[i]== offlineVersion[i]) match++;
-    }
-    if(match<3){
-      output = true;
-    }
-    return output;
-  };
-
-  if(window.OFFLINE_VERSION&&window.LOCALHOST){ $scope.accessingFromOffline = true; }
-  if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
-    $scope.update_version = true;
-    $scope.update_forced = forceUpdate(window.OFFLINE_VERSION, window.CURRENT_VERSION);
-  }
-
+  $scope.UpdateModule = new window.UpdateModule();
 
 
   $scope.sessionUserEmail = "";
@@ -58,7 +33,7 @@ angular.module('EMLMaker')
 
   //only load once!
   $scope.blankSlate();
-  $scope.SecureGateway = new $UserManagement.SecureGateway(function(){
+  $scope.SecureGateway = new SecureGateway(function(){
     $scope.blankSlate();
   });
 

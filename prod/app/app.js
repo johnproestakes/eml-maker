@@ -8,4 +8,11 @@ angular.module('EMLMaker', ['ngRoute','ngSanitize'])
     return output;
 
   }
+})
+.filter('uncamelize', function(){
+  return function(input){
+    return input.replace(/([A-Z])/g, ' $1')
+    // uppercase the first character
+    .replace(/^./, function(str){ return str.toUpperCase(); });
+  }
 });

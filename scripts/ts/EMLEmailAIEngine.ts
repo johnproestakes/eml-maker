@@ -1,10 +1,12 @@
+
+
 namespace EMLMakerAIEngine {
   export class EmailIntelligence {
     messages : any[];
     canContinue : boolean;
     EMLWorkspace: EMLWorkspace;
     lastEval: number;
-    constructor(EMLWorkspace){
+    constructor(EMLWorkspace?){
       this.messages = [];
       this.canContinue = true;
       this.EMLWorkspace = EMLWorkspace;
@@ -14,9 +16,27 @@ namespace EMLMakerAIEngine {
       if(condition) callback(this.EMLWorkspace, this);
       return this;
     }
+    get tabs(){
+      let output = {};
+      for(let i = 0; i<this.messages.length; i++){
+        output[ErrorType[this.messages[i].type]] = this.messages[i].type;
+      }
+      return output;
+    }
+
+    get count(){
+      let output = {};
+      for(var i =0; i < this.messages.length; i++) {
+        if(output[ErrorType[this.messages[i].type]] === undefined) {
+          output[ErrorType[this.messages[i].type]] = 0;
+        }
+        output[ErrorType[this.messages[i].type]]++;
+      }
+      return output;
+    }
   }
   export var emailAILastEval = Date.now();
-  export var emailAILastCheck = {messages:["default"]};
+  export var emailAILastCheck = new EmailIntelligence;
 
   export function CheckEmail(EMLWorkspace) : EmailIntelligence {
     if((Date.now()-emailAILastEval) < 300) {
@@ -28,15 +48,16 @@ namespace EMLMakerAIEngine {
     emailAILastEval = Date.now();
     let EmailAI = new EmailIntelligence(EMLWorkspace);
     // console.log();
-    EmailAI.when(
-      EMLWorkspace.linkData.length>10,
-      function(EMLWorkspace, EmailAI){
-        EmailAI.messages.push(
-          `Your email has a lot of links.`
-        );
-      }
-
-    );
+    // EmailAI
+    // .when(
+    //   EMLWorkspace.linkData.length>10,
+    //   function(EMLWorkspace, EmailAI){
+    //     EmailAI.messages.push(
+    //       `Your email has a lot of links.`
+    //     );
+    //   }
+    //
+    // );
 
 
     emailAILastCheck = EmailAI;

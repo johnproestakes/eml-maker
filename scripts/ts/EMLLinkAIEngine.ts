@@ -1,7 +1,7 @@
 interface Window {
     ga(option1, option2, option3, option4, option5): void;
     saveAs(option1?, option2?): void;
-    jQuery(option):any;
+    jQuery(option): any;
     decodeURIComponent(option): string;
     encodeURIComponent(option): string;
 }
@@ -17,9 +17,27 @@ namespace EMLMakerAIEngine {
       this.LinkObject = LinkObject;
       this.messages = [];
     }
+    get tabs(){
+      let output = {};
+      for(let i = 0; i<this.messages.length; i++){
+        output[ErrorType[this.messages[i].type]] = this.messages[i].type;
+      }
+      return output;
+    }
 
+    get count(){
+      let output = {};
+      for(var i =0; i < this.messages.length; i++) {
+        if(output[ErrorType[this.messages[i].type]] === undefined) {
+          output[ErrorType[this.messages[i].type]] = 0;
+        }
+        output[ErrorType[this.messages[i].type]]++;
+      }
+      return output;
+    }
     when(condition, callback){
       if(condition) callback(this.LinkObject, this);
+      this.messages.sort((x,y)=>{ x.severity > y.severity });
       return this;
     }
   }
@@ -34,7 +52,8 @@ namespace EMLMakerAIEngine {
     let AIMod = new LinkIntelligence(LinkObject);
 
     AIMod.when(
-      LinkObject.needsTrackingCode()&&!LinkObject.new.contains("optum.co/"),
+      (LinkObject.whiteListedUrl!==LinkObject.new.url)
+      &&LinkObject.needsTrackingCode()&&!LinkObject.new.contains("optum.co/"),
       function(LinkObject, AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
@@ -50,7 +69,7 @@ namespace EMLMakerAIEngine {
                   link.isLinkComplete();
                 } ,
                 ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
-              }: {severity: 'high'}));
+              }: {severity: ErrorSeverity.High}));
       })
     .when(linkEncapsulatedPunctuation.test(LinkObject.context),
       function(LinkObject, AIModule){
@@ -60,7 +79,7 @@ namespace EMLMakerAIEngine {
             "Style matters",
             "You should not put punctuation inside of a link unless it is a button, and even then it's a little weird.",
             {
-            severity: 'high'
+            severity: ErrorSeverity.High
           }));
       }
     )
@@ -73,7 +92,7 @@ namespace EMLMakerAIEngine {
             "This URL is not correct.",
             "/content/optum3/en/ is only for use in author in AEM, not on the live site.",
             {
-            severity: 'high'
+            severity: ErrorSeverity.High
           }));
         AIModule.canContinue = false;
       }
@@ -90,7 +109,7 @@ namespace EMLMakerAIEngine {
           "and this link will be removed when you export the code."].join(" "),
 
             {
-            severity: 'high',
+            severity: ErrorSeverity.High,
             handler: function(link){
               link.new.url = "";
               link.deleteOnRender = true;
@@ -114,13 +133,13 @@ namespace EMLMakerAIEngine {
           so that they have underscores instead, as a best practice.`,
           !/\/campaign\/|\/resources\//gi.test(LinkObject.new.url) ?
             {
-            severity: 'high',
+            severity: ErrorSeverity.High,
             handler: function(link){
               link.new.url = link.new.url.replace(/\s/g, "%20");
               link.isLinkComplete();
             } ,
             ctaLabel:'<i class="wizard icon"></i> Encode Spaces'
-          } : {severity: 'high'}));
+          } : {severity: ErrorSeverity.High}));
     })
     .when(
       LinkObject.new.searchParams.entries.length>0&&
@@ -132,7 +151,7 @@ namespace EMLMakerAIEngine {
           "Duplicate query strings",
           "It looks like you have duplicate query strings. When you have duplicate parameters, only one will be valid, so make sure to remove the incorrect or duplicate parameters.\
            Pay attention to these parameters: " + LinkObject.hasDuplicateQueryStrings().join(", "),
-          {severity:'high'}
+          {severity: ErrorSeverity.High}
         ));
       }
     )
@@ -144,7 +163,7 @@ namespace EMLMakerAIEngine {
           ErrorType.Fix,
         "Invalid URL",
           "This is not a valid URL",
-          {severity: "high" }
+          {severity: ErrorSeverity.High }
         ));
         AIModule.canContinue = false;
       }
@@ -179,7 +198,7 @@ namespace EMLMakerAIEngine {
           "Don't use shortlinks or vanity URLs in emails",
           "Always use the long link. Adding query string parameter to a vanity\
            url inside an email will not track appropriately."
-        ));
+        , {severity:ErrorSeverity.High}));
       }
 
 
@@ -199,7 +218,7 @@ namespace EMLMakerAIEngine {
           AIModule.messages.push(
             new errorObject(ErrorType.BestPractice,
               "Add an ALT tag",
-            "Linked image should have an ALT tag.")
+            "Linked image should have an ALT tag.", {severity:ErrorSeverity.Low})
           );
         }
       }
@@ -221,7 +240,7 @@ namespace EMLMakerAIEngine {
             link.isLinkComplete();
             window.ga('send', 'event', "Suggestion", "Remove Anchor Link", "Remove Anchor Link");
           },
-          severity: ErrorType.Suggestion,
+          severity: ErrorSeverity.Low,
           ctaLabel: "<i class=\"wizard icon\"></i> Fix it"
         }
       ));
@@ -258,7 +277,7 @@ namespace EMLMakerAIEngine {
 
               window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
             },
-            severity: ErrorType.Suggestion,
+            severity: ErrorSeverity.Low,
             ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
           }
         ));
@@ -286,7 +305,7 @@ namespace EMLMakerAIEngine {
             link.isLinkComplete();
           },
           ctaLabel: "<i class=\"wizard icon\"></i>Fix it now",
-          severity: ErrorType.Suggestion
+          severity: ErrorSeverity.Low
         }
         ));
       }
@@ -297,7 +316,7 @@ namespace EMLMakerAIEngine {
         AIModule.messages.push(new errorObject(
           ErrorType.Fix,
           "Invalid email address",
-          "Fix invalid email address.", {severity: 'high'}));
+          "Fix invalid email address.", {severity: ErrorSeverity.High}));
         AIModule.canContinue = false;
       }
     ).when(
@@ -312,7 +331,8 @@ namespace EMLMakerAIEngine {
               link.mailto.openEditor();
               window.ga('send', 'event', "Best Practice", "Add subject line", "Add subject line");
             },
-            ctaLabel:"<i class=\"wizard icon\"></i> Open Editor"
+            ctaLabel:"<i class=\"wizard icon\"></i> Open Editor",
+            severity:ErrorSeverity.Medium
           }
         ));
 
@@ -383,7 +403,7 @@ namespace EMLMakerAIEngine {
               link.refreshURL();
               window.ga('send', 'event', "Suggestion", "Cascade Tracking Code", "Cascade Tracking Code");
             },
-            severity: 'suggestion',
+            severity: ErrorSeverity.Low,
             ctaLabel: "<i class=\"wizard icon\"></i> Update all links"
           }
           ));
@@ -411,7 +431,7 @@ namespace EMLMakerAIEngine {
             link.isLinkComplete();
             window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
           },
-          severity: 'suggestion',
+          severity: ErrorSeverity.Low,
           ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
         }
         ));

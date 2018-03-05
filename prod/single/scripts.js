@@ -90,1073 +90,11 @@ e.fn.search=function(o){var a,r=e(this),s=r.selector||"",l=(new Date).getTime(),
 w.cache={width:O.outerWidth(),height:O.outerHeight(),rtl:"rtl"==O.css("direction")}},layout:function(){0===D.children(S.pusher).length&&(w.debug("Adding wrapper element for sidebar"),w.error(E.pusher),z=e('<div class="pusher" />'),D.children().not(S.omitted).not(q).wrapAll(z),w.refresh()),0!==O.nextAll(S.pusher).length&&O.nextAll(S.pusher)[0]===z[0]||(w.debug("Moved sidebar to correct parent element"),w.error(E.movedSidebar,M),O.detach().prependTo(D),w.refresh()),w.clear.cache(),w.set.pushable(),w.set.direction()}},attachEvents:function(t,n){var i=e(t);n=e.isFunction(w[n])?w[n]:w.toggle,i.length>0?(w.debug("Attaching sidebar events to element",t,n),i.on("click"+P,n)):w.error(E.notFound,t)},show:function(t){if(t=e.isFunction(t)?t:function(){},w.is.hidden()){if(w.refreshSidebars(),k.overlay&&(w.error(E.overlay),k.transition="overlay"),w.refresh(),w.othersActive())if(w.debug("Other sidebars currently visible"),k.exclusive){if("overlay"!=k.transition)return void w.hideOthers(w.show);w.hideOthers()}else k.transition="overlay";w.pushPage(function(){t.call(M),k.onShow.call(M)}),k.onChange.call(M),k.onVisible.call(M)}else w.debug("Sidebar is already visible")},hide:function(t){t=e.isFunction(t)?t:function(){},(w.is.visible()||w.is.animating())&&(w.debug("Hiding sidebar",t),w.refreshSidebars(),w.pullPage(function(){t.call(M),k.onHidden.call(M)}),k.onChange.call(M),k.onHide.call(M))},othersAnimating:function(){return q.not(O).filter("."+T.animating).length>0},othersVisible:function(){return q.not(O).filter("."+T.visible).length>0},othersActive:function(){return w.othersVisible()||w.othersAnimating()},hideOthers:function(e){var t=q.not(O).filter("."+T.visible),n=t.length,i=0;e=e||function(){},t.sidebar("hide",function(){i++,i==n&&e()})},toggle:function(){w.verbose("Determining toggled direction"),w.is.hidden()?w.show():w.hide()},pushPage:function(t){var n,i,o,a=w.get.transition(),r="overlay"===a||w.othersActive()?O:z;t=e.isFunction(t)?t:function(){},"scale down"==k.transition&&w.scrollToTop(),w.set.transition(a),w.repaint(),n=function(){w.bind.clickaway(),w.add.inlineCSS(),w.set.animating(),w.set.visible()},i=function(){w.set.dimmed()},o=function(e){e.target==r[0]&&(r.off(C+b,o),w.remove.animating(),w.bind.scrollLock(),t.call(M))},r.off(C+b),r.on(C+b,o),v(n),k.dimPage&&!w.othersVisible()&&v(i)},pullPage:function(t){var n,i,o=w.get.transition(),a="overlay"==o||w.othersActive()?O:z;t=e.isFunction(t)?t:function(){},w.verbose("Removing context push state",w.get.direction()),w.unbind.clickaway(),w.unbind.scrollLock(),n=function(){w.set.transition(o),w.set.animating(),w.remove.visible(),k.dimPage&&!w.othersVisible()&&z.removeClass(T.dimmed)},i=function(e){e.target==a[0]&&(a.off(C+b,i),w.remove.animating(),w.remove.transition(),w.remove.inlineCSS(),("scale down"==o||k.returnScroll&&w.is.mobile())&&w.scrollBack(),t.call(M))},a.off(C+b),a.on(C+b,i),v(n)},scrollToTop:function(){w.verbose("Scrolling to top of page to avoid animation issues"),x=e(t).scrollTop(),O.scrollTop(0),t.scrollTo(0,0)},scrollBack:function(){w.verbose("Scrolling back to original page position"),t.scrollTo(0,x)},clear:{cache:function(){w.verbose("Clearing cached dimensions"),w.cache={}}},set:{ios:function(){c.addClass(T.ios)},pushed:function(){D.addClass(T.pushed)},pushable:function(){D.addClass(T.pushable)},dimmed:function(){z.addClass(T.dimmed)},active:function(){O.addClass(T.active)},animating:function(){O.addClass(T.animating)},transition:function(e){e=e||w.get.transition(),O.addClass(e)},direction:function(e){e=e||w.get.direction(),O.addClass(T[e])},visible:function(){O.addClass(T.visible)},overlay:function(){O.addClass(T.overlay)}},remove:{inlineCSS:function(){w.debug("Removing inline css styles",r),r&&r.length>0&&r.remove()},ios:function(){c.removeClass(T.ios)},pushed:function(){D.removeClass(T.pushed)},pushable:function(){D.removeClass(T.pushable)},active:function(){O.removeClass(T.active)},animating:function(){O.removeClass(T.animating)},transition:function(e){e=e||w.get.transition(),O.removeClass(e)},direction:function(e){e=e||w.get.direction(),O.removeClass(T[e])},visible:function(){O.removeClass(T.visible)},overlay:function(){O.removeClass(T.overlay)}},get:{direction:function(){return O.hasClass(T.top)?T.top:O.hasClass(T.right)?T.right:O.hasClass(T.bottom)?T.bottom:T.left},transition:function(){var e,t=w.get.direction();return e=w.is.mobile()?"auto"==k.mobileTransition?k.defaultTransition.mobile[t]:k.mobileTransition:"auto"==k.transition?k.defaultTransition.computer[t]:k.transition,w.verbose("Determined transition",e),e},transitionEvent:function(){var e,t=n.createElement("element"),o={transition:"transitionend",OTransition:"oTransitionEnd",MozTransition:"transitionend",WebkitTransition:"webkitTransitionEnd"};for(e in o)if(t.style[e]!==i)return o[e]}},is:{ie:function(){var e=!t.ActiveXObject&&"ActiveXObject"in t,n="ActiveXObject"in t;return e||n},ios:function(){var e=navigator.userAgent,t=e.match(R.ios),n=e.match(R.mobileChrome);return!(!t||n)&&(w.verbose("Browser was found to be iOS",e),!0)},mobile:function(){var e=navigator.userAgent,t=e.match(R.mobile);return t?(w.verbose("Browser was found to be mobile",e),!0):(w.verbose("Browser is not mobile, using regular transition",e),!1)},hidden:function(){return!w.is.visible()},visible:function(){return O.hasClass(T.visible)},open:function(){return w.is.visible()},closed:function(){return w.is.hidden()},vertical:function(){return O.hasClass(T.top)},animating:function(){return D.hasClass(T.animating)},rtl:function(){return w.cache.rtl===i&&(w.cache.rtl="rtl"==O.css("direction")),w.cache.rtl}},setting:function(t,n){if(w.debug("Changing setting",t,n),e.isPlainObject(t))e.extend(!0,k,t);else{if(n===i)return k[t];e.isPlainObject(k[t])?e.extend(!0,k[t],n):k[t]=n}},internal:function(t,n){if(e.isPlainObject(t))e.extend(!0,w,t);else{if(n===i)return w[t];w[t]=n}},debug:function(){!k.silent&&k.debug&&(k.performance?w.performance.log(arguments):(w.debug=Function.prototype.bind.call(console.info,console,k.name+":"),w.debug.apply(console,arguments)))},verbose:function(){!k.silent&&k.verbose&&k.debug&&(k.performance?w.performance.log(arguments):(w.verbose=Function.prototype.bind.call(console.info,console,k.name+":"),w.verbose.apply(console,arguments)))},error:function(){k.silent||(w.error=Function.prototype.bind.call(console.error,console,k.name+":"),w.error.apply(console,arguments))},performance:{log:function(e){var t,n,i;k.performance&&(t=(new Date).getTime(),i=f||t,n=t-i,f=t,m.push({Name:e[0],Arguments:[].slice.call(e,1)||"",Element:M,"Execution Time":n})),clearTimeout(w.performance.timer),w.performance.timer=setTimeout(w.performance.display,500)},display:function(){var t=k.name+":",n=0;f=!1,clearTimeout(w.performance.timer),e.each(m,function(e,t){n+=t["Execution Time"]}),t+=" "+n+"ms",d&&(t+=" '"+d+"'"),(console.group!==i||console.table!==i)&&m.length>0&&(console.groupCollapsed(t),console.table?console.table(m):e.each(m,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),m=[]}},invoke:function(t,n,o){var r,s,l,c=I;return n=n||h,o=M||o,"string"==typeof t&&c!==i&&(t=t.split(/[\. ]/),r=t.length-1,e.each(t,function(n,o){var a=n!=r?o+t[n+1].charAt(0).toUpperCase()+t[n+1].slice(1):t;if(e.isPlainObject(c[a])&&n!=r)c=c[a];else{if(c[a]!==i)return s=c[a],!1;if(!e.isPlainObject(c[o])||n==r)return c[o]!==i?(s=c[o],!1):(w.error(E.method,t),!1);c=c[o]}})),e.isFunction(s)?l=s.apply(o,n):s!==i&&(l=s),e.isArray(a)?a.push(l):a!==i?a=[a,l]:l!==i&&(a=l),s}},p?(I===i&&w.initialize(),w.invoke(g)):(I!==i&&w.invoke("destroy"),w.initialize())}),a!==i?a:this},e.fn.sidebar.settings={name:"Sidebar",namespace:"sidebar",silent:!1,debug:!1,verbose:!1,performance:!0,transition:"auto",mobileTransition:"auto",defaultTransition:{computer:{left:"uncover",right:"uncover",top:"overlay",bottom:"overlay"},mobile:{left:"uncover",right:"uncover",top:"overlay",bottom:"overlay"}},context:"body",exclusive:!1,closable:!0,dimPage:!0,scrollLock:!1,returnScroll:!1,delaySetup:!1,duration:500,onChange:function(){},onShow:function(){},onHide:function(){},onHidden:function(){},onVisible:function(){},className:{active:"active",animating:"animating",dimmed:"dimmed",ios:"ios",pushable:"pushable",pushed:"pushed",right:"right",top:"top",left:"left",bottom:"bottom",visible:"visible"},selector:{fixed:".fixed",omitted:"script, link, style, .ui.modal, .ui.dimmer, .ui.nag, .ui.fixed",pusher:".pusher",sidebar:".ui.sidebar"},regExp:{ios:/(iPad|iPhone|iPod)/g,mobileChrome:/(CriOS)/g,mobile:/Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune/g},error:{method:"The method you called is not defined.",pusher:"Had to add pusher element. For optimal performance make sure body content is inside a pusher element",movedSidebar:"Had to move sidebar. For optimal performance make sure sidebar and pusher are direct children of your body tag",overlay:"The overlay setting is no longer supported, use animation: overlay",notFound:"There were no elements that matched the specified selector"}}}(jQuery,window,document),function(e,t,n,i){"use strict";t="undefined"!=typeof t&&t.Math==Math?t:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")(),e.fn.sticky=function(o){var a,r=e(this),s=r.selector||"",l=(new Date).getTime(),c=[],u=arguments[0],d="string"==typeof u,f=[].slice.call(arguments,1);return r.each(function(){var r,m,g,p,h,v=e.isPlainObject(o)?e.extend(!0,{},e.fn.sticky.settings,o):e.extend({},e.fn.sticky.settings),b=v.className,y=v.namespace,x=v.error,C="."+y,w="module-"+y,k=e(this),S=e(t),T=e(v.scrollContext),A=(k.selector||"",k.data(w)),R=t.requestAnimationFrame||t.mozRequestAnimationFrame||t.webkitRequestAnimationFrame||t.msRequestAnimationFrame||function(e){setTimeout(e,0)},E=this;h={initialize:function(){h.determineContainer(),h.determineContext(),h.verbose("Initializing sticky",v,r),h.save.positions(),h.checkErrors(),h.bind.events(),v.observeChanges&&h.observeChanges(),h.instantiate()},instantiate:function(){h.verbose("Storing instance of module",h),A=h,k.data(w,h)},destroy:function(){h.verbose("Destroying previous instance"),h.reset(),g&&g.disconnect(),p&&p.disconnect(),S.off("load"+C,h.event.load).off("resize"+C,h.event.resize),T.off("scrollchange"+C,h.event.scrollchange),k.removeData(w)},observeChanges:function(){"MutationObserver"in t&&(g=new MutationObserver(h.event.documentChanged),p=new MutationObserver(h.event.changed),g.observe(n,{childList:!0,subtree:!0}),p.observe(E,{childList:!0,subtree:!0}),p.observe(m[0],{childList:!0,subtree:!0}),h.debug("Setting up mutation observer",p))},determineContainer:function(){r=v.container?e(v.container):k.offsetParent()},determineContext:function(){if(m=v.context?e(v.context):r,0===m.length)return void h.error(x.invalidContext,v.context,k)},checkErrors:function(){if(h.is.hidden()&&h.error(x.visible,k),h.cache.element.height>h.cache.context.height)return h.reset(),void h.error(x.elementSize,k)},bind:{events:function(){S.on("load"+C,h.event.load).on("resize"+C,h.event.resize),T.off("scroll"+C).on("scroll"+C,h.event.scroll).on("scrollchange"+C,h.event.scrollchange)}},event:{changed:function(e){clearTimeout(h.timer),h.timer=setTimeout(function(){h.verbose("DOM tree modified, updating sticky menu",e),h.refresh()},100)},documentChanged:function(t){[].forEach.call(t,function(t){t.removedNodes&&[].forEach.call(t.removedNodes,function(t){(t==E||e(t).find(E).length>0)&&(h.debug("Element removed from DOM, tearing down events"),h.destroy())})})},load:function(){h.verbose("Page contents finished loading"),R(h.refresh)},resize:function(){h.verbose("Window resized"),R(h.refresh)},scroll:function(){R(function(){T.triggerHandler("scrollchange"+C,T.scrollTop())})},scrollchange:function(e,t){h.stick(t),v.onScroll.call(E)}},refresh:function(e){h.reset(),v.context||h.determineContext(),e&&h.determineContainer(),h.save.positions(),h.stick(),v.onReposition.call(E)},supports:{sticky:function(){var t=e("<div/>");t[0];return t.addClass(b.supported),t.css("position").match("sticky")}},save:{lastScroll:function(e){h.lastScroll=e},elementScroll:function(e){h.elementScroll=e},positions:function(){var e={height:T.height()},t={margin:{top:parseInt(k.css("margin-top"),10),bottom:parseInt(k.css("margin-bottom"),10)},offset:k.offset(),width:k.outerWidth(),height:k.outerHeight()},n={offset:m.offset(),height:m.outerHeight()};({height:r.outerHeight()});h.is.standardScroll()||(h.debug("Non-standard scroll. Removing scroll offset from element offset"),e.top=T.scrollTop(),e.left=T.scrollLeft(),t.offset.top+=e.top,n.offset.top+=e.top,t.offset.left+=e.left,n.offset.left+=e.left),h.cache={fits:t.height<e.height,scrollContext:{height:e.height},element:{margin:t.margin,top:t.offset.top-t.margin.top,left:t.offset.left,width:t.width,height:t.height,bottom:t.offset.top+t.height},context:{top:n.offset.top,height:n.height,bottom:n.offset.top+n.height}},h.set.containerSize(),h.set.size(),h.stick(),h.debug("Caching element positions",h.cache)}},get:{direction:function(e){var t="down";return e=e||T.scrollTop(),h.lastScroll!==i&&(h.lastScroll<e?t="down":h.lastScroll>e&&(t="up")),t},scrollChange:function(e){return e=e||T.scrollTop(),h.lastScroll?e-h.lastScroll:0},currentElementScroll:function(){return h.elementScroll?h.elementScroll:h.is.top()?Math.abs(parseInt(k.css("top"),10))||0:Math.abs(parseInt(k.css("bottom"),10))||0},elementScroll:function(e){e=e||T.scrollTop();var t=h.cache.element,n=h.cache.scrollContext,i=h.get.scrollChange(e),o=t.height-n.height+v.offset,a=h.get.currentElementScroll(),r=a+i;return a=h.cache.fits||r<0?0:r>o?o:r}},remove:{lastScroll:function(){delete h.lastScroll},elementScroll:function(e){delete h.elementScroll},offset:function(){k.css("margin-top","")}},set:{offset:function(){h.verbose("Setting offset on element",v.offset),k.css("margin-top",v.offset)},containerSize:function(){var e=r.get(0).tagName;"HTML"===e||"body"==e?h.determineContainer():Math.abs(r.outerHeight()-h.cache.context.height)>v.jitter&&(h.debug("Context has padding, specifying exact height for container",h.cache.context.height),r.css({height:h.cache.context.height}))},minimumSize:function(){var e=h.cache.element;r.css("min-height",e.height)},scroll:function(e){h.debug("Setting scroll on element",e),h.elementScroll!=e&&(h.is.top()&&k.css("bottom","").css("top",-e),h.is.bottom()&&k.css("top","").css("bottom",e))},size:function(){0!==h.cache.element.height&&0!==h.cache.element.width&&(E.style.setProperty("width",h.cache.element.width+"px","important"),E.style.setProperty("height",h.cache.element.height+"px","important"))}},is:{standardScroll:function(){return T[0]==t},top:function(){return k.hasClass(b.top)},bottom:function(){return k.hasClass(b.bottom)},initialPosition:function(){return!h.is.fixed()&&!h.is.bound()},hidden:function(){return!k.is(":visible")},bound:function(){return k.hasClass(b.bound)},fixed:function(){return k.hasClass(b.fixed)}},stick:function(e){var t=e||T.scrollTop(),n=h.cache,i=n.fits,o=n.element,a=n.scrollContext,r=n.context,s=h.is.bottom()&&v.pushing?v.bottomOffset:v.offset,e={top:t+s,bottom:t+s+a.height},l=(h.get.direction(e.top),i?0:h.get.elementScroll(e.top)),c=!i,u=0!==o.height;u&&(h.is.initialPosition()?e.top>=r.bottom?(h.debug("Initial element position is bottom of container"),h.bindBottom()):e.top>o.top&&(o.height+e.top-l>=r.bottom?(h.debug("Initial element position is bottom of container"),h.bindBottom()):(h.debug("Initial element position is fixed"),h.fixTop())):h.is.fixed()?h.is.top()?e.top<=o.top?(h.debug("Fixed element reached top of container"),h.setInitialPosition()):o.height+e.top-l>=r.bottom?(h.debug("Fixed element reached bottom of container"),h.bindBottom()):c&&(h.set.scroll(l),h.save.lastScroll(e.top),h.save.elementScroll(l)):h.is.bottom()&&(e.bottom-o.height<=o.top?(h.debug("Bottom fixed rail has reached top of container"),h.setInitialPosition()):e.bottom>=r.bottom?(h.debug("Bottom fixed rail has reached bottom of container"),h.bindBottom()):c&&(h.set.scroll(l),h.save.lastScroll(e.top),h.save.elementScroll(l))):h.is.bottom()&&(e.top<=o.top?(h.debug("Jumped from bottom fixed to top fixed, most likely used home/end button"),h.setInitialPosition()):v.pushing?h.is.bound()&&e.bottom<=r.bottom&&(h.debug("Fixing bottom attached element to bottom of browser."),h.fixBottom()):h.is.bound()&&e.top<=r.bottom-o.height&&(h.debug("Fixing bottom attached element to top of browser."),h.fixTop())))},bindTop:function(){h.debug("Binding element to top of parent container"),h.remove.offset(),k.css({left:"",top:"",marginBottom:""}).removeClass(b.fixed).removeClass(b.bottom).addClass(b.bound).addClass(b.top),v.onTop.call(E),v.onUnstick.call(E)},bindBottom:function(){h.debug("Binding element to bottom of parent container"),h.remove.offset(),k.css({left:"",top:""}).removeClass(b.fixed).removeClass(b.top).addClass(b.bound).addClass(b.bottom),v.onBottom.call(E),v.onUnstick.call(E)},setInitialPosition:function(){h.debug("Returning to initial position"),h.unfix(),h.unbind()},fixTop:function(){h.debug("Fixing element to top of page"),h.set.minimumSize(),h.set.offset(),k.css({left:h.cache.element.left,bottom:"",marginBottom:""}).removeClass(b.bound).removeClass(b.bottom).addClass(b.fixed).addClass(b.top),v.onStick.call(E)},fixBottom:function(){h.debug("Sticking element to bottom of page"),h.set.minimumSize(),h.set.offset(),k.css({left:h.cache.element.left,bottom:"",marginBottom:""}).removeClass(b.bound).removeClass(b.top).addClass(b.fixed).addClass(b.bottom),v.onStick.call(E)},unbind:function(){h.is.bound()&&(h.debug("Removing container bound position on element"),h.remove.offset(),k.removeClass(b.bound).removeClass(b.top).removeClass(b.bottom))},unfix:function(){h.is.fixed()&&(h.debug("Removing fixed position on element"),h.remove.offset(),k.removeClass(b.fixed).removeClass(b.top).removeClass(b.bottom),v.onUnstick.call(E))},reset:function(){h.debug("Resetting elements position"),h.unbind(),h.unfix(),h.resetCSS(),h.remove.offset(),h.remove.lastScroll()},resetCSS:function(){k.css({width:"",height:""}),r.css({height:""})},setting:function(t,n){if(e.isPlainObject(t))e.extend(!0,v,t);else{if(n===i)return v[t];v[t]=n}},internal:function(t,n){if(e.isPlainObject(t))e.extend(!0,h,t);else{if(n===i)return h[t];h[t]=n}},debug:function(){!v.silent&&v.debug&&(v.performance?h.performance.log(arguments):(h.debug=Function.prototype.bind.call(console.info,console,v.name+":"),h.debug.apply(console,arguments)))},verbose:function(){!v.silent&&v.verbose&&v.debug&&(v.performance?h.performance.log(arguments):(h.verbose=Function.prototype.bind.call(console.info,console,v.name+":"),h.verbose.apply(console,arguments)))},error:function(){v.silent||(h.error=Function.prototype.bind.call(console.error,console,v.name+":"),h.error.apply(console,arguments))},performance:{log:function(e){var t,n,i;v.performance&&(t=(new Date).getTime(),i=l||t,n=t-i,l=t,c.push({Name:e[0],Arguments:[].slice.call(e,1)||"",Element:E,"Execution Time":n})),clearTimeout(h.performance.timer),h.performance.timer=setTimeout(h.performance.display,0)},display:function(){var t=v.name+":",n=0;l=!1,clearTimeout(h.performance.timer),e.each(c,function(e,t){n+=t["Execution Time"]}),t+=" "+n+"ms",s&&(t+=" '"+s+"'"),(console.group!==i||console.table!==i)&&c.length>0&&(console.groupCollapsed(t),console.table?console.table(c):e.each(c,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),c=[]}},invoke:function(t,n,o){var r,s,l,c=A;return n=n||f,o=E||o,"string"==typeof t&&c!==i&&(t=t.split(/[\. ]/),r=t.length-1,e.each(t,function(n,o){var a=n!=r?o+t[n+1].charAt(0).toUpperCase()+t[n+1].slice(1):t;if(e.isPlainObject(c[a])&&n!=r)c=c[a];else{if(c[a]!==i)return s=c[a],!1;if(!e.isPlainObject(c[o])||n==r)return c[o]!==i&&(s=c[o],!1);c=c[o]}})),e.isFunction(s)?l=s.apply(o,n):s!==i&&(l=s),e.isArray(a)?a.push(l):a!==i?a=[a,l]:l!==i&&(a=l),s}},d?(A===i&&h.initialize(),h.invoke(u)):(A!==i&&A.invoke("destroy"),h.initialize())}),a!==i?a:this},e.fn.sticky.settings={name:"Sticky",namespace:"sticky",silent:!1,debug:!1,verbose:!0,performance:!0,pushing:!1,context:!1,container:!1,scrollContext:t,offset:0,bottomOffset:0,jitter:5,observeChanges:!1,onReposition:function(){},onScroll:function(){},onStick:function(){},onUnstick:function(){},onTop:function(){},onBottom:function(){},error:{container:"Sticky element must be inside a relative container",visible:"Element is hidden, you must call refresh after element becomes visible. Use silent setting to surpress this warning in production.",method:"The method you called is not defined.",invalidContext:"Context specified does not exist",elementSize:"Sticky element is larger than its container, cannot create sticky."},className:{bound:"bound",fixed:"fixed",supported:"native",top:"top",bottom:"bottom"}}}(jQuery,window,document),function(e,t,n,i){"use strict";t="undefined"!=typeof t&&t.Math==Math?t:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")(),e.fn.tab=function(o){var a,r=e(e.isFunction(this)?t:this),s=r.selector||"",l=(new Date).getTime(),c=[],u=arguments[0],d="string"==typeof u,f=[].slice.call(arguments,1),m=!1;return r.each(function(){var g,p,h,v,b,y,x=e.isPlainObject(o)?e.extend(!0,{},e.fn.tab.settings,o):e.extend({},e.fn.tab.settings),C=x.className,w=x.metadata,k=x.selector,S=x.error,T="."+x.namespace,A="module-"+x.namespace,R=e(this),E={},P=!0,F=0,O=this,D=R.data(A);b={initialize:function(){b.debug("Initializing tab menu item",R),b.fix.callbacks(),b.determineTabs(),b.debug("Determining tabs",x.context,p),x.auto&&b.set.auto(),b.bind.events(),x.history&&!m&&(b.initializeHistory(),m=!0),b.instantiate()},instantiate:function(){b.verbose("Storing instance of module",b),D=b,R.data(A,b)},destroy:function(){b.debug("Destroying tabs",R),R.removeData(A).off(T)},bind:{events:function(){e.isWindow(O)||(b.debug("Attaching tab activation events to element",R),R.on("click"+T,b.event.click))}},determineTabs:function(){var t;"parent"===x.context?(R.closest(k.ui).length>0?(t=R.closest(k.ui),b.verbose("Using closest UI element as parent",t)):t=R,g=t.parent(),b.verbose("Determined parent element for creating context",g)):x.context?(g=e(x.context),b.verbose("Using selector for tab context",x.context,g)):g=e("body"),x.childrenOnly?(p=g.children(k.tabs),b.debug("Searching tab context children for tabs",g,p)):(p=g.find(k.tabs),b.debug("Searching tab context for tabs",g,p))},fix:{callbacks:function(){e.isPlainObject(o)&&(o.onTabLoad||o.onTabInit)&&(o.onTabLoad&&(o.onLoad=o.onTabLoad,delete o.onTabLoad,b.error(S.legacyLoad,o.onLoad)),o.onTabInit&&(o.onFirstLoad=o.onTabInit,delete o.onTabInit,b.error(S.legacyInit,o.onFirstLoad)),x=e.extend(!0,{},e.fn.tab.settings,o))}},initializeHistory:function(){if(b.debug("Initializing page state"),e.address===i)return b.error(S.state),!1;if("state"==x.historyType){if(b.debug("Using HTML5 to manage state"),x.path===!1)return b.error(S.path),!1;e.address.history(!0).state(x.path)}e.address.bind("change",b.event.history.change)},event:{click:function(t){var n=e(this).data(w.tab);n!==i?(x.history?(b.verbose("Updating page state",t),e.address.value(n)):(b.verbose("Changing tab",t),b.changeTab(n)),t.preventDefault()):b.debug("No tab specified")},history:{change:function(t){var n=t.pathNames.join("/")||b.get.initialPath(),o=x.templates.determineTitle(n)||!1;b.performance.display(),b.debug("History change event",n,t),y=t,n!==i&&b.changeTab(n),o&&e.address.title(o)}}},refresh:function(){h&&(b.debug("Refreshing tab",h),b.changeTab(h))},cache:{read:function(e){return e!==i&&E[e]},add:function(e,t){e=e||h,b.debug("Adding cached content for",e),E[e]=t},remove:function(e){e=e||h,b.debug("Removing cached content for",e),delete E[e]}},set:{auto:function(){var t="string"==typeof x.path?x.path.replace(/\/$/,"")+"/{$tab}":"/{$tab}";b.verbose("Setting up automatic tab retrieval from server",t),e.isPlainObject(x.apiSettings)?x.apiSettings.url=t:x.apiSettings={url:t}},loading:function(e){var t=b.get.tabElement(e),n=t.hasClass(C.loading);n||(b.verbose("Setting loading state for",t),t.addClass(C.loading).siblings(p).removeClass(C.active+" "+C.loading),t.length>0&&x.onRequest.call(t[0],e))},state:function(t){e.address.value(t)}},changeTab:function(n){var i=t.history&&t.history.pushState,o=i&&x.ignoreFirstLoad&&P,a=x.auto||e.isPlainObject(x.apiSettings),r=a&&!o?b.utilities.pathToArray(n):b.get.defaultPathArray(n);n=b.utilities.arrayToPath(r),e.each(r,function(t,i){var s,l,c,u,d=r.slice(0,t+1),f=b.utilities.arrayToPath(d),m=b.is.tab(f),p=t+1==r.length,k=b.get.tabElement(f);if(b.verbose("Looking for tab",i),m){if(b.verbose("Tab was found",i),h=f,v=b.utilities.filterArray(r,d),p?u=!0:(l=r.slice(0,t+2),c=b.utilities.arrayToPath(l),u=!b.is.tab(c),u&&b.verbose("Tab parameters found",l)),u&&a)return o?(b.debug("Ignoring remote content on first tab load",f),P=!1,b.cache.add(n,k.html()),b.activate.all(f),x.onFirstLoad.call(k[0],f,v,y),x.onLoad.call(k[0],f,v,y)):(b.activate.navigation(f),b.fetch.content(f,n)),!1;b.debug("Opened local tab",f),b.activate.all(f),b.cache.read(f)||(b.cache.add(f,!0),b.debug("First time tab loaded calling tab init"),x.onFirstLoad.call(k[0],f,v,y)),x.onLoad.call(k[0],f,v,y)}else{if(n.search("/")!=-1||""===n)return b.error(S.missingTab,R,g,f),!1;if(s=e("#"+n+', a[name="'+n+'"]'),f=s.closest("[data-tab]").data(w.tab),k=b.get.tabElement(f),s&&s.length>0&&f)return b.debug("Anchor link used, opening parent tab",k,s),k.hasClass(C.active)||setTimeout(function(){b.scrollTo(s)},0),b.activate.all(f),b.cache.read(f)||(b.cache.add(f,!0),b.debug("First time tab loaded calling tab init"),x.onFirstLoad.call(k[0],f,v,y)),x.onLoad.call(k[0],f,v,y),!1}})},scrollTo:function(t){var i=!!(t&&t.length>0)&&t.offset().top;i!==!1&&(b.debug("Forcing scroll to an in-page link in a hidden tab",i,t),e(n).scrollTop(i))},update:{content:function(t,n,o){var a=b.get.tabElement(t),r=a[0];o=o!==i?o:x.evaluateScripts,"string"==typeof x.cacheType&&"dom"==x.cacheType.toLowerCase()&&"string"!=typeof n?a.empty().append(e(n).clone(!0)):o?(b.debug("Updating HTML and evaluating inline scripts",t,n),a.html(n)):(b.debug("Updating HTML",t,n),r.innerHTML=n)}},fetch:{content:function(t,n){var o,a,r=b.get.tabElement(t),s={dataType:"html",encodeParameters:!1,on:"now",cache:x.alwaysRefresh,headers:{"X-Remote":!0},onSuccess:function(e){"response"==x.cacheType&&b.cache.add(n,e),b.update.content(t,e),t==h?(b.debug("Content loaded",t),b.activate.tab(t)):b.debug("Content loaded in background",t),x.onFirstLoad.call(r[0],t,v,y),x.onLoad.call(r[0],t,v,y),"string"==typeof x.cacheType&&"dom"==x.cacheType.toLowerCase()&&r.children().length>0?setTimeout(function(){var e=r.children().clone(!0);e=e.not("script"),b.cache.add(n,e)},0):b.cache.add(n,r.html())},urlData:{tab:n}},l=r.api("get request")||!1,c=l&&"pending"===l.state();n=n||t,a=b.cache.read(n),x.cache&&a?(b.activate.tab(t),b.debug("Adding cached content",n),"once"==x.evaluateScripts?b.update.content(t,a,!1):b.update.content(t,a),x.onLoad.call(r[0],t,v,y)):c?(b.set.loading(t),b.debug("Content is already loading",n)):e.api!==i?(o=e.extend(!0,{},x.apiSettings,s),b.debug("Retrieving remote content",n,o),b.set.loading(t),r.api(o)):b.error(S.api)}},activate:{all:function(e){b.activate.tab(e),b.activate.navigation(e)},tab:function(e){var t=b.get.tabElement(e),n="siblings"==x.deactivate?t.siblings(p):p.not(t),i=t.hasClass(C.active);b.verbose("Showing tab content for",t),i||(t.addClass(C.active),n.removeClass(C.active+" "+C.loading),t.length>0&&x.onVisible.call(t[0],e))},navigation:function(e){var t=b.get.navElement(e),n="siblings"==x.deactivate?t.siblings(r):r.not(t),i=t.hasClass(C.active);b.verbose("Activating tab navigation for",t,e),i||(t.addClass(C.active),n.removeClass(C.active+" "+C.loading))}},deactivate:{all:function(){b.deactivate.navigation(),b.deactivate.tabs()},navigation:function(){r.removeClass(C.active)},tabs:function(){p.removeClass(C.active+" "+C.loading)}},is:{tab:function(e){return e!==i&&b.get.tabElement(e).length>0}},get:{initialPath:function(){return r.eq(0).data(w.tab)||p.eq(0).data(w.tab)},path:function(){return e.address.value()},defaultPathArray:function(e){return b.utilities.pathToArray(b.get.defaultPath(e))},defaultPath:function(e){var t=r.filter("[data-"+w.tab+'^="'+e+'/"]').eq(0),n=t.data(w.tab)||!1;if(n){if(b.debug("Found default tab",n),F<x.maxDepth)return F++,b.get.defaultPath(n);b.error(S.recursion)}else b.debug("No default tabs found for",e,p);return F=0,e},navElement:function(e){return e=e||h,r.filter("[data-"+w.tab+'="'+e+'"]')},tabElement:function(e){var t,n,i,o;return e=e||h,i=b.utilities.pathToArray(e),o=b.utilities.last(i),t=p.filter("[data-"+w.tab+'="'+e+'"]'),n=p.filter("[data-"+w.tab+'="'+o+'"]'),t.length>0?t:n},tab:function(){return h}},utilities:{filterArray:function(t,n){return e.grep(t,function(t){return e.inArray(t,n)==-1})},last:function(t){return!!e.isArray(t)&&t[t.length-1]},pathToArray:function(e){return e===i&&(e=h),"string"==typeof e?e.split("/"):[e]},arrayToPath:function(t){return!!e.isArray(t)&&t.join("/")}},setting:function(t,n){if(b.debug("Changing setting",t,n),e.isPlainObject(t))e.extend(!0,x,t);else{if(n===i)return x[t];e.isPlainObject(x[t])?e.extend(!0,x[t],n):x[t]=n}},internal:function(t,n){if(e.isPlainObject(t))e.extend(!0,b,t);else{if(n===i)return b[t];b[t]=n}},debug:function(){!x.silent&&x.debug&&(x.performance?b.performance.log(arguments):(b.debug=Function.prototype.bind.call(console.info,console,x.name+":"),b.debug.apply(console,arguments)))},verbose:function(){!x.silent&&x.verbose&&x.debug&&(x.performance?b.performance.log(arguments):(b.verbose=Function.prototype.bind.call(console.info,console,x.name+":"),b.verbose.apply(console,arguments)))},error:function(){x.silent||(b.error=Function.prototype.bind.call(console.error,console,x.name+":"),b.error.apply(console,arguments))},performance:{log:function(e){var t,n,i;x.performance&&(t=(new Date).getTime(),i=l||t,n=t-i,l=t,c.push({Name:e[0],Arguments:[].slice.call(e,1)||"",Element:O,"Execution Time":n})),clearTimeout(b.performance.timer),b.performance.timer=setTimeout(b.performance.display,500)},display:function(){var t=x.name+":",n=0;l=!1,clearTimeout(b.performance.timer),e.each(c,function(e,t){n+=t["Execution Time"]}),t+=" "+n+"ms",s&&(t+=" '"+s+"'"),(console.group!==i||console.table!==i)&&c.length>0&&(console.groupCollapsed(t),console.table?console.table(c):e.each(c,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),c=[]}},invoke:function(t,n,o){var r,s,l,c=D;return n=n||f,o=O||o,"string"==typeof t&&c!==i&&(t=t.split(/[\. ]/),r=t.length-1,e.each(t,function(n,o){var a=n!=r?o+t[n+1].charAt(0).toUpperCase()+t[n+1].slice(1):t;if(e.isPlainObject(c[a])&&n!=r)c=c[a];else{if(c[a]!==i)return s=c[a],!1;if(!e.isPlainObject(c[o])||n==r)return c[o]!==i?(s=c[o],!1):(b.error(S.method,t),!1);c=c[o]}})),e.isFunction(s)?l=s.apply(o,n):s!==i&&(l=s),e.isArray(a)?a.push(l):a!==i?a=[a,l]:l!==i&&(a=l),s}},d?(D===i&&b.initialize(),b.invoke(u)):(D!==i&&D.invoke("destroy"),b.initialize())}),a!==i?a:this},e.tab=function(){e(t).tab.apply(this,arguments)},e.fn.tab.settings={name:"Tab",namespace:"tab",silent:!1,debug:!1,verbose:!1,performance:!0,auto:!1,history:!1,historyType:"hash",path:!1,context:!1,childrenOnly:!1,maxDepth:25,deactivate:"siblings",alwaysRefresh:!1,cache:!0,cacheType:"response",ignoreFirstLoad:!1,apiSettings:!1,evaluateScripts:"once",onFirstLoad:function(e,t,n){},onLoad:function(e,t,n){},onVisible:function(e,t,n){},onRequest:function(e,t,n){},templates:{determineTitle:function(e){}},error:{api:"You attempted to load content without API module",method:"The method you called is not defined",missingTab:"Activated tab cannot be found. Tabs are case-sensitive.",noContent:"The tab you specified is missing a content url.",path:"History enabled, but no path was specified",recursion:"Max recursive depth reached",legacyInit:"onTabInit has been renamed to onFirstLoad in 2.0, please adjust your code.",
 legacyLoad:"onTabLoad has been renamed to onLoad in 2.0. Please adjust your code",state:"History requires Asual's Address library <https://github.com/asual/jquery-address>"},metadata:{tab:"tab",loaded:"loaded",promise:"promise"},className:{loading:"loading",active:"active"},selector:{tabs:".ui.tab",ui:".ui"}}}(jQuery,window,document),function(e,t,n,i){"use strict";t="undefined"!=typeof t&&t.Math==Math?t:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")(),e.fn.transition=function(){var o,a=e(this),r=a.selector||"",s=(new Date).getTime(),l=[],c=arguments,u=c[0],d=[].slice.call(arguments,1),f="string"==typeof u;t.requestAnimationFrame||t.mozRequestAnimationFrame||t.webkitRequestAnimationFrame||t.msRequestAnimationFrame||function(e){setTimeout(e,0)};return a.each(function(t){var m,g,p,h,v,b,y,x,C,w=e(this),k=this;C={initialize:function(){m=C.get.settings.apply(k,c),h=m.className,p=m.error,v=m.metadata,x="."+m.namespace,y="module-"+m.namespace,g=w.data(y)||C,b=C.get.animationEndEvent(),f&&(f=C.invoke(u)),f===!1&&(C.verbose("Converted arguments into settings object",m),m.interval?C.delay(m.animate):C.animate(),C.instantiate())},instantiate:function(){C.verbose("Storing instance of module",C),g=C,w.data(y,g)},destroy:function(){C.verbose("Destroying previous module for",k),w.removeData(y)},refresh:function(){C.verbose("Refreshing display type on next animation"),delete C.displayType},forceRepaint:function(){C.verbose("Forcing element repaint");var e=w.parent(),t=w.next();0===t.length?w.detach().appendTo(e):w.detach().insertBefore(t)},repaint:function(){C.verbose("Repainting element");k.offsetWidth},delay:function(e){var n,o,r=C.get.animationDirection();r||(r=C.can.transition()?C.get.direction():"static"),e=e!==i?e:m.interval,n="auto"==m.reverse&&r==h.outward,o=n||1==m.reverse?(a.length-t)*m.interval:t*m.interval,C.debug("Delaying animation by",o),setTimeout(C.animate,o)},animate:function(e){if(m=e||m,!C.is.supported())return C.error(p.support),!1;if(C.debug("Preparing animation",m.animation),C.is.animating()){if(m.queue)return!m.allowRepeats&&C.has.direction()&&C.is.occurring()&&C.queuing!==!0?C.debug("Animation is currently occurring, preventing queueing same animation",m.animation):C.queue(m.animation),!1;if(!m.allowRepeats&&C.is.occurring())return C.debug("Animation is already occurring, will not execute repeated animation",m.animation),!1;C.debug("New animation started, completing previous early",m.animation),g.complete()}C.can.animate()?C.set.animating(m.animation):C.error(p.noAnimation,m.animation,k)},reset:function(){C.debug("Resetting animation to beginning conditions"),C.remove.animationCallbacks(),C.restore.conditions(),C.remove.animating()},queue:function(e){C.debug("Queueing animation of",e),C.queuing=!0,w.one(b+".queue"+x,function(){C.queuing=!1,C.repaint(),C.animate.apply(this,m)})},complete:function(e){C.debug("Animation complete",m.animation),C.remove.completeCallback(),C.remove.failSafe(),C.is.looping()||(C.is.outward()?(C.verbose("Animation is outward, hiding element"),C.restore.conditions(),C.hide()):C.is.inward()?(C.verbose("Animation is outward, showing element"),C.restore.conditions(),C.show()):(C.verbose("Static animation completed"),C.restore.conditions(),m.onComplete.call(k)))},force:{visible:function(){var e=w.attr("style"),t=C.get.userStyle(),n=C.get.displayType(),o=t+"display: "+n+" !important;",a=w.css("display"),r=e===i||""===e;a!==n?(C.verbose("Overriding default display to show element",n),w.attr("style",o)):r&&w.removeAttr("style")},hidden:function(){var e=w.attr("style"),t=w.css("display"),n=e===i||""===e;"none"===t||C.is.hidden()?n&&w.removeAttr("style"):(C.verbose("Overriding default display to hide element"),w.css("display","none"))}},has:{direction:function(t){var n=!1;return t=t||m.animation,"string"==typeof t&&(t=t.split(" "),e.each(t,function(e,t){t!==h.inward&&t!==h.outward||(n=!0)})),n},inlineDisplay:function(){var t=w.attr("style")||"";return e.isArray(t.match(/display.*?;/,""))}},set:{animating:function(e){var t;C.remove.completeCallback(),e=e||m.animation,t=C.get.animationClass(e),C.save.animation(t),C.force.visible(),C.remove.hidden(),C.remove.direction(),C.start.animation(t)},duration:function(e,t){t=t||m.duration,t="number"==typeof t?t+"ms":t,(t||0===t)&&(C.verbose("Setting animation duration",t),w.css({"animation-duration":t}))},direction:function(e){e=e||C.get.direction(),e==h.inward?C.set.inward():C.set.outward()},looping:function(){C.debug("Transition set to loop"),w.addClass(h.looping)},hidden:function(){w.addClass(h.transition).addClass(h.hidden)},inward:function(){C.debug("Setting direction to inward"),w.removeClass(h.outward).addClass(h.inward)},outward:function(){C.debug("Setting direction to outward"),w.removeClass(h.inward).addClass(h.outward)},visible:function(){w.addClass(h.transition).addClass(h.visible)}},start:{animation:function(e){e=e||C.get.animationClass(),C.debug("Starting tween",e),w.addClass(e).one(b+".complete"+x,C.complete),m.useFailSafe&&C.add.failSafe(),C.set.duration(m.duration),m.onStart.call(k)}},save:{animation:function(e){C.cache||(C.cache={}),C.cache.animation=e},displayType:function(e){"none"!==e&&w.data(v.displayType,e)},transitionExists:function(t,n){e.fn.transition.exists[t]=n,C.verbose("Saving existence of transition",t,n)}},restore:{conditions:function(){var e=C.get.currentAnimation();e&&(w.removeClass(e),C.verbose("Removing animation class",C.cache)),C.remove.duration()}},add:{failSafe:function(){var e=C.get.duration();C.timer=setTimeout(function(){w.triggerHandler(b)},e+m.failSafeDelay),C.verbose("Adding fail safe timer",C.timer)}},remove:{animating:function(){w.removeClass(h.animating)},animationCallbacks:function(){C.remove.queueCallback(),C.remove.completeCallback()},queueCallback:function(){w.off(".queue"+x)},completeCallback:function(){w.off(".complete"+x)},display:function(){w.css("display","")},direction:function(){w.removeClass(h.inward).removeClass(h.outward)},duration:function(){w.css("animation-duration","")},failSafe:function(){C.verbose("Removing fail safe timer",C.timer),C.timer&&clearTimeout(C.timer)},hidden:function(){w.removeClass(h.hidden)},visible:function(){w.removeClass(h.visible)},looping:function(){C.debug("Transitions are no longer looping"),C.is.looping()&&(C.reset(),w.removeClass(h.looping))},transition:function(){w.removeClass(h.visible).removeClass(h.hidden)}},get:{settings:function(t,n,i){return"object"==typeof t?e.extend(!0,{},e.fn.transition.settings,t):"function"==typeof i?e.extend({},e.fn.transition.settings,{animation:t,onComplete:i,duration:n}):"string"==typeof n||"number"==typeof n?e.extend({},e.fn.transition.settings,{animation:t,duration:n}):"object"==typeof n?e.extend({},e.fn.transition.settings,n,{animation:t}):"function"==typeof n?e.extend({},e.fn.transition.settings,{animation:t,onComplete:n}):e.extend({},e.fn.transition.settings,{animation:t})},animationClass:function(e){var t=e||m.animation,n=C.can.transition()&&!C.has.direction()?C.get.direction()+" ":"";return h.animating+" "+h.transition+" "+n+t},currentAnimation:function(){return!(!C.cache||C.cache.animation===i)&&C.cache.animation},currentDirection:function(){return C.is.inward()?h.inward:h.outward},direction:function(){return C.is.hidden()||!C.is.visible()?h.inward:h.outward},animationDirection:function(t){var n;return t=t||m.animation,"string"==typeof t&&(t=t.split(" "),e.each(t,function(e,t){t===h.inward?n=h.inward:t===h.outward&&(n=h.outward)})),!!n&&n},duration:function(e){return e=e||m.duration,e===!1&&(e=w.css("animation-duration")||0),"string"==typeof e?e.indexOf("ms")>-1?parseFloat(e):1e3*parseFloat(e):e},displayType:function(e){return e=e===i||e,m.displayType?m.displayType:(e&&w.data(v.displayType)===i&&C.can.transition(!0),w.data(v.displayType))},userStyle:function(e){return e=e||w.attr("style")||"",e.replace(/display.*?;/,"")},transitionExists:function(t){return e.fn.transition.exists[t]},animationStartEvent:function(){var e,t=n.createElement("div"),o={animation:"animationstart",OAnimation:"oAnimationStart",MozAnimation:"mozAnimationStart",WebkitAnimation:"webkitAnimationStart"};for(e in o)if(t.style[e]!==i)return o[e];return!1},animationEndEvent:function(){var e,t=n.createElement("div"),o={animation:"animationend",OAnimation:"oAnimationEnd",MozAnimation:"mozAnimationEnd",WebkitAnimation:"webkitAnimationEnd"};for(e in o)if(t.style[e]!==i)return o[e];return!1}},can:{transition:function(t){var n,o,a,r,s,l,c=m.animation,u=C.get.transitionExists(c),d=C.get.displayType(!1);if(u===i||t){if(C.verbose("Determining whether animation exists"),n=w.attr("class"),o=w.prop("tagName"),a=e("<"+o+" />").addClass(n).insertAfter(w),r=a.addClass(c).removeClass(h.inward).removeClass(h.outward).addClass(h.animating).addClass(h.transition).css("animationName"),s=a.addClass(h.inward).css("animationName"),d||(d=a.attr("class",n).removeAttr("style").removeClass(h.hidden).removeClass(h.visible).show().css("display"),C.verbose("Determining final display state",d),C.save.displayType(d)),a.remove(),r!=s)C.debug("Direction exists for animation",c),l=!0;else{if("none"==r||!r)return void C.debug("No animation defined in css",c);C.debug("Static animation found",c,d),l=!1}C.save.transitionExists(c,l)}return u!==i?u:l},animate:function(){return C.can.transition()!==i}},is:{animating:function(){return w.hasClass(h.animating)},inward:function(){return w.hasClass(h.inward)},outward:function(){return w.hasClass(h.outward)},looping:function(){return w.hasClass(h.looping)},occurring:function(e){return e=e||m.animation,e="."+e.replace(" ","."),w.filter(e).length>0},visible:function(){return w.is(":visible")},hidden:function(){return"hidden"===w.css("visibility")},supported:function(){return b!==!1}},hide:function(){C.verbose("Hiding element"),C.is.animating()&&C.reset(),k.blur(),C.remove.display(),C.remove.visible(),C.set.hidden(),C.force.hidden(),m.onHide.call(k),m.onComplete.call(k)},show:function(e){C.verbose("Showing element",e),C.remove.hidden(),C.set.visible(),C.force.visible(),m.onShow.call(k),m.onComplete.call(k)},toggle:function(){C.is.visible()?C.hide():C.show()},stop:function(){C.debug("Stopping current animation"),w.triggerHandler(b)},stopAll:function(){C.debug("Stopping all animation"),C.remove.queueCallback(),w.triggerHandler(b)},clear:{queue:function(){C.debug("Clearing animation queue"),C.remove.queueCallback()}},enable:function(){C.verbose("Starting animation"),w.removeClass(h.disabled)},disable:function(){C.debug("Stopping animation"),w.addClass(h.disabled)},setting:function(t,n){if(C.debug("Changing setting",t,n),e.isPlainObject(t))e.extend(!0,m,t);else{if(n===i)return m[t];e.isPlainObject(m[t])?e.extend(!0,m[t],n):m[t]=n}},internal:function(t,n){if(e.isPlainObject(t))e.extend(!0,C,t);else{if(n===i)return C[t];C[t]=n}},debug:function(){!m.silent&&m.debug&&(m.performance?C.performance.log(arguments):(C.debug=Function.prototype.bind.call(console.info,console,m.name+":"),C.debug.apply(console,arguments)))},verbose:function(){!m.silent&&m.verbose&&m.debug&&(m.performance?C.performance.log(arguments):(C.verbose=Function.prototype.bind.call(console.info,console,m.name+":"),C.verbose.apply(console,arguments)))},error:function(){m.silent||(C.error=Function.prototype.bind.call(console.error,console,m.name+":"),C.error.apply(console,arguments))},performance:{log:function(e){var t,n,i;m.performance&&(t=(new Date).getTime(),i=s||t,n=t-i,s=t,l.push({Name:e[0],Arguments:[].slice.call(e,1)||"",Element:k,"Execution Time":n})),clearTimeout(C.performance.timer),C.performance.timer=setTimeout(C.performance.display,500)},display:function(){var t=m.name+":",n=0;s=!1,clearTimeout(C.performance.timer),e.each(l,function(e,t){n+=t["Execution Time"]}),t+=" "+n+"ms",r&&(t+=" '"+r+"'"),a.length>1&&(t+=" ("+a.length+")"),(console.group!==i||console.table!==i)&&l.length>0&&(console.groupCollapsed(t),console.table?console.table(l):e.each(l,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),l=[]}},invoke:function(t,n,a){var r,s,l,c=g;return n=n||d,a=k||a,"string"==typeof t&&c!==i&&(t=t.split(/[\. ]/),r=t.length-1,e.each(t,function(n,o){var a=n!=r?o+t[n+1].charAt(0).toUpperCase()+t[n+1].slice(1):t;if(e.isPlainObject(c[a])&&n!=r)c=c[a];else{if(c[a]!==i)return s=c[a],!1;if(!e.isPlainObject(c[o])||n==r)return c[o]!==i&&(s=c[o],!1);c=c[o]}})),e.isFunction(s)?l=s.apply(a,n):s!==i&&(l=s),e.isArray(o)?o.push(l):o!==i?o=[o,l]:l!==i&&(o=l),s!==i&&s}},C.initialize()}),o!==i?o:this},e.fn.transition.exists={},e.fn.transition.settings={name:"Transition",silent:!1,debug:!1,verbose:!1,performance:!0,namespace:"transition",interval:0,reverse:"auto",onStart:function(){},onComplete:function(){},onShow:function(){},onHide:function(){},useFailSafe:!0,failSafeDelay:100,allowRepeats:!1,displayType:!1,animation:"fade",duration:!1,queue:!0,metadata:{displayType:"display"},className:{animating:"animating",disabled:"disabled",hidden:"hidden",inward:"in",loading:"loading",looping:"looping",outward:"out",transition:"transition",visible:"visible"},error:{noAnimation:"Element is no longer attached to DOM. Unable to animate.  Use silent setting to surpress this warning in production.",repeated:"That animation is already occurring, cancelling repeated animation",method:"The method you called is not defined",support:"This browser does not support CSS animations"}}}(jQuery,window,document),function(e,t,n,i){"use strict";var t="undefined"!=typeof t&&t.Math==Math?t:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")();e.api=e.fn.api=function(n){var o,a=e(e.isFunction(this)?t:this),r=a.selector||"",s=(new Date).getTime(),l=[],c=arguments[0],u="string"==typeof c,d=[].slice.call(arguments,1);return a.each(function(){var a,f,m,g,p,h,v=e.isPlainObject(n)?e.extend(!0,{},e.fn.api.settings,n):e.extend({},e.fn.api.settings),b=v.namespace,y=v.metadata,x=v.selector,C=v.error,w=v.className,k="."+b,S="module-"+b,T=e(this),A=T.closest(x.form),R=v.stateContext?e(v.stateContext):T,E=this,P=R[0],F=T.data(S);h={initialize:function(){u||h.bind.events(),h.instantiate()},instantiate:function(){h.verbose("Storing instance of module",h),F=h,T.data(S,F)},destroy:function(){h.verbose("Destroying previous module for",E),T.removeData(S).off(k)},bind:{events:function(){var e=h.get.event();e?(h.verbose("Attaching API events to element",e),T.on(e+k,h.event.trigger)):"now"==v.on&&(h.debug("Querying API endpoint immediately"),h.query())}},decode:{json:function(e){if(e!==i&&"string"==typeof e)try{e=JSON.parse(e)}catch(t){}return e}},read:{cachedResponse:function(e){var n;return t.Storage===i?void h.error(C.noStorage):(n=sessionStorage.getItem(e),h.debug("Using cached response",e,n),n=h.decode.json(n))}},write:{cachedResponse:function(n,o){return o&&""===o?void h.debug("Response empty, not caching",o):t.Storage===i?void h.error(C.noStorage):(e.isPlainObject(o)&&(o=JSON.stringify(o)),sessionStorage.setItem(n,o),void h.verbose("Storing cached response for url",n,o))}},query:function(){if(h.is.disabled())return void h.debug("Element is disabled API request aborted");if(h.is.loading()){if(!v.interruptRequests)return void h.debug("Cancelling request, previous request is still pending");h.debug("Interrupting previous request"),h.abort()}return v.defaultData&&e.extend(!0,v.urlData,h.get.defaultData()),v.serializeForm&&(v.data=h.add.formData(v.data)),f=h.get.settings(),f===!1?(h.cancelled=!0,void h.error(C.beforeSend)):(h.cancelled=!1,m=h.get.templatedURL(),m||h.is.mocked()?(m=h.add.urlData(m),m||h.is.mocked()?(f.url=v.base+m,a=e.extend(!0,{},v,{type:v.method||v.type,data:g,url:v.base+m,beforeSend:v.beforeXHR,success:function(){},failure:function(){},complete:function(){}}),h.debug("Querying URL",a.url),h.verbose("Using AJAX settings",a),"local"===v.cache&&h.read.cachedResponse(m)?(h.debug("Response returned from local cache"),h.request=h.create.request(),void h.request.resolveWith(P,[h.read.cachedResponse(m)])):void(v.throttle?v.throttleFirstRequest||h.timer?(h.debug("Throttling request",v.throttle),clearTimeout(h.timer),h.timer=setTimeout(function(){h.timer&&delete h.timer,h.debug("Sending throttled request",g,a.method),h.send.request()},v.throttle)):(h.debug("Sending request",g,a.method),h.send.request(),h.timer=setTimeout(function(){},v.throttle)):(h.debug("Sending request",g,a.method),h.send.request()))):void 0):void h.error(C.missingURL))},should:{removeError:function(){return v.hideError===!0||"auto"===v.hideError&&!h.is.form()}},is:{disabled:function(){return T.filter(x.disabled).length>0},expectingJSON:function(){return"json"===v.dataType||"jsonp"===v.dataType},form:function(){return T.is("form")||R.is("form")},mocked:function(){return v.mockResponse||v.mockResponseAsync||v.response||v.responseAsync},input:function(){return T.is("input")},loading:function(){return!!h.request&&"pending"==h.request.state()},abortedRequest:function(e){return e&&e.readyState!==i&&0===e.readyState?(h.verbose("XHR request determined to be aborted"),!0):(h.verbose("XHR request was not aborted"),!1)},validResponse:function(t){return h.is.expectingJSON()&&e.isFunction(v.successTest)?(h.debug("Checking JSON returned success",v.successTest,t),v.successTest(t)?(h.debug("Response passed success test",t),!0):(h.debug("Response failed success test",t),!1)):(h.verbose("Response is not JSON, skipping validation",v.successTest,t),!0)}},was:{cancelled:function(){return h.cancelled||!1},succesful:function(){return h.request&&"resolved"==h.request.state()},failure:function(){return h.request&&"rejected"==h.request.state()},complete:function(){return h.request&&("resolved"==h.request.state()||"rejected"==h.request.state())}},add:{urlData:function(t,n){var o,a;return t&&(o=t.match(v.regExp.required),a=t.match(v.regExp.optional),n=n||v.urlData,o&&(h.debug("Looking for required URL variables",o),e.each(o,function(o,a){var r=a.indexOf("$")!==-1?a.substr(2,a.length-3):a.substr(1,a.length-2),s=e.isPlainObject(n)&&n[r]!==i?n[r]:T.data(r)!==i?T.data(r):R.data(r)!==i?R.data(r):n[r];return s===i?(h.error(C.requiredParameter,r,t),t=!1,!1):(h.verbose("Found required variable",r,s),s=v.encodeParameters?h.get.urlEncodedValue(s):s,t=t.replace(a,s),void 0)})),a&&(h.debug("Looking for optional URL variables",o),e.each(a,function(o,a){var r=a.indexOf("$")!==-1?a.substr(3,a.length-4):a.substr(2,a.length-3),s=e.isPlainObject(n)&&n[r]!==i?n[r]:T.data(r)!==i?T.data(r):R.data(r)!==i?R.data(r):n[r];s!==i?(h.verbose("Optional variable Found",r,s),t=t.replace(a,s)):(h.verbose("Optional variable not found",r),t=t.indexOf("/"+a)!==-1?t.replace("/"+a,""):t.replace(a,""))}))),t},formData:function(t){var n,o=e.fn.serializeObject!==i,a=o?A.serializeObject():A.serialize();return t=t||v.data,n=e.isPlainObject(t),n?o?(h.debug("Extending existing data with form data",t,a),t=e.extend(!0,{},t,a)):(h.error(C.missingSerialize),h.debug("Cant extend data. Replacing data with form data",t,a),t=a):(h.debug("Adding form data",a),t=a),t}},send:{request:function(){h.set.loading(),h.request=h.create.request(),h.is.mocked()?h.mockedXHR=h.create.mockedXHR():h.xhr=h.create.xhr(),v.onRequest.call(P,h.request,h.xhr)}},event:{trigger:function(e){h.query(),"submit"!=e.type&&"click"!=e.type||e.preventDefault()},xhr:{always:function(){},done:function(t,n,i){var o=this,a=(new Date).getTime()-p,r=v.loadingDuration-a,s=!!e.isFunction(v.onResponse)&&(h.is.expectingJSON()?v.onResponse.call(o,e.extend(!0,{},t)):v.onResponse.call(o,t));r=r>0?r:0,s&&(h.debug("Modified API response in onResponse callback",v.onResponse,s,t),t=s),r>0&&h.debug("Response completed early delaying state change by",r),setTimeout(function(){h.is.validResponse(t)?h.request.resolveWith(o,[t,i]):h.request.rejectWith(o,[i,"invalid"])},r)},fail:function(e,t,n){var i=this,o=(new Date).getTime()-p,a=v.loadingDuration-o;a=a>0?a:0,a>0&&h.debug("Response completed early delaying state change by",a),setTimeout(function(){h.is.abortedRequest(e)?h.request.rejectWith(i,[e,"aborted",n]):h.request.rejectWith(i,[e,"error",t,n])},a)}},request:{done:function(e,t){h.debug("Successful API Response",e),"local"===v.cache&&m&&(h.write.cachedResponse(m,e),h.debug("Saving server response locally",h.cache)),v.onSuccess.call(P,e,T,t)},complete:function(e,t){var n,i;h.was.succesful()?(i=e,n=t):(n=e,i=h.get.responseFromXHR(n)),h.remove.loading(),v.onComplete.call(P,i,T,n)},fail:function(e,t,n){var o=h.get.responseFromXHR(e),r=h.get.errorFromRequest(o,t,n);return"aborted"==t?(h.debug("XHR Aborted (Most likely caused by page navigation or CORS Policy)",t,n),v.onAbort.call(P,t,T,e),!0):("invalid"==t?h.debug("JSON did not pass success test. A server-side error has most likely occurred",o):"error"==t&&e!==i&&(h.debug("XHR produced a server error",t,n),200!=e.status&&n!==i&&""!==n&&h.error(C.statusMessage+n,a.url),v.onError.call(P,r,T,e)),v.errorDuration&&"aborted"!==t&&(h.debug("Adding error state"),h.set.error(),h.should.removeError()&&setTimeout(h.remove.error,v.errorDuration)),h.debug("API Request failed",r,e),void v.onFailure.call(P,o,T,e))}}},create:{request:function(){return e.Deferred().always(h.event.request.complete).done(h.event.request.done).fail(h.event.request.fail)},mockedXHR:function(){var t,n,i,o=!1,a=!1,r=!1,s=v.mockResponse||v.response,l=v.mockResponseAsync||v.responseAsync;return i=e.Deferred().always(h.event.xhr.complete).done(h.event.xhr.done).fail(h.event.xhr.fail),s?(e.isFunction(s)?(h.debug("Using specified synchronous callback",s),n=s.call(P,f)):(h.debug("Using settings specified response",s),n=s),i.resolveWith(P,[n,o,{responseText:n}])):e.isFunction(l)&&(t=function(e){h.debug("Async callback returned response",e),e?i.resolveWith(P,[e,o,{responseText:e}]):i.rejectWith(P,[{responseText:e},a,r])},h.debug("Using specified async response callback",l),l.call(P,f,t)),i},xhr:function(){var t;return t=e.ajax(a).always(h.event.xhr.always).done(h.event.xhr.done).fail(h.event.xhr.fail),h.verbose("Created server request",t,a),t}},set:{error:function(){h.verbose("Adding error state to element",R),R.addClass(w.error)},loading:function(){h.verbose("Adding loading state to element",R),R.addClass(w.loading),p=(new Date).getTime()}},remove:{error:function(){h.verbose("Removing error state from element",R),R.removeClass(w.error)},loading:function(){h.verbose("Removing loading state from element",R),R.removeClass(w.loading)}},get:{responseFromXHR:function(t){return!!e.isPlainObject(t)&&(h.is.expectingJSON()?h.decode.json(t.responseText):t.responseText)},errorFromRequest:function(t,n,o){return e.isPlainObject(t)&&t.error!==i?t.error:v.error[n]!==i?v.error[n]:o},request:function(){return h.request||!1},xhr:function(){return h.xhr||!1},settings:function(){var t;return t=v.beforeSend.call(P,v),t&&(t.success!==i&&(h.debug("Legacy success callback detected",t),h.error(C.legacyParameters,t.success),t.onSuccess=t.success),t.failure!==i&&(h.debug("Legacy failure callback detected",t),h.error(C.legacyParameters,t.failure),t.onFailure=t.failure),t.complete!==i&&(h.debug("Legacy complete callback detected",t),h.error(C.legacyParameters,t.complete),t.onComplete=t.complete)),t===i&&h.error(C.noReturnedValue),t===!1?t:t!==i?e.extend(!0,{},t):e.extend(!0,{},v)},urlEncodedValue:function(e){var n=t.decodeURIComponent(e),i=t.encodeURIComponent(e),o=n!==e;return o?(h.debug("URL value is already encoded, avoiding double encoding",e),e):(h.verbose("Encoding value using encodeURIComponent",e,i),i)},defaultData:function(){var t={};return e.isWindow(E)||(h.is.input()?t.value=T.val():h.is.form()||(t.text=T.text())),t},event:function(){return e.isWindow(E)||"now"==v.on?(h.debug("API called without element, no events attached"),!1):"auto"==v.on?T.is("input")?E.oninput!==i?"input":E.onpropertychange!==i?"propertychange":"keyup":T.is("form")?"submit":"click":v.on},templatedURL:function(e){if(e=e||T.data(y.action)||v.action||!1,m=T.data(y.url)||v.url||!1)return h.debug("Using specified url",m),m;if(e){if(h.debug("Looking up url for action",e,v.api),v.api[e]===i&&!h.is.mocked())return void h.error(C.missingAction,v.action,v.api);m=v.api[e]}else h.is.form()&&(m=T.attr("action")||R.attr("action")||!1,h.debug("No url or action specified, defaulting to form action",m));return m}},abort:function(){var e=h.get.xhr();e&&"resolved"!==e.state()&&(h.debug("Cancelling API request"),e.abort())},reset:function(){h.remove.error(),h.remove.loading()},setting:function(t,n){if(h.debug("Changing setting",t,n),e.isPlainObject(t))e.extend(!0,v,t);else{if(n===i)return v[t];e.isPlainObject(v[t])?e.extend(!0,v[t],n):v[t]=n}},internal:function(t,n){if(e.isPlainObject(t))e.extend(!0,h,t);else{if(n===i)return h[t];h[t]=n}},debug:function(){!v.silent&&v.debug&&(v.performance?h.performance.log(arguments):(h.debug=Function.prototype.bind.call(console.info,console,v.name+":"),h.debug.apply(console,arguments)))},verbose:function(){!v.silent&&v.verbose&&v.debug&&(v.performance?h.performance.log(arguments):(h.verbose=Function.prototype.bind.call(console.info,console,v.name+":"),h.verbose.apply(console,arguments)))},error:function(){v.silent||(h.error=Function.prototype.bind.call(console.error,console,v.name+":"),h.error.apply(console,arguments))},performance:{log:function(e){var t,n,i;v.performance&&(t=(new Date).getTime(),i=s||t,n=t-i,s=t,l.push({Name:e[0],Arguments:[].slice.call(e,1)||"","Execution Time":n})),clearTimeout(h.performance.timer),h.performance.timer=setTimeout(h.performance.display,500)},display:function(){var t=v.name+":",n=0;s=!1,clearTimeout(h.performance.timer),e.each(l,function(e,t){n+=t["Execution Time"]}),t+=" "+n+"ms",r&&(t+=" '"+r+"'"),(console.group!==i||console.table!==i)&&l.length>0&&(console.groupCollapsed(t),console.table?console.table(l):e.each(l,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),l=[]}},invoke:function(t,n,a){var r,s,l,c=F;return n=n||d,a=E||a,"string"==typeof t&&c!==i&&(t=t.split(/[\. ]/),r=t.length-1,e.each(t,function(n,o){var a=n!=r?o+t[n+1].charAt(0).toUpperCase()+t[n+1].slice(1):t;if(e.isPlainObject(c[a])&&n!=r)c=c[a];else{if(c[a]!==i)return s=c[a],!1;if(!e.isPlainObject(c[o])||n==r)return c[o]!==i?(s=c[o],!1):(h.error(C.method,t),!1);c=c[o]}})),e.isFunction(s)?l=s.apply(a,n):s!==i&&(l=s),e.isArray(o)?o.push(l):o!==i?o=[o,l]:l!==i&&(o=l),s}},u?(F===i&&h.initialize(),h.invoke(c)):(F!==i&&F.invoke("destroy"),h.initialize())}),o!==i?o:this},e.api.settings={name:"API",namespace:"api",debug:!1,verbose:!1,performance:!0,api:{},cache:!0,interruptRequests:!0,on:"auto",stateContext:!1,loadingDuration:0,hideError:"auto",errorDuration:2e3,encodeParameters:!0,action:!1,url:!1,base:"",urlData:{},defaultData:!0,serializeForm:!1,throttle:0,throttleFirstRequest:!0,method:"get",data:{},dataType:"json",mockResponse:!1,mockResponseAsync:!1,response:!1,responseAsync:!1,beforeSend:function(e){return e},beforeXHR:function(e){},onRequest:function(e,t){},onResponse:!1,onSuccess:function(e,t){},onComplete:function(e,t){},onFailure:function(e,t){},onError:function(e,t){},onAbort:function(e,t){},successTest:!1,error:{beforeSend:"The before send function has aborted the request",error:"There was an error with your request",exitConditions:"API Request Aborted. Exit conditions met",JSONParse:"JSON could not be parsed during error handling",legacyParameters:"You are using legacy API success callback names",method:"The method you called is not defined",missingAction:"API action used but no url was defined",missingSerialize:"jquery-serialize-object is required to add form data to an existing data object",missingURL:"No URL specified for api event",noReturnedValue:"The beforeSend callback must return a settings object, beforeSend ignored.",noStorage:"Caching responses locally requires session storage",parseError:"There was an error parsing your request",requiredParameter:"Missing a required URL parameter: ",statusMessage:"Server gave an error: ",timeout:"Your request timed out"},regExp:{required:/\{\$*[A-z0-9]+\}/g,optional:/\{\/\$*[A-z0-9]+\}/g},className:{loading:"loading",error:"error"},selector:{disabled:".disabled",form:"form"},metadata:{action:"action",url:"url"}}}(jQuery,window,document),function(e,t,n,i){"use strict";t="undefined"!=typeof t&&t.Math==Math?t:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")(),e.fn.state=function(t){var o,a=e(this),r=a.selector||"",s=("ontouchstart"in n.documentElement,(new Date).getTime()),l=[],c=arguments[0],u="string"==typeof c,d=[].slice.call(arguments,1);return a.each(function(){var n,f=e.isPlainObject(t)?e.extend(!0,{},e.fn.state.settings,t):e.extend({},e.fn.state.settings),m=f.error,g=f.metadata,p=f.className,h=f.namespace,v=f.states,b=f.text,y="."+h,x=h+"-module",C=e(this),w=this,k=C.data(x);n={initialize:function(){n.verbose("Initializing module"),f.automatic&&n.add.defaults(),f.context&&""!==r?e(f.context).on(r,"mouseenter"+y,n.change.text).on(r,"mouseleave"+y,n.reset.text).on(r,"click"+y,n.toggle.state):C.on("mouseenter"+y,n.change.text).on("mouseleave"+y,n.reset.text).on("click"+y,n.toggle.state),n.instantiate()},instantiate:function(){n.verbose("Storing instance of module",n),k=n,C.data(x,n)},destroy:function(){n.verbose("Destroying previous module",k),C.off(y).removeData(x)},refresh:function(){n.verbose("Refreshing selector cache"),C=e(w)},add:{defaults:function(){var o=t&&e.isPlainObject(t.states)?t.states:{};e.each(f.defaults,function(t,a){n.is[t]!==i&&n.is[t]()&&(n.verbose("Adding default states",t,w),e.extend(f.states,a,o))})}},is:{active:function(){return C.hasClass(p.active)},loading:function(){return C.hasClass(p.loading)},inactive:function(){return!C.hasClass(p.active)},state:function(e){return p[e]!==i&&C.hasClass(p[e])},enabled:function(){return!C.is(f.filter.active)},disabled:function(){return C.is(f.filter.active)},textEnabled:function(){return!C.is(f.filter.text)},button:function(){return C.is(".button:not(a, .submit)")},input:function(){return C.is("input")},progress:function(){return C.is(".ui.progress")}},allow:function(e){n.debug("Now allowing state",e),v[e]=!0},disallow:function(e){n.debug("No longer allowing",e),v[e]=!1},allows:function(e){return v[e]||!1},enable:function(){C.removeClass(p.disabled)},disable:function(){C.addClass(p.disabled)},setState:function(e){n.allows(e)&&C.addClass(p[e])},removeState:function(e){n.allows(e)&&C.removeClass(p[e])},toggle:{state:function(){var t,o;if(n.allows("active")&&n.is.enabled()){if(n.refresh(),e.fn.api!==i)if(t=C.api("get request"),o=C.api("was cancelled"))n.debug("API Request cancelled by beforesend"),f.activateTest=function(){return!1},f.deactivateTest=function(){return!1};else if(t)return void n.listenTo(t);n.change.state()}}},listenTo:function(t){n.debug("API request detected, waiting for state signal",t),t&&(b.loading&&n.update.text(b.loading),e.when(t).then(function(){"resolved"==t.state()?(n.debug("API request succeeded"),f.activateTest=function(){return!0},f.deactivateTest=function(){return!0}):(n.debug("API request failed"),f.activateTest=function(){return!1},f.deactivateTest=function(){return!1}),n.change.state()}))},change:{state:function(){n.debug("Determining state change direction"),n.is.inactive()?n.activate():n.deactivate(),f.sync&&n.sync(),f.onChange.call(w)},text:function(){n.is.textEnabled()&&(n.is.disabled()?(n.verbose("Changing text to disabled text",b.hover),n.update.text(b.disabled)):n.is.active()?b.hover?(n.verbose("Changing text to hover text",b.hover),n.update.text(b.hover)):b.deactivate&&(n.verbose("Changing text to deactivating text",b.deactivate),n.update.text(b.deactivate)):b.hover?(n.verbose("Changing text to hover text",b.hover),n.update.text(b.hover)):b.activate&&(n.verbose("Changing text to activating text",b.activate),n.update.text(b.activate)))}},activate:function(){f.activateTest.call(w)&&(n.debug("Setting state to active"),C.addClass(p.active),n.update.text(b.active),f.onActivate.call(w))},deactivate:function(){f.deactivateTest.call(w)&&(n.debug("Setting state to inactive"),C.removeClass(p.active),n.update.text(b.inactive),f.onDeactivate.call(w));
 },sync:function(){n.verbose("Syncing other buttons to current state"),n.is.active()?a.not(C).state("activate"):a.not(C).state("deactivate")},get:{text:function(){return f.selector.text?C.find(f.selector.text).text():C.html()},textFor:function(e){return b[e]||!1}},flash:{text:function(e,t,i){var o=n.get.text();n.debug("Flashing text message",e,t),e=e||f.text.flash,t=t||f.flashDuration,i=i||function(){},n.update.text(e),setTimeout(function(){n.update.text(o),i.call(w)},t)}},reset:{text:function(){var e=b.active||C.data(g.storedText),t=b.inactive||C.data(g.storedText);n.is.textEnabled()&&(n.is.active()&&e?(n.verbose("Resetting active text",e),n.update.text(e)):t&&(n.verbose("Resetting inactive text",e),n.update.text(t)))}},update:{text:function(e){var t=n.get.text();e&&e!==t?(n.debug("Updating text",e),f.selector.text?C.data(g.storedText,e).find(f.selector.text).text(e):C.data(g.storedText,e).html(e)):n.debug("Text is already set, ignoring update",e)}},setting:function(t,o){if(n.debug("Changing setting",t,o),e.isPlainObject(t))e.extend(!0,f,t);else{if(o===i)return f[t];e.isPlainObject(f[t])?e.extend(!0,f[t],o):f[t]=o}},internal:function(t,o){if(e.isPlainObject(t))e.extend(!0,n,t);else{if(o===i)return n[t];n[t]=o}},debug:function(){!f.silent&&f.debug&&(f.performance?n.performance.log(arguments):(n.debug=Function.prototype.bind.call(console.info,console,f.name+":"),n.debug.apply(console,arguments)))},verbose:function(){!f.silent&&f.verbose&&f.debug&&(f.performance?n.performance.log(arguments):(n.verbose=Function.prototype.bind.call(console.info,console,f.name+":"),n.verbose.apply(console,arguments)))},error:function(){f.silent||(n.error=Function.prototype.bind.call(console.error,console,f.name+":"),n.error.apply(console,arguments))},performance:{log:function(e){var t,i,o;f.performance&&(t=(new Date).getTime(),o=s||t,i=t-o,s=t,l.push({Name:e[0],Arguments:[].slice.call(e,1)||"",Element:w,"Execution Time":i})),clearTimeout(n.performance.timer),n.performance.timer=setTimeout(n.performance.display,500)},display:function(){var t=f.name+":",o=0;s=!1,clearTimeout(n.performance.timer),e.each(l,function(e,t){o+=t["Execution Time"]}),t+=" "+o+"ms",r&&(t+=" '"+r+"'"),(console.group!==i||console.table!==i)&&l.length>0&&(console.groupCollapsed(t),console.table?console.table(l):e.each(l,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),l=[]}},invoke:function(t,a,r){var s,l,c,u=k;return a=a||d,r=w||r,"string"==typeof t&&u!==i&&(t=t.split(/[\. ]/),s=t.length-1,e.each(t,function(o,a){var r=o!=s?a+t[o+1].charAt(0).toUpperCase()+t[o+1].slice(1):t;if(e.isPlainObject(u[r])&&o!=s)u=u[r];else{if(u[r]!==i)return l=u[r],!1;if(!e.isPlainObject(u[a])||o==s)return u[a]!==i?(l=u[a],!1):(n.error(m.method,t),!1);u=u[a]}})),e.isFunction(l)?c=l.apply(r,a):l!==i&&(c=l),e.isArray(o)?o.push(c):o!==i?o=[o,c]:c!==i&&(o=c),l}},u?(k===i&&n.initialize(),n.invoke(c)):(k!==i&&k.invoke("destroy"),n.initialize())}),o!==i?o:this},e.fn.state.settings={name:"State",debug:!1,verbose:!1,namespace:"state",performance:!0,onActivate:function(){},onDeactivate:function(){},onChange:function(){},activateTest:function(){return!0},deactivateTest:function(){return!0},automatic:!0,sync:!1,flashDuration:1e3,filter:{text:".loading, .disabled",active:".disabled"},context:!1,error:{beforeSend:"The before send function has cancelled state change",method:"The method you called is not defined."},metadata:{promise:"promise",storedText:"stored-text"},className:{active:"active",disabled:"disabled",error:"error",loading:"loading",success:"success",warning:"warning"},selector:{text:!1},defaults:{input:{disabled:!0,loading:!0,active:!0},button:{disabled:!0,loading:!0,active:!0},progress:{active:!0,success:!0,warning:!0,error:!0}},states:{active:!0,disabled:!0,error:!0,loading:!0,success:!0,warning:!0},text:{disabled:!1,flash:!1,hover:!1,active:!1,inactive:!1,activate:!1,deactivate:!1}}}(jQuery,window,document),function(e,t,n,i){"use strict";t="undefined"!=typeof t&&t.Math==Math?t:"undefined"!=typeof self&&self.Math==Math?self:Function("return this")(),e.fn.visibility=function(o){var a,r=e(this),s=r.selector||"",l=(new Date).getTime(),c=[],u=arguments[0],d="string"==typeof u,f=[].slice.call(arguments,1),m=r.length,g=0;return r.each(function(){var r,p,h,v,b=e.isPlainObject(o)?e.extend(!0,{},e.fn.visibility.settings,o):e.extend({},e.fn.visibility.settings),y=b.className,x=b.namespace,C=b.error,w=b.metadata,k="."+x,S="module-"+x,T=e(t),A=e(this),R=e(b.context),E=(A.selector||"",A.data(S)),P=t.requestAnimationFrame||t.mozRequestAnimationFrame||t.webkitRequestAnimationFrame||t.msRequestAnimationFrame||function(e){setTimeout(e,0)},F=this,O=!1;v={initialize:function(){v.debug("Initializing",b),v.setup.cache(),v.should.trackChanges()&&("image"==b.type&&v.setup.image(),"fixed"==b.type&&v.setup.fixed(),b.observeChanges&&v.observeChanges(),v.bind.events()),v.save.position(),v.is.visible()||v.error(C.visible,A),b.initialCheck&&v.checkVisibility(),v.instantiate()},instantiate:function(){v.debug("Storing instance",v),A.data(S,v),E=v},destroy:function(){v.verbose("Destroying previous module"),h&&h.disconnect(),p&&p.disconnect(),T.off("load"+k,v.event.load).off("resize"+k,v.event.resize),R.off("scroll"+k,v.event.scroll).off("scrollchange"+k,v.event.scrollchange),"fixed"==b.type&&(v.resetFixed(),v.remove.placeholder()),A.off(k).removeData(S)},observeChanges:function(){"MutationObserver"in t&&(p=new MutationObserver(v.event.contextChanged),h=new MutationObserver(v.event.changed),p.observe(n,{childList:!0,subtree:!0}),h.observe(F,{childList:!0,subtree:!0}),v.debug("Setting up mutation observer",h))},bind:{events:function(){v.verbose("Binding visibility events to scroll and resize"),b.refreshOnLoad&&T.on("load"+k,v.event.load),T.on("resize"+k,v.event.resize),R.off("scroll"+k).on("scroll"+k,v.event.scroll).on("scrollchange"+k,v.event.scrollchange)}},event:{changed:function(e){v.verbose("DOM tree modified, updating visibility calculations"),v.timer=setTimeout(function(){v.verbose("DOM tree modified, updating sticky menu"),v.refresh()},100)},contextChanged:function(t){[].forEach.call(t,function(t){t.removedNodes&&[].forEach.call(t.removedNodes,function(t){(t==F||e(t).find(F).length>0)&&(v.debug("Element removed from DOM, tearing down events"),v.destroy())})})},resize:function(){v.debug("Window resized"),b.refreshOnResize&&P(v.refresh)},load:function(){v.debug("Page finished loading"),P(v.refresh)},scroll:function(){b.throttle?(clearTimeout(v.timer),v.timer=setTimeout(function(){R.triggerHandler("scrollchange"+k,[R.scrollTop()])},b.throttle)):P(function(){R.triggerHandler("scrollchange"+k,[R.scrollTop()])})},scrollchange:function(e,t){v.checkVisibility(t)}},precache:function(t,i){t instanceof Array||(t=[t]);for(var o=t.length,a=0,r=[],s=n.createElement("img"),l=function(){a++,a>=t.length&&e.isFunction(i)&&i()};o--;)s=n.createElement("img"),s.onload=l,s.onerror=l,s.src=t[o],r.push(s)},enableCallbacks:function(){v.debug("Allowing callbacks to occur"),O=!1},disableCallbacks:function(){v.debug("Disabling all callbacks temporarily"),O=!0},should:{trackChanges:function(){return d?(v.debug("One time query, no need to bind events"),!1):(v.debug("Callbacks being attached"),!0)}},setup:{cache:function(){v.cache={occurred:{},screen:{},element:{}}},image:function(){var e=A.data(w.src);e&&(v.verbose("Lazy loading image",e),b.once=!0,b.observeChanges=!1,b.onOnScreen=function(){v.debug("Image on screen",F),v.precache(e,function(){v.set.image(e,function(){g++,g==m&&b.onAllLoaded.call(this),b.onLoad.call(this)})})})},fixed:function(){v.debug("Setting up fixed"),b.once=!1,b.observeChanges=!1,b.initialCheck=!0,b.refreshOnLoad=!0,o.transition||(b.transition=!1),v.create.placeholder(),v.debug("Added placeholder",r),b.onTopPassed=function(){v.debug("Element passed, adding fixed position",A),v.show.placeholder(),v.set.fixed(),b.transition&&e.fn.transition!==i&&A.transition(b.transition,b.duration)},b.onTopPassedReverse=function(){v.debug("Element returned to position, removing fixed",A),v.hide.placeholder(),v.remove.fixed()}}},create:{placeholder:function(){v.verbose("Creating fixed position placeholder"),r=A.clone(!1).css("display","none").addClass(y.placeholder).insertAfter(A)}},show:{placeholder:function(){v.verbose("Showing placeholder"),r.css("display","block").css("visibility","hidden")}},hide:{placeholder:function(){v.verbose("Hiding placeholder"),r.css("display","none").css("visibility","")}},set:{fixed:function(){v.verbose("Setting element to fixed position"),A.addClass(y.fixed).css({position:"fixed",top:b.offset+"px",left:"auto",zIndex:b.zIndex}),b.onFixed.call(F)},image:function(t,n){A.attr("src",t),b.transition?e.fn.transition!==i?A.transition(b.transition,b.duration,n):A.fadeIn(b.duration,n):A.show()}},is:{onScreen:function(){var e=v.get.elementCalculations();return e.onScreen},offScreen:function(){var e=v.get.elementCalculations();return e.offScreen},visible:function(){return!(!v.cache||!v.cache.element)&&!(0===v.cache.element.width&&0===v.cache.element.offset.top)}},refresh:function(){v.debug("Refreshing constants (width/height)"),"fixed"==b.type&&v.resetFixed(),v.reset(),v.save.position(),b.checkOnRefresh&&v.checkVisibility(),b.onRefresh.call(F)},resetFixed:function(){v.remove.fixed(),v.remove.occurred()},reset:function(){v.verbose("Resetting all cached values"),e.isPlainObject(v.cache)&&(v.cache.screen={},v.cache.element={})},checkVisibility:function(e){v.verbose("Checking visibility of element",v.cache.element),!O&&v.is.visible()&&(v.save.scroll(e),v.save.calculations(),v.passed(),v.passingReverse(),v.topVisibleReverse(),v.bottomVisibleReverse(),v.topPassedReverse(),v.bottomPassedReverse(),v.onScreen(),v.offScreen(),v.passing(),v.topVisible(),v.bottomVisible(),v.topPassed(),v.bottomPassed(),b.onUpdate&&b.onUpdate.call(F,v.get.elementCalculations()))},passed:function(t,n){var o=v.get.elementCalculations();if(t&&n)b.onPassed[t]=n;else{if(t!==i)return v.get.pixelsPassed(t)>o.pixelsPassed;o.passing&&e.each(b.onPassed,function(e,t){o.bottomVisible||o.pixelsPassed>v.get.pixelsPassed(e)?v.execute(t,e):b.once||v.remove.occurred(t)})}},onScreen:function(e){var t=v.get.elementCalculations(),n=e||b.onOnScreen,o="onScreen";if(e&&(v.debug("Adding callback for onScreen",e),b.onOnScreen=e),t.onScreen?v.execute(n,o):b.once||v.remove.occurred(o),e!==i)return t.onOnScreen},offScreen:function(e){var t=v.get.elementCalculations(),n=e||b.onOffScreen,o="offScreen";if(e&&(v.debug("Adding callback for offScreen",e),b.onOffScreen=e),t.offScreen?v.execute(n,o):b.once||v.remove.occurred(o),e!==i)return t.onOffScreen},passing:function(e){var t=v.get.elementCalculations(),n=e||b.onPassing,o="passing";if(e&&(v.debug("Adding callback for passing",e),b.onPassing=e),t.passing?v.execute(n,o):b.once||v.remove.occurred(o),e!==i)return t.passing},topVisible:function(e){var t=v.get.elementCalculations(),n=e||b.onTopVisible,o="topVisible";if(e&&(v.debug("Adding callback for top visible",e),b.onTopVisible=e),t.topVisible?v.execute(n,o):b.once||v.remove.occurred(o),e===i)return t.topVisible},bottomVisible:function(e){var t=v.get.elementCalculations(),n=e||b.onBottomVisible,o="bottomVisible";if(e&&(v.debug("Adding callback for bottom visible",e),b.onBottomVisible=e),t.bottomVisible?v.execute(n,o):b.once||v.remove.occurred(o),e===i)return t.bottomVisible},topPassed:function(e){var t=v.get.elementCalculations(),n=e||b.onTopPassed,o="topPassed";if(e&&(v.debug("Adding callback for top passed",e),b.onTopPassed=e),t.topPassed?v.execute(n,o):b.once||v.remove.occurred(o),e===i)return t.topPassed},bottomPassed:function(e){var t=v.get.elementCalculations(),n=e||b.onBottomPassed,o="bottomPassed";if(e&&(v.debug("Adding callback for bottom passed",e),b.onBottomPassed=e),t.bottomPassed?v.execute(n,o):b.once||v.remove.occurred(o),e===i)return t.bottomPassed},passingReverse:function(e){var t=v.get.elementCalculations(),n=e||b.onPassingReverse,o="passingReverse";if(e&&(v.debug("Adding callback for passing reverse",e),b.onPassingReverse=e),t.passing?b.once||v.remove.occurred(o):v.get.occurred("passing")&&v.execute(n,o),e!==i)return!t.passing},topVisibleReverse:function(e){var t=v.get.elementCalculations(),n=e||b.onTopVisibleReverse,o="topVisibleReverse";if(e&&(v.debug("Adding callback for top visible reverse",e),b.onTopVisibleReverse=e),t.topVisible?b.once||v.remove.occurred(o):v.get.occurred("topVisible")&&v.execute(n,o),e===i)return!t.topVisible},bottomVisibleReverse:function(e){var t=v.get.elementCalculations(),n=e||b.onBottomVisibleReverse,o="bottomVisibleReverse";if(e&&(v.debug("Adding callback for bottom visible reverse",e),b.onBottomVisibleReverse=e),t.bottomVisible?b.once||v.remove.occurred(o):v.get.occurred("bottomVisible")&&v.execute(n,o),e===i)return!t.bottomVisible},topPassedReverse:function(e){var t=v.get.elementCalculations(),n=e||b.onTopPassedReverse,o="topPassedReverse";if(e&&(v.debug("Adding callback for top passed reverse",e),b.onTopPassedReverse=e),t.topPassed?b.once||v.remove.occurred(o):v.get.occurred("topPassed")&&v.execute(n,o),e===i)return!t.onTopPassed},bottomPassedReverse:function(e){var t=v.get.elementCalculations(),n=e||b.onBottomPassedReverse,o="bottomPassedReverse";if(e&&(v.debug("Adding callback for bottom passed reverse",e),b.onBottomPassedReverse=e),t.bottomPassed?b.once||v.remove.occurred(o):v.get.occurred("bottomPassed")&&v.execute(n,o),e===i)return!t.bottomPassed},execute:function(e,t){var n=v.get.elementCalculations(),i=v.get.screenCalculations();e=e||!1,e&&(b.continuous?(v.debug("Callback being called continuously",t,n),e.call(F,n,i)):v.get.occurred(t)||(v.debug("Conditions met",t,n),e.call(F,n,i))),v.save.occurred(t)},remove:{fixed:function(){v.debug("Removing fixed position"),A.removeClass(y.fixed).css({position:"",top:"",left:"",zIndex:""}),b.onUnfixed.call(F)},placeholder:function(){v.debug("Removing placeholder content"),r&&r.remove()},occurred:function(e){if(e){var t=v.cache.occurred;t[e]!==i&&t[e]===!0&&(v.debug("Callback can now be called again",e),v.cache.occurred[e]=!1)}else v.cache.occurred={}}},save:{calculations:function(){v.verbose("Saving all calculations necessary to determine positioning"),v.save.direction(),v.save.screenCalculations(),v.save.elementCalculations()},occurred:function(e){e&&(v.cache.occurred[e]!==i&&v.cache.occurred[e]===!0||(v.verbose("Saving callback occurred",e),v.cache.occurred[e]=!0))},scroll:function(e){e=e+b.offset||R.scrollTop()+b.offset,v.cache.scroll=e},direction:function(){var e,t=v.get.scroll(),n=v.get.lastScroll();return e=t>n&&n?"down":t<n&&n?"up":"static",v.cache.direction=e,v.cache.direction},elementPosition:function(){var e=v.cache.element,t=v.get.screenSize();return v.verbose("Saving element position"),e.fits=e.height<t.height,e.offset=A.offset(),e.width=A.outerWidth(),e.height=A.outerHeight(),v.cache.element=e,e},elementCalculations:function(){var e=v.get.screenCalculations(),t=v.get.elementPosition();return b.includeMargin?(t.margin={},t.margin.top=parseInt(A.css("margin-top"),10),t.margin.bottom=parseInt(A.css("margin-bottom"),10),t.top=t.offset.top-t.margin.top,t.bottom=t.offset.top+t.height+t.margin.bottom):(t.top=t.offset.top,t.bottom=t.offset.top+t.height),t.topVisible=e.bottom>=t.top,t.topPassed=e.top>=t.top,t.bottomVisible=e.bottom>=t.bottom,t.bottomPassed=e.top>=t.bottom,t.pixelsPassed=0,t.percentagePassed=0,t.onScreen=t.topVisible&&!t.bottomPassed,t.passing=t.topPassed&&!t.bottomPassed,t.offScreen=!t.onScreen,t.passing&&(t.pixelsPassed=e.top-t.top,t.percentagePassed=(e.top-t.top)/t.height),v.cache.element=t,v.verbose("Updated element calculations",t),t},screenCalculations:function(){var e=v.get.scroll();return v.save.direction(),v.cache.screen.top=e,v.cache.screen.bottom=e+v.cache.screen.height,v.cache.screen},screenSize:function(){v.verbose("Saving window position"),v.cache.screen={height:R.height()}},position:function(){v.save.screenSize(),v.save.elementPosition()}},get:{pixelsPassed:function(e){var t=v.get.elementCalculations();return e.search("%")>-1?t.height*(parseInt(e,10)/100):parseInt(e,10)},occurred:function(e){return v.cache.occurred!==i&&(v.cache.occurred[e]||!1)},direction:function(){return v.cache.direction===i&&v.save.direction(),v.cache.direction},elementPosition:function(){return v.cache.element===i&&v.save.elementPosition(),v.cache.element},elementCalculations:function(){return v.cache.element===i&&v.save.elementCalculations(),v.cache.element},screenCalculations:function(){return v.cache.screen===i&&v.save.screenCalculations(),v.cache.screen},screenSize:function(){return v.cache.screen===i&&v.save.screenSize(),v.cache.screen},scroll:function(){return v.cache.scroll===i&&v.save.scroll(),v.cache.scroll},lastScroll:function(){return v.cache.screen===i?(v.debug("First scroll event, no last scroll could be found"),!1):v.cache.screen.top}},setting:function(t,n){if(e.isPlainObject(t))e.extend(!0,b,t);else{if(n===i)return b[t];b[t]=n}},internal:function(t,n){if(e.isPlainObject(t))e.extend(!0,v,t);else{if(n===i)return v[t];v[t]=n}},debug:function(){!b.silent&&b.debug&&(b.performance?v.performance.log(arguments):(v.debug=Function.prototype.bind.call(console.info,console,b.name+":"),v.debug.apply(console,arguments)))},verbose:function(){!b.silent&&b.verbose&&b.debug&&(b.performance?v.performance.log(arguments):(v.verbose=Function.prototype.bind.call(console.info,console,b.name+":"),v.verbose.apply(console,arguments)))},error:function(){b.silent||(v.error=Function.prototype.bind.call(console.error,console,b.name+":"),v.error.apply(console,arguments))},performance:{log:function(e){var t,n,i;b.performance&&(t=(new Date).getTime(),i=l||t,n=t-i,l=t,c.push({Name:e[0],Arguments:[].slice.call(e,1)||"",Element:F,"Execution Time":n})),clearTimeout(v.performance.timer),v.performance.timer=setTimeout(v.performance.display,500)},display:function(){var t=b.name+":",n=0;l=!1,clearTimeout(v.performance.timer),e.each(c,function(e,t){n+=t["Execution Time"]}),t+=" "+n+"ms",s&&(t+=" '"+s+"'"),(console.group!==i||console.table!==i)&&c.length>0&&(console.groupCollapsed(t),console.table?console.table(c):e.each(c,function(e,t){console.log(t.Name+": "+t["Execution Time"]+"ms")}),console.groupEnd()),c=[]}},invoke:function(t,n,o){var r,s,l,c=E;return n=n||f,o=F||o,"string"==typeof t&&c!==i&&(t=t.split(/[\. ]/),r=t.length-1,e.each(t,function(n,o){var a=n!=r?o+t[n+1].charAt(0).toUpperCase()+t[n+1].slice(1):t;if(e.isPlainObject(c[a])&&n!=r)c=c[a];else{if(c[a]!==i)return s=c[a],!1;if(!e.isPlainObject(c[o])||n==r)return c[o]!==i?(s=c[o],!1):(v.error(C.method,t),!1);c=c[o]}})),e.isFunction(s)?l=s.apply(o,n):s!==i&&(l=s),e.isArray(a)?a.push(l):a!==i?a=[a,l]:l!==i&&(a=l),s}},d?(E===i&&v.initialize(),E.save.scroll(),E.save.calculations(),v.invoke(u)):(E!==i&&E.invoke("destroy"),v.initialize())}),a!==i?a:this},e.fn.visibility.settings={name:"Visibility",namespace:"visibility",debug:!1,verbose:!1,performance:!0,observeChanges:!0,initialCheck:!0,refreshOnLoad:!0,refreshOnResize:!0,checkOnRefresh:!0,once:!0,continuous:!1,offset:0,includeMargin:!1,context:t,throttle:!1,type:!1,zIndex:"10",transition:"fade in",duration:1e3,onPassed:{},onOnScreen:!1,onOffScreen:!1,onPassing:!1,onTopVisible:!1,onBottomVisible:!1,onTopPassed:!1,onBottomPassed:!1,onPassingReverse:!1,onTopVisibleReverse:!1,onBottomVisibleReverse:!1,onTopPassedReverse:!1,onBottomPassedReverse:!1,onLoad:function(){},onAllLoaded:function(){},onFixed:function(){},onUnfixed:function(){},onUpdate:!1,onRefresh:function(){},metadata:{src:"src"},className:{fixed:"fixed",placeholder:"placeholder"},error:{method:"The method you called is not defined.",visible:"Element is hidden, you must call refresh after element becomes visible"}}}(jQuery,window,document);
-var EMLMakerAIEngine;
-(function (EMLMakerAIEngine) {
-    var LinkIntelligence = (function () {
-        function LinkIntelligence(LinkObject) {
-            this.canContinue = true;
-            this.LinkObject = LinkObject;
-            this.messages = [];
-        }
-        LinkIntelligence.prototype.when = function (condition, callback) {
-            if (condition)
-                callback(this.LinkObject, this);
-            return this;
-        };
-        return LinkIntelligence;
-    }());
-    EMLMakerAIEngine.LinkIntelligence = LinkIntelligence;
-    var landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g;
-    var extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/gi;
-    var linkEncapsulatedPunctuation = /\<a ([^<].*)([\.\?\,\:])\<\/a/gi;
-    function CheckLink(LinkObject) {
-        var AIMod = new LinkIntelligence(LinkObject);
-        AIMod.when(LinkObject.needsTrackingCode() && !LinkObject.new.contains("optum.co/"), function (LinkObject, AIModule) {
-            AIModule.canContinue = false;
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "This URL needs a tracking code.", "Create and add one to make this message go away.", !/\/campaign\/|\/resources\//gi.test(LinkObject.new.url) ?
-                {
-                    severity: ErrorSeverity.High,
-                    handler: function (link) {
-                        console.log(link);
-                        link.overrideTrackingRequirements();
-                        link.isLinkComplete();
-                    },
-                    ctaLabel: '<i class="unlock alternate icon"></i> Do not track link'
-                } : { severity: 'high' }));
-        })
-            .when(linkEncapsulatedPunctuation.test(LinkObject.context), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.BestPractice, "Style matters", "You should not put punctuation inside of a link unless it is a button, and even then it's a little weird.", {
-                severity: 'high'
-            }));
-        })
-            .when(/http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new.url), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "This URL is not correct.", "/content/optum3/en/ is only for use in author in AEM, not on the live site.", {
-                severity: 'high'
-            }));
-            AIModule.canContinue = false;
-        }).when((window.jQuery(LinkObject.context).find("img").length == 0 && jQuery(LinkObject.context).text().trim() == "") && (!LinkObject.hasOwnProperty("deleteOnRender") || !LinkObject.deleteOnRender), function (LinkObject, AIModule) {
-            AIModule.canContinue = false;
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "Missing content", ["This link doesn't contain any text or image.",
-                "This might be a mistake; you can remove it from",
-                "the code, or by clicking the button to the right,",
-                "and this link will be removed when you export the code."].join(" "), {
-                severity: 'high',
-                handler: function (link) {
-                    link.new.url = "";
-                    link.deleteOnRender = true;
-                    link.isLinkComplete();
-                },
-                ctaLabel: '<i class="trash icon"></i> Remove link'
-            }));
-        }).when(LinkObject.new.contains(" "), function (LinkObject, AIModule) {
-            AIModule.canContinue = false;
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "Link has spaces", "You should not have spaces in your link,\n          either rename the asset so that it does\n          not contain spaces, or convert the spaces to %20s.\n          If you can, try to rename PDFs that have spaces in them\n          so that they have underscores instead, as a best practice.", !/\/campaign\/|\/resources\//gi.test(LinkObject.new.url) ?
-                {
-                    severity: 'high',
-                    handler: function (link) {
-                        link.new.url = link.new.url.replace(/\s/g, "%20");
-                        link.isLinkComplete();
-                    },
-                    ctaLabel: '<i class="wizard icon"></i> Encode Spaces'
-                } : { severity: 'high' }));
-        })
-            .when(LinkObject.new.searchParams.entries.length > 0 &&
-            LinkObject.hasDuplicateQueryStrings(), function (LinkObject, AIModule) {
-            AIModule.canContinue = false;
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "Duplicate query strings", "It looks like you have duplicate query strings. When you have duplicate parameters, only one will be valid, so make sure to remove the incorrect or duplicate parameters.\
-           Pay attention to these parameters: " + LinkObject.hasDuplicateQueryStrings().join(", "), { severity: 'high' }));
-        })
-            .when(!LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new.url), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "Invalid URL", "This is not a valid URL", { severity: "high" }));
-            AIModule.canContinue = false;
-        }).when(landingPagePreferred.test(LinkObject.new.url), function (LinkObject, AIModule) {
-            var match = LinkObject.new.url.match(landingPagePreferred);
-            if (match.length > 0) {
-                var ext = match[0].toUpperCase().substr(1, match[0].length);
-                AIModule.messages.push(new errorObject(ErrorType.BestPractice, "Landing page preferred", ["When you direct email ",
-                    "traffic to ", (/^[aeiouAEIOU]/gi.test(ext) ? "an " : "a "),
-                    ext, ", it's generally a good idea to serve the ", ext, " on",
-                    " a landing page with more information about the asset. This will also ",
-                    "give you more analytics data, like session/visit duration and promote ",
-                    "browsing other content."].join("")));
-            }
-        }).when(/.com?(\.[a-z]{2,3})?\/([a-zA-Z0-9\-]+)\/*(\?.*)?$/.test(LinkObject.new.url.trim())
-            && !LinkObject.new.contains('info.optum'), function (LinkObject, AIModule) {
-            AIModule.canContinue = (LinkObject.new.contains("optum.co")) ? false : true;
-            AIModule.messages.push(new errorObject((LinkObject.new.contains("optum.co")) ? ErrorType.Fix : ErrorType.BestPractice, "Don't use shortlinks or vanity URLs in emails", "Always use the long link. Adding query string parameter to a vanity\
-           url inside an email will not track appropriately."));
-        }).when(LinkObject.context && /click|click\shere/g.test(LinkObject.context), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.BestPractice, "Use descriptive CTAs", "\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"));
-        }).when(LinkObject.linkImage && LinkObject.linkImage.length > 0, function (LinkObject, AIModule) {
-            var img = window.jQuery(LinkObject.context).find("img").get(0);
-            if (img.alt === undefined || img.alt == "") {
-                AIModule.messages.push(new errorObject(ErrorType.BestPractice, "Add an ALT tag", "Linked image should have an ALT tag."));
-            }
-        }).when(/^http(.*)#/g.test(LinkObject.new.url), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.Suggestion, "Email links can't jump.", "It looks like you're trying to send traffic to a\n        <em>Jump link</em> AKA <em>Anchor link</em>. The only\n        time that is acceptible is when the destination is on\n        the same page. You see, the assumption is that all the content is\n        loaded, but when you click from an email into another page with a\n        jump link, you're sending someone to a loading page. The page may or\n        may not send them to the location you're intending, or there\n        may be an awkward user experience.", {
-                handler: function (link) {
-                    link.removeJumpLink();
-                    link.isLinkComplete();
-                    window.ga('send', 'event', "Suggestion", "Remove Anchor Link", "Remove Anchor Link");
-                },
-                severity: ErrorType.Suggestion,
-                ctaLabel: "<i class=\"wizard icon\"></i> Fix it"
-            }));
-        }).when(LinkObject.new.contains(".oft"), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.BestPractice, "We don't link to OFTs in emails we send.", "You should not be sending OFTs to external contacts.\
-              OFTs only work with Outlook on PCs, and that is less\
-               than half of the population of email clients these days."));
-            AIModule.messages.push(new errorObject(ErrorType.Suggestion, "Forward to a colleague?", "If you are trying to do a Forward to a Colleague (FTAC)\
-             feature, forget doing that with an OFT. You can achieve\
-              the same effect by using a mailto link. <br><br><em>NOTE:\
-               You can leave the email address field blank for this one.\
-                When the user clicks the link the email field will be empty,\
-                 so he/she can add their own recipients.</em>", { handler: function (link) {
-                    link.mailto.email = "";
-                    link.mailto.subject = "I wanted you to see this";
-                    link.mailto.body = "Check out this link\n\nhttps://www.yourlinkgoeshere.com";
-                    // link.new.url = "mailto:?subject=" +window.encodeURIComponent() + "&body=" + window.encodeURIComponent("Check out this link\n\nhttps://www.yourlinkgoeshere.com");
-                    link.mailto.composeEmail();
-                    link.mailto.initEmailEditor();
-                    link.mailto.openEditor();
-                    // link.refreshURL();
-                    link.isLinkComplete();
-                    window.ga('send', 'event', "Suggestion", "Use FTAC", "Use FTAC");
-                },
-                severity: ErrorType.Suggestion,
-                ctaLabel: "<i class=\"wizard icon\"></i> Try it?"
-            }));
-        }).when(extDoesNotrequireTrackingCode.test(LinkObject.new.url) && LinkObject.hasTrackingCode(), function (LinkObject, AIModule) {
-            var match = LinkObject.new.url.match(extDoesNotrequireTrackingCode);
-            if (match.length > 0) {
-                var ext = match[0].toUpperCase().substr(1, match[0].length);
-                var phrase = /^[aeiouAEIOU]/gi.test(ext) ? "an " : "a " + ext;
-                AIModule.messages.push(new errorObject(ErrorType.Suggestion, "Unnecessary tracking link", "It looks like you added a tracking code to " + phrase + " file.\n          In fact, you can only track web pages with these tracking codes.", {
-                    handler: function (link) {
-                        for (var i = 0; i < link.new.searchParams.entries.length; i++) {
-                            if (/[a-z]{1,4}=(.*?:){3,9}/ig.test(link.new.searchParams.entries[i])) {
-                                link.new.searchParams.deleteAtIndex(i);
-                            }
-                            window.ga('send', 'event', "Suggestion", "Unnecessary tracking code", "Remove Tracking Code");
-                        }
-                        link.new.searchParams.updateEntries();
-                        link.refreshURL();
-                        link.isLinkComplete();
-                    },
-                    ctaLabel: "<i class=\"wizard icon\"></i>Fix it now",
-                    severity: ErrorType.Suggestion
-                }));
-            }
-        }).when(LinkObject.isLinkType('mailto') && LinkObject.mailto.has('email') && !LinkObject.mailto.isValidEmailAddress(), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.Fix, "Invalid email address", "Fix invalid email address.", { severity: 'high' }));
-            AIModule.canContinue = false;
-        }).when(LinkObject.isLinkType('mailto') && !LinkObject.mailto.has('subject'), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.BestPractice, "Always include a subject line.", "You can add a subject line using the Editor button.", {
-                handler: function (link) {
-                    link.mailto.openEditor();
-                    window.ga('send', 'event', "Best Practice", "Add subject line", "Add subject line");
-                },
-                ctaLabel: "<i class=\"wizard icon\"></i> Open Editor"
-            }));
-        }).when(LinkObject.isLinkType('mailto') && !LinkObject.mailto.has('email'), function (LinkObject, AIModule) {
-            if (LinkObject.mailto.has('subject')
-                && LinkObject.mailto.has('body')
-                && (LinkObject.mailto.body.indexOf("https://") > -1 || LinkObject.mailto.body.indexOf("http://") > -1)) {
-                AIModule.messages.push(new errorObject(ErrorType.BestPractice, "Implementing FTAC?", ["It looks like you're trying to implement a Forward to a ",
-                    "Colleague (FTAC) feature. Use the Mailto Editor to adjust ",
-                    "your subject line, email body, and link you're including. ",
-                    "With an FTAC, don't worry about including a recipient email address.",
-                    " The intention is to open a new email with an empty To: line so",
-                    " the user can fill it in from his/her address book."].join("")));
-            }
-            else {
-                AIModule.messages.push(new errorObject(ErrorType.Warn, "No email address set", "This mailto link does not have an email address set."));
-            }
-        }).when(LinkObject.requiresTrackingCode() && LinkObject.hasTrackingCode(), function (LinkObject, AIModule) {
-            var affected = false;
-            LinkObject._super.mapLinkObjects(function (LO) {
-                if (LO.requiresTrackingCode() && !LO.hasTrackingCode()) {
-                    affected = true;
-                    console.log('affected=true');
-                }
-            });
-            if (affected) {
-                AIModule.messages.push(new errorObject(ErrorType.Suggestion, "Need a hand?", "I noticed you added a tracking code to this link, great job.\
-             If you want I can add the same tracking code to the other links in this email \
-             which require tracking codes.", { handler: function (link) {
-                        var trackingCode = "";
-                        LinkObject.new.searchParams.entries.forEach(function (strParameter) {
-                            if (LinkObject.hasTrackingCode(strParameter)) {
-                                trackingCode = strParameter;
-                            }
-                        });
-                        link._super.mapLinkObjects(function (LO) {
-                            if (LO.requiresTrackingCode() && !LO.hasTrackingCode()) {
-                                LO.new.searchParams.append(trackingCode);
-                                LO.refreshURL();
-                            }
-                        });
-                        link._super.mapLinkObjects(function (LO) { LO.isLinkComplete(); });
-                        // });
-                        link.refreshURL();
-                        window.ga('send', 'event', "Suggestion", "Cascade Tracking Code", "Cascade Tracking Code");
-                    },
-                    severity: 'suggestion',
-                    ctaLabel: "<i class=\"wizard icon\"></i> Update all links"
-                }));
-            }
-        })
-            .when(LinkObject.requiresTrackingCode()
-            && /resource|campaign/g.test(LinkObject.new.url)
-            && !LinkObject.new.searchParams.has("s"), function (LinkObject, AIModule) {
-            AIModule.messages.push(new errorObject(ErrorType.Suggestion, "Are you tracking channel source with your form?", "If this link directs to a page with a form, consider adding\
-            an s-code to the URL so you can populate a form field with\
-             a value from the query string to track the channel source\
-              of the form submission.<br><br><em>NOTE: You can change\
-               the value of the s-code to whatever you'd like, but we'll\
-                add <code>s=email</code> by default.</em>", {
-                handler: function (link) {
-                    link.new.searchParams.append("s=email");
-                    link.refreshURL();
-                    link.isLinkComplete();
-                    window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
-                },
-                severity: 'suggestion',
-                ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"
-            }));
-        });
-        return AIMod;
-    }
-    EMLMakerAIEngine.CheckLink = CheckLink;
-})(EMLMakerAIEngine || (EMLMakerAIEngine = {}));
-
-var EMLMakerAIEngine;
-(function (EMLMakerAIEngine) {
-    var EmailIntelligence = (function () {
-        function EmailIntelligence(EMLWorkspace) {
-            this.messages = [];
-            this.canContinue = true;
-            this.EMLWorkspace = EMLWorkspace;
-            this.lastEval = Date.now();
-        }
-        EmailIntelligence.prototype.when = function (condition, callback) {
-            if (condition)
-                callback(this.EMLWorkspace, this);
-            return this;
-        };
-        return EmailIntelligence;
-    }());
-    EMLMakerAIEngine.EmailIntelligence = EmailIntelligence;
-    EMLMakerAIEngine.emailAILastEval = Date.now();
-    EMLMakerAIEngine.emailAILastCheck = { messages: ["default"] };
-    function CheckEmail(EMLWorkspace) {
-        if ((Date.now() - EMLMakerAIEngine.emailAILastEval) < 300) {
-            // console.log(Date.now()-emailAILastEval);
-            // console.log("load cache");
-            EMLMakerAIEngine.emailAILastEval = Date.now();
-            return EMLMakerAIEngine.emailAILastCheck;
-        }
-        EMLMakerAIEngine.emailAILastEval = Date.now();
-        var EmailAI = new EmailIntelligence(EMLWorkspace);
-        // console.log();
-        EmailAI.when(EMLWorkspace.linkData.length > 10, function (EMLWorkspace, EmailAI) {
-            EmailAI.messages.push("Your email has a lot of links.");
-        });
-        EMLMakerAIEngine.emailAILastCheck = EmailAI;
-        return EmailAI;
-    }
-    EMLMakerAIEngine.CheckEmail = CheckEmail;
-})(EMLMakerAIEngine || (EMLMakerAIEngine = {}));
-// var jQueryObject = jQuery(EMLWorkspace.sourceCode);
-// var preheader = jQueryObject.find(".preheader");
-// console.log("preheader", preheader);
-// if( preheader.length == 0 || preheader.text().trim()!==""){
-//   errors.messages.push(new errorObject('BEST PRACTICE',
-//   "<h4>Missing preheader</h4>Your email doesn't look like it has a preheader. Preheaders are great for improving open rates in some email clients so you should generally always include a preheader. If you cannot come up with new a preheader for each email, consider something generic that you can reuse."));
-// }
-//all images need alt tags?
-//personalization?
-/* Your subscribers will appreciate your messages even more if they're personalized. Adding personalized product recommendations into marketing emails can increase sales conversion rates by 15-25%, and click-through rates by 25-35%.*/
-// var links = [];
-// for (var i = 0; i<EMLWorkspace.linkData.length;i++){
-//   if(links.indexOf(EMLWorkspace.linkData[i].old)>-1){
-//
-//   }
-// }
-// errors.messages.push(new errorObject('BEST PRACTICE', "You have too many links in this email."));
-// console.log(errors);
-
-// declare var window: MyWindow;
-// window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
-var ErrorSeverity;
-(function (ErrorSeverity) {
-    ErrorSeverity[ErrorSeverity["Low"] = 0] = "Low";
-    ErrorSeverity[ErrorSeverity["Medium"] = 1] = "Medium";
-    ErrorSeverity[ErrorSeverity["High"] = 2] = "High";
-})(ErrorSeverity || (ErrorSeverity = {}));
-var ErrorType;
-(function (ErrorType) {
-    ErrorType[ErrorType["Fix"] = 1] = "Fix";
-    ErrorType[ErrorType["BestPractice"] = 2] = "BestPractice";
-    ErrorType[ErrorType["Suggestion"] = 3] = "Suggestion";
-    ErrorType[ErrorType["Warn"] = 4] = "Warn";
-})(ErrorType || (ErrorType = {}));
-var errorObject = (function () {
-    function errorObject(type, title, description, args) {
-        if (args === undefined)
-            args = {};
-        this.type = type;
-        this.cleanType = ErrorType[type];
-        this.title = title;
-        this.description = description;
-        this.handler = args.handler === undefined ? function () { } : args.handler;
-        this.ctaLabel = args.ctaLabel === undefined ? "" : args.ctaLabel;
-        this.severity = args.severity === undefined ? "low" : args.severity;
-    }
-    return errorObject;
-}());
-var MailtoLinkObject = (function () {
-    function MailtoLinkObject(LinkObject) {
-        this.parent = LinkObject;
-        this.email = "";
-        this.subject = "";
-        this.body = "";
-        if (this.parent.isLinkType('mailto')) {
-            this.initEmailEditor();
-        }
-    }
-    MailtoLinkObject.prototype.has = function (option) {
-        this.updateMailtoObj();
-        return this[option] && this[option].trim() !== "";
-    };
-    MailtoLinkObject.prototype.isValidEmailAddress = function () {
-        return this.parent.emailRegex.test(this.email);
-    };
-    MailtoLinkObject.prototype.deinitEmailEditor = function () {
-        this.email = "";
-        this.subject = "";
-        this.body = "";
-    };
-    MailtoLinkObject.prototype.composeEmail = function () {
-        this.parent.new.url = "mailto:" + this.email;
-        var options = ["subject", "body"];
-        for (var i = 0; i < options.length; i++) {
-            if (this[options[i]] && this[options[i]] !== "") {
-                this.parent.new.searchParams.set(options[i], this[options[i]]);
-            }
-        }
-    };
-    MailtoLinkObject.prototype.updateMailtoObj = function () {
-        var _this = this;
-        var a = this.parent.new.url.substr(7, this.parent.new.url.length - 7);
-        var b = a.split("?");
-        this.email = b[0];
-        this.parent.new.searchParams.updateEntries();
-        if (b.length > 1) {
-            ["subject", "body"].forEach(function (option) {
-                if (_this.parent.new.searchParams.has(option)) {
-                    _this[option] = window.decodeURIComponent(_this.parent.new.searchParams.get(option));
-                }
-            });
-        }
-    };
-    MailtoLinkObject.prototype.inputOnBlur = function () {
-        //decoded url all the entries;
-        //reencode them.
-        this.parent.new.searchParams.updateEntries();
-        this.parent.new.searchParams.updateSearchProp();
-    };
-    MailtoLinkObject.prototype.openEditor = function () {
-        this.initEmailEditor();
-        window.jQuery("html,body")
-            .animate({ scrollTop: window.jQuery('#link-' + this.parent.id).offset().top - 75 }, 300);
-        var LO = this.parent;
-        setTimeout(function () {
-            window.jQuery("#link-" + LO.id).find(".mailtoEditor").popup("show");
-        }, 400);
-    };
-    MailtoLinkObject.prototype.initEmailEditor = function () {
-        this.updateMailtoObj();
-    };
-    return MailtoLinkObject;
-}());
-var URLObj = (function () {
-    function URLObj(url) {
-        this.href = "";
-        this.search = "";
-        this.origin = "";
-        this.hash = "";
-        this.protocol = "";
-        this.url = url;
-        this.searchParams = new URLObjSearchParams(this);
-    }
-    URLObj.prototype.prepareExport = function () {
-        //do something here?
-    };
-    URLObj.prototype.contains = function (str) {
-        if (this.url.indexOf(str) > -1) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    };
-    Object.defineProperty(URLObj.prototype, "url", {
-        get: function () {
-            this.prepareExport();
-            return this.origin + this.search + this.hash;
-        },
-        set: function (url) {
-            this.search = "";
-            this.hash = "";
-            var protocolType = /^(https?|mailto|ftp)\:/gi;
-            if (protocolType.test(url)) {
-                var a = url.match(protocolType);
-                this.protocol = a[0];
-            }
-            this.href = url;
-            if (url.trim() == "#") {
-                this.hash = "#";
-            }
-            else if (url.trim().length > 1 && url.indexOf("#") > -1) {
-                var urlParts = url.split("#");
-                this.hash = "#" + urlParts.pop(); //jump link.. need to remove it from the other stuff.
-                var parts = (urlParts.join("#")).split("?");
-                this.origin = parts[0];
-                this.search = parts[1].length > 0 ? "?" + parts[1] : "";
-            }
-            else {
-                if (url.indexOf("?") > -1) {
-                    var parts = url.split("?");
-                    this.origin = parts[0];
-                    this.search = (parts.length > 0) ? "?" + parts[1] : "";
-                }
-                else {
-                    this.origin = url;
-                }
-            }
-            //this.searchParams.updateSearchProp();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return URLObj;
-}());
-var URLObjSearchParams = (function () {
-    function URLObjSearchParams(parent) {
-        this.parent = parent;
-        if (this.parent.search.length > 0) {
-            this._entries = (this.parent.search.substr(1, this.parent.search.length)).split(/\&amp\;|\&/g);
-        }
-        else {
-            this._entries = [];
-        }
-    }
-    Object.defineProperty(URLObjSearchParams.prototype, "entries", {
-        get: function () {
-            var output = [];
-            for (var i = 0; i < this._entries.length; i++) {
-                var a = this._entries[i].split("=");
-                if (a.length > 1) {
-                    a[1] = decodeURIComponent(a[1]);
-                }
-                output.push(a.join("="));
-            }
-            return output;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    URLObjSearchParams.prototype.updateEntries = function () {
-        this._entries = [];
-        if (this.parent.search !== "?" && this.parent.search.length > 1) {
-            var props = (this.parent.search.substr(1, this.parent.search.length)).split(/\&amp\;|\&/g);
-            for (var i = 0; i < props.length; i++) {
-                this._entries.push(props[i]);
-            }
-        }
-    };
-    URLObjSearchParams.prototype.updateSearchProp = function () {
-        var output = [];
-        for (var i = 0; i < this._entries.length; i++) {
-            var prop = this._entries[i].split("=");
-            if (/[a-z]{1,4}=(.*?:){3,9}/gi.test(this._entries[i])) {
-                output.push(this._entries[i]);
-            }
-            else {
-                output.push(prop[0] + (prop.length > 1 ? "=" + encodeURIComponent(decodeURIComponent(prop[1])) : ""));
-            }
-        }
-        this.parent.search = output.length > 0 ? "?" + output.join("&") : "";
-    };
-    URLObjSearchParams.prototype.has = function (param) {
-        var regex = new RegExp("^" + param + "\=", "g");
-        var output = false;
-        for (var i = 0; i < this._entries.length; i++) {
-            if (regex.test(this._entries[i]))
-                output = true;
-        }
-        return output;
-    };
-    URLObjSearchParams.prototype.get = function (param) {
-        var regex = new RegExp("^" + param + "\=", "g"), output = false;
-        for (var i = 0; i < this._entries.length; i++) {
-            if (regex.test(this._entries[i])) {
-                output = (this._entries[i].split("=")).pop();
-            }
-        }
-        return output;
-    };
-    URLObjSearchParams.prototype.set = function (param, value) {
-        var regex = new RegExp("^" + param + "\=", "g"), output = false;
-        for (var i = 0; i < this._entries.length; i++) {
-            if (regex.test(this._entries[i])) {
-                this._entries[i] = param + "=" + value;
-                output = true;
-            }
-        }
-        if (!output) {
-            this.append(param + "=" + value);
-        }
-        this.updateSearchProp();
-    };
-    URLObjSearchParams.prototype.append = function (valuePair) {
-        this._entries.push(valuePair);
-        this.updateSearchProp();
-    };
-    URLObjSearchParams.prototype.deleteAll = function () {
-        this._entries = [];
-        this.updateSearchProp();
-    };
-    URLObjSearchParams.prototype.deleteAtIndex = function (index) {
-        this._entries.splice(index, 1);
-        this.updateSearchProp();
-    };
-    URLObjSearchParams.prototype.delete = function (param) {
-        //doesnt do anything yet.
-    };
-    return URLObjSearchParams;
-}());
-var LinkObject = (function () {
-    function LinkObject(line, context, parent) {
-        var LO = this;
-        this.__isComplete = false;
-        this._super = parent;
-        this.__requiresTrackingCodeRegExp = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
-        this.__requiredTrackingCodeWhitelist = [
-            '.pdf', '.ics', '.oft', 'optumsurveys.co', 'healthid.optum.com', 'learning.optum.com', 'app.info.optum.com',
-            'optum.webex.com', 'twitter.com', 'facebook.com', 'linkedin.com', 'info.optum'
-        ];
-        this.line = line + 1;
-        this.context = context;
-        this.queryStrings = [];
-        this.errors = [];
-        this.id = 0;
-        this.whiteListedUrl = "~~whitelist~~";
-        this.urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
-        this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        var re2 = /href\=\"([^\"\>]*)\"/g;
-        var href = context.match(re2);
-        if (href.length > 0) {
-            if (href[0] == "href=\"\"") {
-                LO.new = new URLObj("#");
-                LO.old = new URLObj("#");
-            }
-            else {
-                LO.new = new URLObj((href[0].substr(6, href[0].length - 7)).trim());
-                LO.old = new URLObj((href[0].substr(6, href[0].length - 7)).trim());
-            }
-        }
-        //find image
-        if (/src=\"(.*?)\"/.test(context)) {
-            var found = context.match(/src=\"(.*?)\"/);
-            if (found.length > 0) {
-                console.log("image found");
-                LO.linkImage = found[1];
-            }
-        }
-        //need to set the url before you do this;
-        this.mailto = new MailtoLinkObject(this);
-        this.isLinkComplete();
-    }
-    LinkObject.prototype.hasDuplicateQueryStrings = function () {
-        var result = [], usedStrings = [];
-        if (this.new.searchParams.entries.length > 0) {
-            for (var _i = 0, _a = this.new.searchParams.entries; _i < _a.length; _i++) {
-                var a = _a[_i];
-                var param = a.split("=").shift();
-                if (usedStrings.indexOf(param) > -1) {
-                    result.push(param);
-                }
-                usedStrings.push(param);
-            }
-        }
-        if (result.length > 0) {
-            return result;
-        }
-        else {
-            return false;
-        }
-    };
-    LinkObject.prototype.hasQueryStringParameter = function (id) {
-        console.warn("hasQueryStringParameter has depreciated, use the relevant URLObjSearchParams method");
-        return this.new.searchParams.has(id);
-    };
-    LinkObject.prototype.removeJumpLink = function () {
-        //can move to url obj class.. but tbh it's just resetting the hash value;
-        this.new.hash = "";
-        this.isLinkComplete();
-    };
-    LinkObject.prototype.overrideTrackingRequirements = function () {
-        this.whiteListedUrl = this.new.url;
-    };
-    LinkObject.prototype.displayFormattedURL = function () {
-        //displays url;
-        var content = this.context;
-        content = content.replace(new RegExp("<", "g"), "&lt;");
-        content = content.replace(new RegExp(">", "g"), "&gt;");
-        var start = content.indexOf("href=\"");
-        content = content.substr(0, start) + "href=\"<strong>" + (this.hasOwnProperty("deleteOnRender") && this.deleteOnRender ? this.old.url : this.new.url) + "</strong>" + content.substr(start + ("href=\"" + this.old.url).length, content.length);
-        return content;
-    };
-    LinkObject.prototype.isLinkComplete = function () {
-        this._super.intelligence = EMLMakerAIEngine.CheckEmail(this._super);
-        this.errors = {
-            count: {},
-            values: {},
-            data: []
-        };
-        // this._super.messages = {"messages":[],"canProceed":true};
-        var errors = EMLMakerAIEngine.CheckLink(this, errorObject);
-        this.errors.data = errors.messages;
-        for (var i = 0; i < errors.messages.length; i++) {
-            if (this.errors.values[ErrorType[errors.messages[i].type]] === undefined) {
-                this.errors.values[ErrorType[errors.messages[i].type]] = errors.messages[i].type;
-            }
-            if (this.errors.count[ErrorType[errors.messages[i].type]] === undefined) {
-                this.errors.count[ErrorType[errors.messages[i].type]] = 0;
-            }
-            this.errors.count[ErrorType[errors.messages[i].type]]++;
-        }
-        this.__isComplete = errors.canContinue;
-        if (this.hasOwnProperty("deleteOnRender") && this.deleteOnRender)
-            this.__isComplete = true;
-        return this.__isComplete;
-    };
-    LinkObject.prototype.isLinkType = function (type) {
-        var output = false;
-        switch (type) {
-            case "http":
-                if (this.new.protocol == "http:" || this.new.protocol == "https:") {
-                    output = true;
-                }
-                break;
-            case "mailto":
-                if (this.new.protocol == "mailto:") {
-                    output = true;
-                }
-                break;
-            default:
-        }
-        return output;
-    };
-    LinkObject.prototype.hasTrackingCode = function (obj) {
-        if (obj === undefined)
-            obj = this.new.url;
-        // if(this.whiteListedUrl==this.new) return true;
-        var a = /[a-z]{1,4}=(.*?:){3,9}/ig;
-        return a.test(obj);
-    };
-    LinkObject.prototype.requiresTrackingCode = function (obj) {
-        var output = false;
-        if (this.__requiresTrackingCodeRegExp.test(this.new.url)) {
-            output = true;
-            // iterate ofer whitelist
-            for (var i = 0; i < this.__requiredTrackingCodeWhitelist.length; i++) {
-                if (this.__requiredTrackingCodeWhitelist[i] instanceof RegExp) {
-                    if (this.__requiredTrackingCodeWhitelist[i]["test"](this.new.url)) {
-                        output = false;
-                    }
-                }
-                else {
-                    if (this.new.url.indexOf(this.__requiredTrackingCodeWhitelist[i]) > -1) {
-                        output = false;
-                    }
-                }
-            }
-        }
-        return output;
-    };
-    LinkObject.prototype.needsTrackingCode = function () {
-        var output = this.requiresTrackingCode();
-        if (this.whiteListedUrl == this.new.url)
-            return false;
-        // determine links that need special tracking
-        if (this.hasTrackingCode()) {
-            output = false;
-        }
-        return output;
-    };
-    LinkObject.prototype.refreshURL = function () {
-        console.warn("refreshURL has depreciated, use the relevant URLObj method");
-        // if(this.new.indexOf("#")>-1){
-        this.isLinkComplete();
-    };
-    return LinkObject;
-}());
-var EMLWorkspace = (function () {
-    function EMLWorkspace(html, $scope) {
-        if (html === undefined)
-            html = "";
-        if ($scope === undefined)
-            $scope = "";
-        var Workspace = this;
-        this.buffer = null;
-        this.scope = $scope;
-        this.linksView = 'experimental'; //advanced shows all
-        this.sourceCode = html; //inital
-        this.outputCode = ""; //final
-        this.fileName = "untitled";
-        this.linkData = [];
-        this.defaultScode = "s=email";
-        this.header = { "subject": "" };
-        this.messages = [];
-        this.errors = { messages: [], canProceed: true };
-        this.exportForEloqua = "Yes";
-        this.__emlHeaders = "";
-        this.__allowableHeaderFields = {
-            "to": { syntax: "To: ", label: "To", instructions: "A list of email addresses separated by commas." },
-            "subject": { syntax: "Subject: ", label: "Subject", instructions: "" },
-            "cc": { syntax: "Cc: ", label: "CC", instructions: "A list of email addresses separated by commas." },
-            "replyto": { syntax: "Reply-to: ", label: "Reply to", instructions: "A list of email addresses separated by commas." }
-        };
-        this.headers = [
-            "X-Unsent: 1",
-            "Mime-Version: 1.0 (Mac OS X Mail 10.1 \(3251\))",
-            "X-Uniform-Type-Identifier: com.apple.mail-draft",
-            "Content-Transfer-Encoding: 7bit"
-        ];
-    }
-    EMLWorkspace.prototype.mapLinkObjects = function (callback) {
-        if (this.linkData.length > 0) {
-            for (var i = 0; i < this.linkData.length; i++) {
-                callback(this.linkData[i]);
-            }
-        }
-    };
-    EMLWorkspace.prototype.composeEML = function () {
-        location.href = "#/export-compose-eml";
-    };
-    EMLWorkspace.prototype.downloadEml = function () {
-        this.generateOutputCode();
-        this.outputCode = this.__replaceEloquaMergeFields(this.outputCode);
-        var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.outputCode);
-        this.fileName = this.__formatFileName(this.fileName);
-        window.saveAs(new Blob([output], { type: "text/html" }), this.fileName + ".eml");
-        window.ga('send', 'event', "EML", "download", "EML Export");
-        location.href = "#/export-eml";
-    };
-    EMLWorkspace.prototype.downloadCsv = function () {
-        var output = "Context,Original URL,Modified URL\n";
-        this.linkData.forEach(function (link) {
-            output += link.context.replace(/,/g, "(comma)") + "," + link.old.url + "," + link.new.url + "\n";
-        });
-        this.fileName = this.__formatFileName(this.fileName);
-        window.saveAs(new Blob([output], { type: "text/csv" }), this.fileName + "_links.csv");
-        window.ga('send', 'event', "CSV", "download", "CSV Export");
-    };
-    EMLWorkspace.prototype.downloadHtml = function () {
-        this.generateOutputCode();
-        var output = this.outputCode;
-        this.fileName = this.__formatFileName(this.fileName);
-        window.saveAs(new Blob([output], { type: "text/html" }), this.fileName + ".html");
-        window.ga('send', 'event', "HTML", "download", "HTML Export");
-    };
-    EMLWorkspace.prototype.exportCodeToHTML = function () {
-        if (this.exportForEloqua && this.exportForEloqua == "Yes") {
-            var Wksp = this;
-            for (var i = 0; i < Wksp.linkData.length; i++) {
-                if (!Wksp.linkData[i].isLinkType("mailto")
-                    && !Wksp.linkData[i].new.searchParams.has("elqTrack")
-                    && !/app\.info\.optum\.com/gi.test(Wksp.linkData[i].new.url)) {
-                    Wksp.linkData[i].new.searchParams.append("elqTrack=true");
-                    Wksp.linkData[i].refreshURL();
-                }
-            }
-            window.ga('send', 'event', "HTML", "Add Eloqua Tracking", "Add Eloqua Tracking");
-        }
-        else {
-            var Wksp = this;
-            for (var i = 0; i < this.linkData.length; i++) {
-                if (Wksp.linkData[i].queryStrings.indexOf("elqTrack=true") > -1) {
-                    Wksp.linkData[i].queryStrings.splice(Wksp.linkData[i].queryStrings.indexOf("elqTrack=true"), 1);
-                    Wksp.linkData[i].refreshURL();
-                }
-            }
-        }
-        this.generateOutputCode();
-        window.ga('send', 'event', "HTML", "view sourcecode", "Export/View HTML");
-        location.href = "#/export-html";
-    };
-    EMLWorkspace.prototype.replaceSpecialCharacters = function (text) {
-        var replace = {
-            174: ["&reg;"],
-            169: ["&copy;"],
-            8211: ["&ndash;"],
-            8212: ["&mdash;"],
-            8220: ["&ldquo;"],
-            8221: ["&rdquo;"],
-            8216: ["&lsquo;"],
-            8217: ["&rsquo;"],
-            8482: ["&trade;"]
-        };
-        for (var i in replace) {
-            if (replace.hasOwnProperty(i)) {
-                var regexp = new RegExp(String.fromCharCode(parseInt(i)), "g");
-                if (regexp.test(text)) {
-                    // console.log("found character" + String.fromCharCode(parseInt(i)));
-                    text = text.replace(regexp, replace[i][0]);
-                }
-            }
-        }
-        return text;
-    };
-    EMLWorkspace.prototype.processHtml = function () {
-        this.linkData = [];
-        window.scrollTo(0, 0);
-        var workingCode = this.replaceSpecialCharacters(this.sourceCode.replace(new RegExp("</a>", "ig"), "</a>\n"));
-        //determine email headers
-        this.__emlHeaders = this.__buildHeaders();
-        //   $scope.data.header,
-        //   $scope.data.allowableHeaderFields);
-        //replace merge fields
-        if (this.fileName == "untitled") {
-            var titleReg = /<title>([^<].*?)<\/title>/gi;
-            if (titleReg.test(workingCode)) {
-                var titleTag = workingCode.match(titleReg);
-                if (titleTag.length > 0) {
-                    this.fileName = this.__formatFileName(titleTag[0].replace(titleReg, "$1"));
-                }
-            }
-        }
-        var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
-        var codeLines = workingCode.split("\n");
-        var _super = this;
-        var n = 1;
-        for (var line = 0; line < codeLines.length; line++) {
-            var found = codeLines[line].match(re1);
-            if (found) {
-                found.forEach(function (context) {
-                    if (/(href\=\"([^\"\>]*)\"?)/g.test(context)) {
-                        var a = new LinkObject(line, context, _super);
-                        a.id = n;
-                        _super.linkData.push(a);
-                        n++;
-                    }
-                });
-            }
-        }
-        //redirect
-        location.href = "#/links";
-    };
-    EMLWorkspace.prototype.addNewHeaderField = function (value) {
-        this.header[value] = "";
-    };
-    EMLWorkspace.prototype.removeHeaderField = function (value) {
-        delete this.header[value];
-    };
-    EMLWorkspace.prototype.isHeaderSelected = function (header) {
-        if (!this.header.hasOwnProperty(header) || this.header == "") {
-            return true;
-        }
-        else {
-            return false;
-        }
-    };
-    EMLWorkspace.prototype.verifyLinkSectionComplete = function () {
-        var output = false;
-        if (this.linkData && this.linkData.length == 0) {
-            output = false;
-        }
-        else {
-            if (this.areLinksComplete()) {
-                output = true;
-            }
-            else {
-                output = false;
-            }
-        }
-        return output;
-    };
-    EMLWorkspace.prototype.generateOutputCode = function () {
-        var workingCode = this.replaceSpecialCharacters(this.sourceCode);
-        workingCode = workingCode.replace(new RegExp("</a>", "ig"), "</a>\n");
-        var codeLines = workingCode.split("\n");
-        this.linkData.forEach(function (link) {
-            var line = link.line - 1;
-            if (codeLines[line] === undefined)
-                return false;
-            // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
-            if (link.whiteListedUrl == link.new.url) {
-                //report the non tracked link;
-                window.ga('send', 'event', "Tracking-Optout", "override", this.new);
-            }
-            if (link.hasOwnProperty("deleteOnRender") && link.deleteOnRender) {
-                var contextStart = codeLines[line].indexOf(link.context);
-                codeLines[line] = codeLines[line].replace(new RegExp(link.context, "gi"), "");
-            }
-            else {
-                var start = codeLines[line].indexOf("href=\"" + link.old.url);
-                codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + link.new.url + codeLines[line].substr(start + 6 + link.old.url.length, codeLines[line].length);
-            }
-        });
-        this.outputCode = codeLines.join("\n");
-        this.outputCode = this.outputCode.replace(new RegExp("</a>\n", "ig"), "</a>");
-        try {
-            // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
-            this.outputCode = this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
-        }
-        catch (e) {
-            console.log("error merging lines with links that previously had punctuation.");
-        }
-    };
-    EMLWorkspace.prototype.updateLinksAndExport = function () {
-        if (!this.areLinksComplete()) {
-            return false;
-        }
-        //  this.errors = window.EMLMaker_EmailAIEngine(this, self.errorObject);
-        location.href = "#/export";
-        window.scrollTo(0, 0);
-        return true;
-    };
-    EMLWorkspace.prototype.areLinksComplete = function () {
-        var output = true;
-        this.mapLinkObjects(function (LinkObject) {
-            if (!LinkObject.__isComplete) {
-                output = false;
-            }
-            if (LinkObject.needsTrackingCode()) {
-                output = false;
-            }
-        });
-        return output;
-    };
-    EMLWorkspace.prototype.getLinksSummary = function () {
-        var data = {
-            needsTracking: 0,
-            invalidUrl: 0
-        };
-        this.mapLinkObjects(function (LinkObject) {
-            if (LinkObject.needsTrackingCode())
-                data.needsTracking++;
-            if (LinkObject.isLinkComplete())
-                data.invalidUrl++;
-        });
-        return data;
-    };
-    EMLWorkspace.prototype.importHtmlFromFileDrop = function (evt) {
-        if (this.sourceCode.length > 0) {
-            this.sourceCode = (this.outputCode = "");
-        }
-        var files = evt.dataTransfer.files;
-        if (evt.dataTransfer.files.length > 1) {
-            alert('you can only import one file at at time.');
-        }
-        else {
-            var reader = new FileReader();
-            var WS = this;
-            reader.onloadend = function (evt) {
-                var dropText = evt.target.result;
-                var nameParts = files[0].name.split(".");
-                var ext = nameParts.pop().toLowerCase();
-                WS.fileName = WS.__formatFileName(nameParts.join("."));
-                if (ext == 'eml') {
-                    WS.sourceCode = WS.__stripHtmlAndSubjectFromEML(dropText);
-                }
-                else {
-                    WS.sourceCode = dropText;
-                }
-                WS.processHtml();
-                location.href = "#/links";
-            };
-            reader.readAsText(files[0]);
-            window.ga('send', 'event', "HTML", "import", "HTML Import File Drop");
-        }
-    };
-    EMLWorkspace.prototype.__formatFileName = function (name) {
-        var _slugify_strip_re = /[^\w\s-]/g;
-        var _slugify_hyphenate_re = /[-\s]+/g;
-        name = name.replace(_slugify_strip_re, '').trim().toLowerCase();
-        name = name.replace(_slugify_hyphenate_re, '-');
-        return name;
-    };
-    EMLWorkspace.prototype.__replaceEloquaMergeFields = function (content) {
-        var re4 = /<span(%20|\s)class="?eloquaemail"?\s?>(.*?)<\/span>/ig;
-        content = content.replace(re4, "#$2#");
-        return content;
-    };
-    EMLWorkspace.prototype.__stripHtmlAndSubjectFromEML = function (code) {
-        var output = code.split("\n");
-        var html = output.pop();
-        for (var i = 0; i < output.length; i++) {
-            if (output[i].indexOf("Subject:") > -1) {
-                if (this.header === undefined)
-                    this.header = {};
-            }
-        }
-        return html;
-    };
-    EMLWorkspace.prototype.__removeWhiteSpace = function (code) {
-        var output = code;
-        output = output.replace(new RegExp("\n", "g"), " ");
-        output = output.replace(new RegExp("\t", "g"), " ");
-        output = output.replace(/\s{2,99999}/g, " ");
-        return output;
-    };
-    EMLWorkspace.prototype.__buildHeaders = function () {
-        var headers = [];
-        for (var i = 0; i < this.headers.length; i++) {
-            headers.push(this.headers[i]);
-        }
-        var charset = this.__getCharsetFromHTML(this.sourceCode);
-        if (charset == "")
-            charset = "charset=UTF-8";
-        headers.push("Content-Type: text/html;\n\t" + charset);
-        // console.log(headers, allowableHeaderFields);
-        for (var i_1 in this.header) {
-            if (this.header.hasOwnProperty(i_1)) {
-                if (this.__allowableHeaderFields.hasOwnProperty(i_1)) {
-                    headers.push(this.__allowableHeaderFields[i_1].syntax + " " + this.header[i_1]);
-                }
-            }
-        }
-        this.__emlHeaders = headers.join("\n");
-        return headers.join("\n");
-    };
-    EMLWorkspace.prototype.__getCharsetFromHTML = function (content) {
-        var re5 = /<meta.*?charset=([^\s"]*)/ig, charset = "";
-        var metaTags = content.match(re5);
-        if (metaTags) {
-            metaTags.forEach(function (item) {
-                var charsetVals = item.match(/charset=([^\s"]*)/ig);
-                if (charsetVals) {
-                    charset = charsetVals[0];
-                }
-                else {
-                    charset = "charset=UTF-8";
-                }
-            });
-        }
-        return charset;
-    };
-    return EMLWorkspace;
-}());
-var LocateText = (function () {
-    function LocateText() {
-    }
-    return LocateText;
-}());
-
+var UpdateModule=function(){function i(){this.updateVersion=!1,this.updateForced=!1,this.offlineVersion=void 0===window.OFFLINE_VERSION?"":window.OFFLINE_VERSION,this.onlineVersion=window.CURRENT_VERSION,""==window.OFFLINE_VERSION?this.accessingFromOffline=!1:(window.OFFLINE_VERSION&&window.LOCALHOST&&(this.accessingFromOffline=!0),window.OFFLINE_VERSION&&window.OFFLINE_VERSION!==window.CURRENT_VERSION&&(this.updateVersion=!0,this.updateForced=this.forceUpdate(window.OFFLINE_VERSION,window.CURRENT_VERSION)))}return i.prototype.showMessage=function(){return this.updateVersion&&this.updateForced},i.prototype.showTeaser=function(){return""==this.offlineVersion},i.prototype.forceUpdate=function(i,o){for(var e=i.split("."),n=o.split("."),t=0,s=!1,r=0;r<n.length;r++)n[r]==e[r]&&t++;return t<3&&(s=!0),s},i}();
+var SecureGateway=function(){function s(s){var e=this;this.loginCallback=s,this.loginTimer=null,this.sessionUserEmail="",this.timerDelay=500,this.salt="47dafea9aae3b28ab5c39eb7f7d2c924",this.emailRegex=/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,this.sessionIdLocalStorageKey="EMLMaker.emlUserID",window.persist_store||(window.persist_store=new window.Persist.Store("EMLMaker"),window.addEventListener("unload",function(){window.persist_store.save()})),this.hasSavedSessionId()&&this.isValidEmailAddress(this.sessionId)?(this.sessionUserEmail=this.sessionId,location.href="#/login",this.loginTimer=setTimeout(function(){location.href="#/main",e.setCurrentUser(e.sessionUserEmail)},this.timerDelay)):(location.href="#/login",this.sessionUserEmail=""),window.addEventListener("hashchange",function(){""!=e.sessionUserEmail&&e.hasSavedSessionId()||(location.href="#/login")})}return s.prototype.logOut=function(){this.loginAsOther(),this.sessionId="",this.sessionUserEmail="",window.persist_store.remove(this.sessionIdLocalStorageKey),location.hasOwnProperty("reload")?location.reload():document.location.href=document.location.href},s.prototype.loginAsOther=function(){clearTimeout(this.loginTimer),delete this.loginTimer},s.prototype.sessionUpdateUserEmail=function(){this.errorMessage="",this.isValidEmailAddress(this.sessionUserEmail)?(this.setCurrentUser(this.sessionUserEmail),this.loginCallback(),location.href="#/main"):this.errorMessage="Sorry! You have to enter a valid email address."},s.prototype.hasSavedSessionId=function(){var s=window.persist_store.get(this.sessionIdLocalStorageKey);return s?(this.sessionId=s,!0):(this.sessionId="",!1)},s.prototype.setCurrentUser=function(s){var e=window.CryptoJS.MD5(s+this.salt).toString();window.persist_store.set(this.sessionIdLocalStorageKey,s),window.ga("set","userId",e)},s.prototype.isValidEmailAddress=function(s){return this.emailRegex.test(s)?(console.log(s,"is valid"),!0):(console.log(s,"is not valid"),!1)},s}();
+var EMLMakerAIEngine;!function(e){function t(e){var t=new n(e);return t.when(e.whiteListedUrl!==e["new"].url&&e.needsTrackingCode()&&!e["new"].contains("optum.co/"),function(e,t){t.canContinue=!1,t.messages.push(new errorObject(ErrorType.Fix,"This URL needs a tracking code.","Create and add one to make this message go away.",/\/campaign\/|\/resources\//gi.test(e["new"].url)?{severity:ErrorSeverity.High}:{severity:ErrorSeverity.High,handler:function(e){console.log(e),e.overrideTrackingRequirements(),e.isLinkComplete()},ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'}))}).when(o.test(e.context),function(e,t){t.messages.push(new errorObject(ErrorType.BestPractice,"Style matters","You should not put punctuation inside of a link unless it is a button, and even then it's a little weird.",{severity:ErrorSeverity.High}))}).when(/http(.*)\/content\/optum(.*)\.html/gi.test(e["new"].url),function(e,t){t.messages.push(new errorObject(ErrorType.Fix,"This URL is not correct.","/content/optum3/en/ is only for use in author in AEM, not on the live site.",{severity:ErrorSeverity.High})),t.canContinue=!1}).when(!(0!=window.jQuery(e.context).find("img").length||""!=jQuery(e.context).text().trim()||e.hasOwnProperty("deleteOnRender")&&e.deleteOnRender),function(e,t){t.canContinue=!1,t.messages.push(new errorObject(ErrorType.Fix,"Missing content",["This link doesn't contain any text or image.","This might be a mistake; you can remove it from","the code, or by clicking the button to the right,","and this link will be removed when you export the code."].join(" "),{severity:ErrorSeverity.High,handler:function(e){e["new"].url="",e.deleteOnRender=!0,e.isLinkComplete()},ctaLabel:'<i class="trash icon"></i> Remove link'}))}).when(e["new"].contains(" "),function(e,t){t.canContinue=!1,t.messages.push(new errorObject(ErrorType.Fix,"Link has spaces","You should not have spaces in your link,\n          either rename the asset so that it does\n          not contain spaces, or convert the spaces to %20s.\n          If you can, try to rename PDFs that have spaces in them\n          so that they have underscores instead, as a best practice.",/\/campaign\/|\/resources\//gi.test(e["new"].url)?{severity:ErrorSeverity.High}:{severity:ErrorSeverity.High,handler:function(e){e["new"].url=e["new"].url.replace(/\s/g,"%20"),e.isLinkComplete()},ctaLabel:'<i class="wizard icon"></i> Encode Spaces'}))}).when(e["new"].searchParams.entries.length>0&&e.hasDuplicateQueryStrings(),function(e,t){t.canContinue=!1,t.messages.push(new errorObject(ErrorType.Fix,"Duplicate query strings","It looks like you have duplicate query strings. When you have duplicate parameters, only one will be valid, so make sure to remove the incorrect or duplicate parameters.           Pay attention to these parameters: "+e.hasDuplicateQueryStrings().join(", "),{severity:ErrorSeverity.High}))}).when(!e.isLinkType("mailto")&&!e.urlRegex.test(e["new"].url),function(e,t){t.messages.push(new errorObject(ErrorType.Fix,"Invalid URL","This is not a valid URL",{severity:ErrorSeverity.High})),t.canContinue=!1}).when(i.test(e["new"].url),function(e,t){var n=e["new"].url.match(i);if(n.length>0){var r=n[0].toUpperCase().substr(1,n[0].length);t.messages.push(new errorObject(ErrorType.BestPractice,"Landing page preferred",["When you direct email ","traffic to ",/^[aeiouAEIOU]/gi.test(r)?"an ":"a ",r,", it's generally a good idea to serve the ",r," on"," a landing page with more information about the asset. This will also ","give you more analytics data, like session/visit duration and promote ","browsing other content."].join("")))}}).when(/.com?(\.[a-z]{2,3})?\/([a-zA-Z0-9\-]+)\/*(\?.*)?$/.test(e["new"].url.trim())&&!e["new"].contains("info.optum"),function(e,t){t.canContinue=!e["new"].contains("optum.co"),t.messages.push(new errorObject(e["new"].contains("optum.co")?ErrorType.Fix:ErrorType.BestPractice,"Don't use shortlinks or vanity URLs in emails","Always use the long link. Adding query string parameter to a vanity           url inside an email will not track appropriately.",{severity:ErrorSeverity.High}))}).when(e.context&&/click|click\shere/g.test(e.context),function(e,t){t.messages.push(new errorObject(ErrorType.BestPractice,"Use descriptive CTAs","\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"))}).when(e.linkImage&&e.linkImage.length>0,function(e,t){var n=window.jQuery(e.context).find("img").get(0);void 0!==n.alt&&""!=n.alt||t.messages.push(new errorObject(ErrorType.BestPractice,"Add an ALT tag","Linked image should have an ALT tag.",{severity:ErrorSeverity.Low}))}).when(/^http(.*)#/g.test(e["new"].url),function(e,t){t.messages.push(new errorObject(ErrorType.Suggestion,"Email links can't jump.","It looks like you're trying to send traffic to a\n        <em>Jump link</em> AKA <em>Anchor link</em>. The only\n        time that is acceptible is when the destination is on\n        the same page. You see, the assumption is that all the content is\n        loaded, but when you click from an email into another page with a\n        jump link, you're sending someone to a loading page. The page may or\n        may not send them to the location you're intending, or there\n        may be an awkward user experience.",{handler:function(e){e.removeJumpLink(),e.isLinkComplete(),window.ga("send","event","Suggestion","Remove Anchor Link","Remove Anchor Link")},severity:ErrorSeverity.Low,ctaLabel:'<i class="wizard icon"></i> Fix it'}))}).when(e["new"].contains(".oft"),function(e,t){t.messages.push(new errorObject(ErrorType.BestPractice,"We don't link to OFTs in emails we send.","You should not be sending OFTs to external contacts.              OFTs only work with Outlook on PCs, and that is less               than half of the population of email clients these days.")),t.messages.push(new errorObject(ErrorType.Suggestion,"Forward to a colleague?","If you are trying to do a Forward to a Colleague (FTAC)             feature, forget doing that with an OFT. You can achieve              the same effect by using a mailto link. <br><br><em>NOTE:               You can leave the email address field blank for this one.                When the user clicks the link the email field will be empty,                 so he/she can add their own recipients.</em>",{handler:function(e){e.mailto.email="",e.mailto.subject="I wanted you to see this",e.mailto.body="Check out this link\n\nhttps://www.yourlinkgoeshere.com",e.mailto.composeEmail(),e.mailto.initEmailEditor(),e.mailto.openEditor(),e.isLinkComplete(),window.ga("send","event","Suggestion","Use FTAC","Use FTAC")},severity:ErrorSeverity.Low,ctaLabel:'<i class="wizard icon"></i> Try it?'}))}).when(r.test(e["new"].url)&&e.hasTrackingCode(),function(e,t){var n=e["new"].url.match(r);if(n.length>0){var i=n[0].toUpperCase().substr(1,n[0].length),o=/^[aeiouAEIOU]/gi.test(i)?"an ":"a "+i;t.messages.push(new errorObject(ErrorType.Suggestion,"Unnecessary tracking link","It looks like you added a tracking code to "+o+" file.\n          In fact, you can only track web pages with these tracking codes.",{handler:function(e){for(var t=0;t<e["new"].searchParams.entries.length;t++)/[a-z]{1,4}=(.*?:){3,9}/gi.test(e["new"].searchParams.entries[t])&&e["new"].searchParams.deleteAtIndex(t),window.ga("send","event","Suggestion","Unnecessary tracking code","Remove Tracking Code");e["new"].searchParams.updateEntries(),e.refreshURL(),e.isLinkComplete()},ctaLabel:'<i class="wizard icon"></i>Fix it now',severity:ErrorSeverity.Low}))}}).when(e.isLinkType("mailto")&&e.mailto.has("email")&&!e.mailto.isValidEmailAddress(),function(e,t){t.messages.push(new errorObject(ErrorType.Fix,"Invalid email address","Fix invalid email address.",{severity:ErrorSeverity.High})),t.canContinue=!1}).when(e.isLinkType("mailto")&&!e.mailto.has("subject"),function(e,t){t.messages.push(new errorObject(ErrorType.BestPractice,"Always include a subject line.","You can add a subject line using the Editor button.",{handler:function(e){e.mailto.openEditor(),window.ga("send","event","Best Practice","Add subject line","Add subject line")},ctaLabel:'<i class="wizard icon"></i> Open Editor',severity:ErrorSeverity.Medium}))}).when(e.isLinkType("mailto")&&!e.mailto.has("email"),function(e,t){e.mailto.has("subject")&&e.mailto.has("body")&&(e.mailto.body.indexOf("https://")>-1||e.mailto.body.indexOf("http://")>-1)?t.messages.push(new errorObject(ErrorType.BestPractice,"Implementing FTAC?",["It looks like you're trying to implement a Forward to a ","Colleague (FTAC) feature. Use the Mailto Editor to adjust ","your subject line, email body, and link you're including. ","With an FTAC, don't worry about including a recipient email address."," The intention is to open a new email with an empty To: line so"," the user can fill it in from his/her address book."].join(""))):t.messages.push(new errorObject(ErrorType.Warn,"No email address set","This mailto link does not have an email address set."))}).when(e.requiresTrackingCode()&&e.hasTrackingCode(),function(e,t){var n=!1;e._super.mapLinkObjects(function(e){e.requiresTrackingCode()&&!e.hasTrackingCode()&&(n=!0,console.log("affected=true"))}),n&&t.messages.push(new errorObject(ErrorType.Suggestion,"Need a hand?","I noticed you added a tracking code to this link, great job.             If you want I can add the same tracking code to the other links in this email              which require tracking codes.",{handler:function(t){var n="";e["new"].searchParams.entries.forEach(function(t){e.hasTrackingCode(t)&&(n=t)}),t._super.mapLinkObjects(function(e){e.requiresTrackingCode()&&!e.hasTrackingCode()&&(e["new"].searchParams.append(n),e.refreshURL())}),t._super.mapLinkObjects(function(e){e.isLinkComplete()}),t.refreshURL(),window.ga("send","event","Suggestion","Cascade Tracking Code","Cascade Tracking Code")},severity:ErrorSeverity.Low,ctaLabel:'<i class="wizard icon"></i> Update all links'}))}).when(e.requiresTrackingCode()&&/resource|campaign/g.test(e["new"].url)&&!e["new"].searchParams.has("s"),function(e,t){t.messages.push(new errorObject(ErrorType.Suggestion,"Are you tracking channel source with your form?","If this link directs to a page with a form, consider adding            an s-code to the URL so you can populate a form field with             a value from the query string to track the channel source              of the form submission.<br><br><em>NOTE: You can change               the value of the s-code to whatever you'd like, but we'll                add <code>s=email</code> by default.</em>",{handler:function(e){e["new"].searchParams.append("s=email"),e.refreshURL(),e.isLinkComplete(),window.ga("send","event","Suggestion","Add s-code","Add s-code")},severity:ErrorSeverity.Low,ctaLabel:'<i class="wizard icon"></i>Add S-Code'}))}),t}var n=function(){function e(e){this.canContinue=!0,this.LinkObject=e,this.messages=[]}return Object.defineProperty(e.prototype,"tabs",{get:function(){for(var e={},t=0;t<this.messages.length;t++)e[ErrorType[this.messages[t].type]]=this.messages[t].type;return e},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"count",{get:function(){for(var e={},t=0;t<this.messages.length;t++)void 0===e[ErrorType[this.messages[t].type]]&&(e[ErrorType[this.messages[t].type]]=0),e[ErrorType[this.messages[t].type]]++;return e},enumerable:!0,configurable:!0}),e.prototype.when=function(e,t){return e&&t(this.LinkObject,this),this.messages.sort(function(e,t){e.severity>t.severity}),this},e}();e.LinkIntelligence=n;var i=/(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g,r=/(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/gi,o=/\<a ([^<].*)([\.\?\,\:])\<\/a/gi;e.CheckLink=t}(EMLMakerAIEngine||(EMLMakerAIEngine={}));
+var EMLMakerAIEngine;!function(e){function t(t){if(Date.now()-e.emailAILastEval<300)return e.emailAILastEval=Date.now(),e.emailAILastCheck;e.emailAILastEval=Date.now();var s=new a(t);return e.emailAILastCheck=s,s}var a=function(){function e(e){this.messages=[],this.canContinue=!0,this.EMLWorkspace=e,this.lastEval=Date.now()}return e.prototype.when=function(e,t){return e&&t(this.EMLWorkspace,this),this},Object.defineProperty(e.prototype,"tabs",{get:function(){for(var e={},t=0;t<this.messages.length;t++)e[ErrorType[this.messages[t].type]]=this.messages[t].type;return e},enumerable:!0,configurable:!0}),Object.defineProperty(e.prototype,"count",{get:function(){for(var e={},t=0;t<this.messages.length;t++)void 0===e[ErrorType[this.messages[t].type]]&&(e[ErrorType[this.messages[t].type]]=0),e[ErrorType[this.messages[t].type]]++;return e},enumerable:!0,configurable:!0}),e}();e.EmailIntelligence=a,e.emailAILastEval=Date.now(),e.emailAILastCheck=new a,e.CheckEmail=t}(EMLMakerAIEngine||(EMLMakerAIEngine={}));
+var ErrorSeverity;!function(e){e[e.High=1]="High",e[e.Medium=2]="Medium",e[e.Low=3]="Low",e[e.Zero=4]="Zero"}(ErrorSeverity||(ErrorSeverity={}));var ErrorType;!function(e){e[e.Fix=1]="Fix",e[e.BestPractice=2]="BestPractice",e[e.Suggestion=3]="Suggestion",e[e.Warn=4]="Warn"}(ErrorType||(ErrorType={}));var errorObject=function(){function e(e,t,i,r){void 0===r&&(r={}),this.type=e,this.cleanType=ErrorType[e],this.title=t,this.description=i,this.handler=void 0===r.handler?function(){}:r.handler,this.ctaLabel=void 0===r.ctaLabel?"":r.ctaLabel,this.severity=void 0===r.severity?ErrorSeverity.Zero:r.severity}return e}(),MailtoLinkObject=function(){function e(e){this.parent=e,this.email="",this.subject="",this.body="",this.parent.isLinkType("mailto")&&this.initEmailEditor()}return e.prototype.has=function(e){return this.updateMailtoObj(),this[e]&&""!==this[e].trim()},e.prototype.isValidEmailAddress=function(){return this.parent.emailRegex.test(this.email)},e.prototype.deinitEmailEditor=function(){this.email="",this.subject="",this.body=""},e.prototype.composeEmail=function(){this.parent["new"].url="mailto:"+this.email;for(var e=["subject","body"],t=0;t<e.length;t++)this[e[t]]&&""!==this[e[t]]&&this.parent["new"].searchParams.set(e[t],this[e[t]])},e.prototype.updateMailtoObj=function(){var e=this,t=this.parent["new"].url.substr(7,this.parent["new"].url.length-7),i=t.split("?");this.email=i[0],this.parent["new"].searchParams.updateEntries(),i.length>1&&["subject","body"].forEach(function(t){e.parent["new"].searchParams.has(t)&&(e[t]=window.decodeURIComponent(e.parent["new"].searchParams.get(t)))})},e.prototype.inputOnBlur=function(){this.parent["new"].searchParams.updateEntries(),this.parent["new"].searchParams.updateSearchProp()},e.prototype.openEditor=function(){this.initEmailEditor(),window.jQuery("html,body").animate({scrollTop:window.jQuery("#link-"+this.parent.id).offset().top-75},300);var e=this.parent;setTimeout(function(){window.jQuery("#link-"+e.id).find(".mailtoEditor").popup("show")},400)},e.prototype.initEmailEditor=function(){this.updateMailtoObj()},e}(),URLObj=function(){function e(e){this.href="",this.search="",this.origin="",this.hash="",this.protocol="",this.url=e,this.searchParams=new URLObjSearchParams(this)}return e.prototype.prepareExport=function(){},e.prototype.contains=function(e){return this.url.indexOf(e)>-1},Object.defineProperty(e.prototype,"url",{get:function(){return this.prepareExport(),this.origin+this.search+this.hash},set:function(e){this.search="",this.hash="";var t=/^(https?|mailto|ftp)\:/gi;if(t.test(e)){var i=e.match(t);this.protocol=i[0]}if(this.href=e,"#"==e.trim())this.hash="#";else if(e.trim().length>1&&e.indexOf("#")>-1){var r=e.split("#");this.hash="#"+r.pop();var n=r.join("#").split("?");this.origin=n[0],this.search=n.length>0?"?"+n[1]:""}else if(e.indexOf("?")>-1){var n=e.split("?");this.origin=n[0],this.search=n.length>0?"?"+n[1]:""}else this.origin=e},enumerable:!0,configurable:!0}),e}(),URLObjSearchParams=function(){function e(e){this.parent=e,this.parent.search.length>0?this._entries=this.parent.search.substr(1,this.parent.search.length).split(/\&amp\;|\&/g):this._entries=[]}return Object.defineProperty(e.prototype,"entries",{get:function(){for(var e=[],t=0;t<this._entries.length;t++){var i=this._entries[t].split("=");i.length>1&&(i[1]=decodeURIComponent(i[1])),e.push(i.join("="))}return e},enumerable:!0,configurable:!0}),e.prototype.updateEntries=function(){if(this._entries=[],"?"!==this.parent.search&&this.parent.search.length>1)for(var e=this.parent.search.substr(1,this.parent.search.length).split(/\&amp\;|\&/g),t=0;t<e.length;t++)this._entries.push(e[t])},e.prototype.updateSearchProp=function(){for(var e=[],t=0;t<this._entries.length;t++){var i=this._entries[t].split("=");/[a-z]{1,4}=(.*?:){3,9}/gi.test(this._entries[t])?e.push(this._entries[t]):e.push(i[0]+(i.length>1?"="+encodeURIComponent(decodeURIComponent(i[1])):""))}this.parent.search=e.length>0?"?"+e.join("&"):""},e.prototype.has=function(e){for(var t=new RegExp("^"+e+"=","g"),i=!1,r=0;r<this._entries.length;r++)t.test(this._entries[r])&&(i=!0);return i},e.prototype.get=function(e){for(var t=new RegExp("^"+e+"=","g"),i=!1,r=0;r<this._entries.length;r++)t.test(this._entries[r])&&(i=this._entries[r].split("=").pop());return i},e.prototype.set=function(e,t){for(var i=new RegExp("^"+e+"=","g"),r=!1,n=0;n<this._entries.length;n++)i.test(this._entries[n])&&(this._entries[n]=e+"="+t,r=!0);r||this.append(e+"="+t),this.updateSearchProp()},e.prototype.append=function(e){this._entries.push(e),this.updateSearchProp()},e.prototype.deleteAll=function(){this._entries=[],this.updateSearchProp()},e.prototype.deleteAtIndex=function(e){this._entries.splice(e,1),this.updateSearchProp()},e.prototype["delete"]=function(e){},e}(),LinkObject=function(){function e(e,t,i){var r=this;this.__isComplete=!1,this._super=i,this.__requiresTrackingCodeRegExp=RegExp("^http(s)?://(.*?)?optum(.*?)?.co[m.]?"),this.__requiredTrackingCodeWhitelist=[".pdf",".ics",".oft","optumsurveys.co","healthid.optum.com","learning.optum.com","app.info.optum.com","optum.webex.com","twitter.com","facebook.com","linkedin.com","info.optum"],this.line=e+1,this.context=t,this.queryStrings=[],this.errors=[],this.id=0,this.whiteListedUrl="~~whitelist~~",this.urlRegex=/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[\/?#]\S*)?$/i,this.emailRegex=/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;var n=/href\=\"([^\"\>]*)\"/g,s=t.match(n);if(s.length>0&&('href=""'==s[0]?(r["new"]=new URLObj("#"),r.old=new URLObj("#"),this.context=this.context.replace(new RegExp('href=""',"g"),'href="#"')):(r["new"]=new URLObj(s[0].substr(6,s[0].length-7).trim()),r.old=new URLObj(s[0].substr(6,s[0].length-7).trim()))),/src=\"(.*?)\"/.test(t)){var o=t.match(/src=\"(.*?)\"/);o.length>0&&(console.log("image found"),r.linkImage=o[1])}this.mailto=new MailtoLinkObject(this),this.isLinkComplete()}return e.prototype.hasDuplicateQueryStrings=function(){var e=[],t=[];if(this["new"].searchParams.entries.length>0)for(var i=0,r=this["new"].searchParams.entries;i<r.length;i++){var n=r[i],s=n.split("=").shift();t.indexOf(s)>-1&&e.push(s),t.push(s)}return e.length>0&&e},e.prototype.hasQueryStringParameter=function(e){return console.warn("hasQueryStringParameter has depreciated, use the relevant URLObjSearchParams method"),this["new"].searchParams.has(e)},e.prototype.removeJumpLink=function(){this["new"].hash="",this.isLinkComplete()},e.prototype.overrideTrackingRequirements=function(){this.whiteListedUrl=this["new"].url},e.prototype.displayFormattedURL=function(){var e=this.context,t='href="',i=e.indexOf(t);return e=e.replace(new RegExp('href=""',"g"),'href="#"'),e=e.substr(0,i)+t+"|||+++|||"+e.substr(i+(t.length+this.old.url.length),e.length),e=e.replace(new RegExp('"',"g"),"&quot;"),e=e.replace(new RegExp("/","g"),"&#47;"),e=e.replace(new RegExp(">","g"),"&gt;"),e=e.replace(new RegExp("<","g"),"&lt;"),e=e.replace(/([^\s]*?)\=/g,'<span class="attr">$1</span><span class="keyword">=</span>'),e=e.replace(/\&quot\;\&gt\;/g,'&quot;<span class="tag">&gt;</span>'),e=e.replace(/\&\#47\;\&gt\;/g,'<span class="tag">&#47;&gt;</span>'),e=e.replace(/\&quot\;(.*?)\&quot\;/g,'<span class="value">"$1"</span>'),e=e.replace(/\&lt\;([a-z]+\s?)/g,'<span class="tag">&lt;$1</span>'),e=e.replace(/\&lt\;\&\#47\;([a-z]+\s?)\&gt\;/g,'<span class="tag">&lt;&#47;$1&gt;</span>'),e=e.replace(/\&gt\;/g,'<span class="tag">&gt;</span>'),e=e.replace(/\|\|\|\+\+\+\|\|\|/g,"<strong>"+(this.hasOwnProperty("deleteOnRender")&&this.deleteOnRender?this.old.url:this["new"].url)+"</strong>")},e.prototype.isLinkComplete=function(){return this._super.intelligence=EMLMakerAIEngine.CheckEmail(this._super),this.errors=EMLMakerAIEngine.CheckLink(this),this.__isComplete=this.errors.canContinue,this.hasOwnProperty("deleteOnRender")&&this.deleteOnRender&&(this.__isComplete=!0),this.__isComplete},e.prototype.isLinkType=function(e){var t=!1;switch(e){case"http":"http:"!=this["new"].protocol&&"https:"!=this["new"].protocol||(t=!0);break;case"mailto":"mailto:"==this["new"].protocol&&(t=!0)}return t},e.prototype.hasTrackingCode=function(e){void 0===e&&(e=this["new"].url);var t=/[a-z]{1,4}=(.*?:){3,9}/gi;return t.test(e)},e.prototype.requiresTrackingCode=function(e){var t=!1;if(this.__requiresTrackingCodeRegExp.test(this["new"].url)){t=!0;for(var i=0;i<this.__requiredTrackingCodeWhitelist.length;i++)this.__requiredTrackingCodeWhitelist[i]instanceof RegExp?this.__requiredTrackingCodeWhitelist[i].test(this["new"].url)&&(t=!1):this["new"].url.indexOf(this.__requiredTrackingCodeWhitelist[i])>-1&&(t=!1)}return t},e.prototype.needsTrackingCode=function(){var e=this.requiresTrackingCode();return this.whiteListedUrl!=this["new"].url&&(this.hasTrackingCode()&&(e=!1),e)},e.prototype.refreshURL=function(){console.warn("refreshURL has depreciated, use the relevant URLObj method"),this.isLinkComplete()},e}(),EMLWorkspace=function(){function e(e,t){void 0===e&&(e=""),void 0===t&&(t="");this.buffer=null,this.scope=t,this.linksView="experimental",this.sourceCode=e,this.outputCode="",this.fileName="eml-maker-untitled",this.linkData=[],this.defaultScode="s=email",this.header={subject:""},this.messages=[],this.errors={messages:[],canProceed:!0},this.exportForEloqua="Yes",this.__emlHeaders="",this.__allowableHeaderFields={to:{syntax:"To: ",label:"To",instructions:"A list of email addresses separated by commas."},subject:{syntax:"Subject: ",label:"Subject",instructions:""},cc:{syntax:"Cc: ",label:"CC",instructions:"A list of email addresses separated by commas."},replyto:{syntax:"Reply-to: ",label:"Reply to",instructions:"A list of email addresses separated by commas."}},this.headers=["X-Unsent: 1","Mime-Version: 1.0 (Mac OS X Mail 10.1 (3251))","X-Uniform-Type-Identifier: com.apple.mail-draft","Content-Transfer-Encoding: 7bit"]}return e.prototype.mapLinkObjects=function(e){if(this.linkData.length>0)for(var t=0;t<this.linkData.length;t++)e(this.linkData[t])},e.prototype.composeEML=function(){location.href="#/export-compose-eml"},e.prototype.downloadEml=function(){this.generateOutputCode(),this.outputCode=this.__replaceEloquaMergeFields(this.outputCode);var e=this.__emlHeaders+"\n\n"+this.__removeWhiteSpace(this.outputCode);this.fileName=this.__formatFileName(this.fileName),window.saveAs(new Blob([e],{type:"text/html"}),this.fileName+".eml"),window.ga("send","event","EML","download","EML Export"),location.href="#/export-eml"},e.prototype.downloadCsv=function(){var e="Context,Original URL,Modified URL\n";this.linkData.forEach(function(t){e+=t.context.replace(/,/g,"(comma)")+","+t.old.url+","+t["new"].url+"\n"}),this.fileName=this.__formatFileName(this.fileName),window.saveAs(new Blob([e],{type:"text/csv"}),this.fileName+"_links.csv"),window.ga("send","event","CSV","download","CSV Export")},e.prototype.downloadHtml=function(){this.generateOutputCode();var e=this.outputCode;this.fileName=this.__formatFileName(this.fileName),window.saveAs(new Blob([e],{type:"text/html"}),this.fileName+".html"),window.ga("send","event","HTML","download","HTML Export")},e.prototype.exportCodeToHTML=function(){var e=!1;this.exportForEloqua&&"Yes"==this.exportForEloqua?(this.mapLinkObjects(function(t){e=t.whiteListedUrl==t["new"].url,t.isLinkType("mailto")||t["new"].searchParams.has("elqTrack")||/app\.info\.optum\.com/gi.test(t["new"].url)||(t["new"].searchParams.append("elqTrack=true"),t.refreshURL(),e&&(t.whiteListedUrl=t["new"].url))}),window.ga("send","event","HTML","Add Eloqua Tracking","Add Eloqua Tracking")):this.mapLinkObjects(function(e){if(e["new"].searchParams.has("elqTrack")){var t=e["new"].searchParams.entries.indexOf("elqTrack=true");t>-1&&e["new"].searchParams.deleteAtIndex(t),e.refreshURL()}}),this.generateOutputCode(),window.ga("send","event","HTML","view sourcecode","Export/View HTML"),location.href="#/export-html"},e.prototype.replaceSpecialCharacters=function(e){var t={174:["&reg;"],169:["&copy;"],8211:["&ndash;"],8212:["&mdash;"],8220:["&ldquo;"],8221:["&rdquo;"],8216:["&lsquo;"],8217:["&rsquo;"],8482:["&trade;"]};for(var i in t)if(t.hasOwnProperty(i)){var r=new RegExp(String.fromCharCode(parseInt(i)),"g");r.test(e)&&(e=e.replace(r,t[i][0]))}return e},e.prototype.processHtml=function(){this.linkData=[],window.scrollTo(0,0);var e=this.replaceSpecialCharacters(this.sourceCode.replace(new RegExp("</a>","ig"),"</a>\n"));if(this.__emlHeaders=this.__buildHeaders(),"untitled"==this.fileName){var t=/<title>([^<].*?)<\/title>/gi;if(t.test(e)){var i=e.match(t);i.length>0&&(this.fileName=this.__formatFileName(i[0].replace(t,"$1")))}}var r=/<a\b[^>]*?>([\r\n]|.)*?<\/a>/gm;e=e.replace(r,function(e){return e.replace(new RegExp("\n|\t","g"),"")});for(var n=e.split("\n"),s=this,o=1,a=0;a<n.length;a++){var h=n[a].match(r);h&&h.forEach(function(e){if(/(href\=\"([^\"\>]*)\"?)/g.test(e)){var t=new LinkObject(a,e,s);t.id=o,t.readOnly=t["new"].contains(".com/e/es.aspx")&&t["new"].contains("~~eloqua"),s.linkData.push(t),o++}})}location.href="#/links"},e.prototype.addNewHeaderField=function(e){this.header[e]=""},e.prototype.removeHeaderField=function(e){delete this.header[e]},e.prototype.isHeaderSelected=function(e){return!this.header.hasOwnProperty(e)||""==this.header},e.prototype.verifyLinkSectionComplete=function(){var e=!1;return e=(!this.linkData||0!=this.linkData.length)&&!!this.areLinksComplete()},e.prototype.generateOutputCode=function(){var e=this.replaceSpecialCharacters(this.sourceCode);e=e.replace(new RegExp("</a>","ig"),"</a>\n");var t=e.split("\n");this.mapLinkObjects(function(e){var i=e.line-1;if(void 0===t[i])return!1;if(e.whiteListedUrl==e["new"].url&&window.ga("send","event","Tracking-Optout","override",e["new"].url),e.hasOwnProperty("deleteOnRender")&&e.deleteOnRender){t[i].indexOf(e.context);t[i]=t[i].replace(new RegExp(e.context,"gi"),"")}else{var r=t[i].indexOf('href="'+e.old.url);t[i]=t[i].substr(0,r)+'href="'+e["new"].url+t[i].substr(r+6+e.old.url.length,t[i].length)}}),this.outputCode=t.join("\n"),this.outputCode=this.outputCode.replace(new RegExp("</a>\n","ig"),"</a>");try{this.outputCode=this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g,"</a>$1")}catch(i){console.log("error merging lines with links that previously had punctuation.")}},e.prototype.updateLinksAndExport=function(){return!!this.areLinksComplete()&&(location.href="#/export",window.scrollTo(0,0),!0)},e.prototype.areLinksComplete=function(){var e=!0;return this.mapLinkObjects(function(t){t.__isComplete||(e=!1),t.needsTrackingCode()&&(e=!1)}),e},e.prototype.getLinksSummary=function(){var e={needsTracking:0,invalidUrl:0};return this.mapLinkObjects(function(t){t.needsTrackingCode()&&e.needsTracking++,t.isLinkComplete()&&e.invalidUrl++}),e},e.prototype.importHtmlFromFileDrop=function(e){this.sourceCode.length>0&&(this.sourceCode=this.outputCode="");var t=e.dataTransfer.files;if(e.dataTransfer.files.length>1)alert("you can only import one file at at time.");else{var i=new FileReader,r=this;i.onloadend=function(e){var i=e.target.result,n=t[0].name.split("."),s=n.pop().toLowerCase();r.fileName=r.__formatFileName(n.join(".")),"eml"==s?r.sourceCode=r.__stripHtmlAndSubjectFromEML(i):r.sourceCode=i,r.processHtml(),location.href="#/links"},i.readAsText(t[0]),window.ga("send","event","HTML","import","HTML Import File Drop")}},e.prototype.__formatFileName=function(e){var t=/[^\w\s-]/g,i=/[-\s]+/g;return e=e.replace(t,"").trim().toLowerCase(),e=e.replace(i,"-")},e.prototype.__replaceEloquaMergeFields=function(e){var t=/<span(%20|\s)class="?eloquaemail"?\s?>(.*?)<\/span>/gi;return e=e.replace(t,"#$2#")},e.prototype.__stripHtmlAndSubjectFromEML=function(e){for(var t=e.split("\n"),i=t.pop(),r=0;r<t.length;r++)t[r].indexOf("Subject:")>-1&&void 0===this.header&&(this.header={});return i},e.prototype.__removeWhiteSpace=function(e){var t=e;return t=t.replace(new RegExp("\n","g")," "),t=t.replace(new RegExp("\t","g")," "),t=t.replace(/\s{2,99999}/g," ")},e.prototype.__buildHeaders=function(){for(var e=[],t=0;t<this.headers.length;t++)e.push(this.headers[t]);var i=this.__getCharsetFromHTML(this.sourceCode);""==i&&(i="charset=UTF-8"),e.push("Content-Type: text/html;\n\t"+i);for(var r in this.header)this.header.hasOwnProperty(r)&&this.__allowableHeaderFields.hasOwnProperty(r)&&e.push(this.__allowableHeaderFields[r].syntax+" "+this.header[r]);return this.__emlHeaders=e.join("\n"),e.join("\n")},e.prototype.__getCharsetFromHTML=function(e){var t=/<meta.*?charset=([^\s"]*)/gi,i="",r=e.match(t);return r&&r.forEach(function(e){var t=e.match(/charset=([^\s"]*)/gi);i=t?t[0]:"charset=UTF-8"}),i},e}(),LocateText=function(){function e(){}return e}();
 /*
  AngularJS v1.5.9
  (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -1525,6 +463,13 @@ angular.module('EMLMaker', ['ngRoute','ngSanitize'])
     return output;
 
   }
+})
+.filter('uncamelize', function(){
+  return function(input){
+    return input.replace(/([A-Z])/g, ' $1')
+    // uppercase the first character
+    .replace(/^./, function(str){ return str.toUpperCase(); });
+  }
 });
 
 angular.module('EMLMaker').factory(
@@ -1544,114 +489,6 @@ angular.module('EMLMaker').factory(
   });
 
 angular.module('EMLMaker').factory(
-  "$UserManagement",
-  ['$CryptoJS','$PersistJS',
-  function $UserManagement($CryptoJS, $PersistJS){
-
-    var self = this;
-
-    this.SecureGateway = /**@class*/ (function(){
-      function SecureGateway(loginCallback){
-        //constructor
-        // this.sessionEmailInput= "";
-        var SG = this;
-        this.loginCallback = loginCallback;
-        this.loginTimer = null;
-        this.sessionUserEmail = "";
-        this.timerDelay = 500;
-        this.salt = "47dafea9aae3b28ab5c39eb7f7d2c924";
-        this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        this.sessionIdLocalStorageKey = "EMLMaker.emlUserID";
-
-
-
-        if(this.hasSavedSessionId()){
-          if(this.isValidEmailAddress(this.sessionId)){
-            this.sessionUserEmail = this.sessionId;
-            // loginCallback();
-            location.href="#/login";
-            this.loginTimer = setTimeout(function(){
-              location.href="#/main";
-              SG.setCurrentUser(SG.sessionUserEmail);
-            }, this.timerDelay);
-          } else {
-            location.href="#/login";
-            this.sessionUserEmail = "";
-            }
-        } else {
-          location.href="#/login";
-          this.sessionUserEmail = "";
-        }
-
-        window.addEventListener('hashchange', function(){
-          if( SG.sessionUserEmail == "" || !SG.hasSavedSessionId()) {
-            location.href="#/login";
-          }
-        });
-
-      }
-      SecureGateway.prototype.logOut = function(){
-        this.loginAsOther();
-        this.sessionId = "";
-        this.sessionUserEmail = "";
-        $PersistJS.remove(this.sessionIdLocalStorageKey);
-        if(location.hasOwnProperty("reload")){
-          location.reload();
-        } else {
-          document.location.href = document.location.href;
-        }
-      };
-      SecureGateway.prototype.loginAsOther = function(){
-        clearTimeout(this.loginTimer);
-        delete this.loginTimer;
-      };
-
-      SecureGateway.prototype.sessionUpdateUserEmail = function(){
-        this.errorMessage = "";
-
-        if(this.isValidEmailAddress(this.sessionUserEmail)) {
-          this.setCurrentUser(this.sessionUserEmail);
-          this.loginCallback();
-          location.href = "#/main";
-        } else {
-          // Error message
-          this.errorMessage = "Sorry! You have to enter a valid email address.";
-        }
-      };
-      SecureGateway.prototype.hasSavedSessionId = function(){
-        var savedEmailId = $PersistJS.get(this.sessionIdLocalStorageKey);
-        // console.log(savedEmailId);
-        if(savedEmailId){
-          this.sessionId = savedEmailId;
-          return true;
-        } else {
-          this.sessionId = "";
-          return false;
-        }
-      };
-      SecureGateway.prototype.setCurrentUser = function(email){
-        var hash = $CryptoJS.MD5(email + this.salt).toString();
-        $PersistJS.set(this.sessionIdLocalStorageKey, email);
-        window.ga('set', 'userId', hash);
-      };
-      SecureGateway.prototype.isValidEmailAddress = function(email){
-        if(this.emailRegex.test(email)){
-          console.log(email, "is valid");
-          return true;
-        } else {
-          console.log(email, "is not valid");
-          return false;
-        }
-      };
-
-      return SecureGateway;
-    })();
-
-
-    return this;
-  }]);
-
-angular.module('EMLMaker').factory(
   "saveAs", function saveAs(){
     /*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
     window.saveAs=window.saveAs||function(e){"use strict";if(typeof e==="undefined"||typeof navigator!=="undefined"&&/MSIE [1-9]\./.test(navigator.userAgent)){return}var t=e.document,n=function(){return e.URL||e.webkitURL||e},r=t.createElementNS("http://www.w3.org/1999/xhtml","a"),o="download"in r,a=function(e){var t=new MouseEvent("click");e.dispatchEvent(t)},i=/constructor/i.test(e.HTMLElement)||e.safari,f=/CriOS\/[\d]+/.test(navigator.userAgent),u=function(t){(e.setImmediate||e.setTimeout)(function(){throw t},0)},s="application/octet-stream",d=1e3*40,c=function(e){var t=function(){if(typeof e==="string"){n().revokeObjectURL(e)}else{e.remove()}};setTimeout(t,d)},l=function(e,t,n){t=[].concat(t);var r=t.length;while(r--){var o=e["on"+t[r]];if(typeof o==="function"){try{o.call(e,n||e)}catch(a){u(a)}}}},p=function(e){if(/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type)){return new Blob([String.fromCharCode(65279),e],{type:e.type})}return e},v=function(t,u,d){if(!d){t=p(t)}var v=this,w=t.type,m=w===s,y,h=function(){l(v,"writestart progress write writeend".split(" "))},S=function(){if((f||m&&i)&&e.FileReader){var r=new FileReader;r.onloadend=function(){var t=f?r.result:r.result.replace(/^data:[^;]*;/,"data:attachment/file;");var n=e.open(t,"_blank");if(!n)e.location.href=t;t=undefined;v.readyState=v.DONE;h()};r.readAsDataURL(t);v.readyState=v.INIT;return}if(!y){y=n().createObjectURL(t)}if(m){e.location.href=y}else{var o=e.open(y,"_blank");if(!o){e.location.href=y}}v.readyState=v.DONE;h();c(y)};v.readyState=v.INIT;if(o){y=n().createObjectURL(t);setTimeout(function(){r.href=y;r.download=u;a(r);h();c(y);v.readyState=v.DONE});return}S()},w=v.prototype,m=function(e,t,n){return new v(e,t||e.name||"download",n)};if(typeof navigator!=="undefined"&&navigator.msSaveOrOpenBlob){return function(e,t,n){t=t||e.name||"download";if(!n){e=p(e)}return navigator.msSaveOrOpenBlob(e,t)}}w.abort=function(){};w.readyState=w.INIT=0;w.WRITING=1;w.DONE=2;w.error=w.onwritestart=w.onprogress=w.onwrite=w.onabort=w.onerror=w.onwriteend=null;return m}(typeof self!=="undefined"&&self||typeof window!=="undefined"&&window||this.content);if(typeof module!=="undefined"&&module.exports){module.exports.saveAs=saveAs}else if(typeof define!=="undefined"&&define!==null&&define.amd!==null){define("FileSaver.js",function(){return saveAs})}
@@ -1664,36 +501,11 @@ angular.module('EMLMaker')
   '$scope',
   'saveAs',
   '$routeParams',
-  '$UserManagement',
-  function($scope, saveAs, $routeParams, $UserManagement){
+
+  function($scope, saveAs, $routeParams){
 
 
-  $scope.update_version = false;
-  $scope.update_forced = false;
-  $scope.offlineVersion = window.OFFLINE_VERSION;
-  $scope.onlineVersion = window.CURRENT_VERSION;
-  $scope.accessingFromOffline = false;
-
-
-  var forceUpdate = function(offline, online){
-    var offlineVersion = offline.split("."),
-    onlineVersion = online.split("."),
-    match = 0, output = false;
-    for(var i=0; i<onlineVersion.length;i++){
-      if(onlineVersion[i]== offlineVersion[i]) match++;
-    }
-    if(match<3){
-      output = true;
-    }
-    return output;
-  };
-
-  if(window.OFFLINE_VERSION&&window.LOCALHOST){ $scope.accessingFromOffline = true; }
-  if(window.OFFLINE_VERSION &&(window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
-    $scope.update_version = true;
-    $scope.update_forced = forceUpdate(window.OFFLINE_VERSION, window.CURRENT_VERSION);
-  }
-
+  $scope.UpdateModule = new window.UpdateModule();
 
 
   $scope.sessionUserEmail = "";
@@ -1719,7 +531,7 @@ angular.module('EMLMaker')
 
   //only load once!
   $scope.blankSlate();
-  $scope.SecureGateway = new $UserManagement.SecureGateway(function(){
+  $scope.SecureGateway = new SecureGateway(function(){
     $scope.blankSlate();
   });
 
@@ -1972,28 +784,28 @@ angular.module('EMLMaker')
 .directive('messageCenter', ['$timeout', function($timeout){
   return {
     restrict: "E",
-    template: '<div><div class="ui tiny secondary pointing menu">\
-    <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{messages.data.length}}</span></a>\
-    <a class="item" ng-show="messages.count.Fix" ng-click="search.type=1" ng-class="{active: search.type==1}">Fix <span class="ui tiny red label">{{messages.count.Fix}}</span></a>\
-    <a class="item" ng-show="messages.count.Suggestion" ng-click="search.type=3" ng-class="{active: search.type==3}">Suggestions <span class="ui tiny label">{{messages.count.Suggestion}}</span></a>\
-    <a class="item" ng-show="messages.count.BestPractice" ng-click="search.type=2" ng-class="{active: search.type==2}">Best Practices <span class="ui tiny label">{{messages.count.BestPractice}}</span></a></div>\
-    <div id="error-messages-list" class="ui divided list"><message-item item="item" class="item" ng-repeat="obj in messages.data | filter: search" error="obj"></message-item></div>\
+    template: '<div class="message-center"><div class="ui tiny secondary pointing menu">\
+    <div class="item mnu-title">MESSAGES:</div>\
+    <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{errors.messages.length}}</span></a>\
+    <a class="item" ng-repeat="(tab,value) in errors.tabs track by $index" ng-show="errors.count[tab]" ng-click="search.type=value" ng-class="{active: search.type==value}">{{tab | uncamelize}} <span class="ui tiny label">{{errors.count[tab]}}</span></a>\
+    </div>\
+    <div id="error-messages-list" class="ui middle aligned divided list">\
+      <message-item item="item" class="item" ng-repeat="obj in errors.messages | filter: search" error="obj"></message-item>\
+      </div>\
     </div>',
-    scope: {messages:"=", item:"="},
+    scope: {
+      errors:"=",
+      item:"="
+    },
     link: function(scope, el, attr){
       $timeout(function(){
         scope._search = {type: ""};
-        var View = (function(View){
-          View[View["DEFAULT"]=0] = "DEFAULT";
-          View[View["EDIT"]=1] = "EDIT";
-          return View;
-        })({});
-        scope.view = View.DEFAULT;
+        //scope.tabs = ["Fix", "BestPractice", "Suggestion"];
 
         Object.defineProperty(scope, "search", {
           get: function(){
             var b = ["","Fix", "BestPractice", "Suggestion"];
-            if(scope.messages.count[b[scope._search.type]]==undefined) scope._search.type = "";
+            if(scope.errors.count[b[scope._search.type]]==undefined) scope._search.type = "";
             return scope._search;
           }
         });
@@ -2011,21 +823,23 @@ angular.module('EMLMaker')
 .directive('messageItem', ['$timeout', function($timeout){
   return {
     restrict: "E",
-    template: '<div ng-show="error.ctaLabel!==\'\'" style="margin-top: .5em; float:right">\
-      <div class="ui small compact" \
-      ng-class="{\'red button\':error.cleanType==\'Fix\',\'violet button\':error.cleanType==\'Suggestion\',\'orange button\':error.cleanType==\'Warn\',\'button\':error.cleanType==\'BestPractice\'}" \
-      \ ng-click="error.handler(item)" \
-       ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
-      </div>\
+    template: '<div ng-class="messageCls">\
+    <div class="right floated content" ng-show="error.ctaLabel!==\'\'" >\
+    <div class="ui small compact" \
+    ng-class="buttonCls" \
+    \ ng-click="error.handler(item)" \
+     ng-bind-html="error.ctaLabel">{{error.ctaLabel ? error.ctaLabel : "Resolve"}}</div>\
+    </div>\
       <div class="content"> \
-        <h4><span class="ui tiny" ng-class="{\'red label\':error.cleanType==\'Fix\',\'orange label\':error.cleanType==\'Warn\',\'violet label\':error.cleanType==\'Suggestion\',\'label\':error.cleanType==\'BestPractice\'}">{{error.cleanType}}</span><br> {{error.title}}</h4>\
+        <h4>{{error.title}}</h4>\
         <div ng-bind-html="error.description"></div></div>\
     </div>',
     scope: {error: "=", item:"="},
     link: function(scope, el, attr){
       $timeout(function(){
-
-
+        var cls = ["", "red", "orange","violet","yellow",""];
+        scope.buttonCls = [cls[scope.error.severity],"button"].join(" ");
+        scope.messageCls = "type-"+ scope.error.type +" level-"+scope.error.severity;
         scope.$on('$destroy', function(){
           // jQuery(el).popup("destroy");
         });
@@ -2035,6 +849,36 @@ angular.module('EMLMaker')
 
 
 }]);
+
+angular.module('EMLMaker')
+.directive('ngChangeLazy', ['$timeout', function($timeout){
+	return {
+		restrict: "A",
+		// transclude: true,
+		scope: {
+			ngChangeLazy:"&",
+			dataTransferEvt:"="
+		},
+		link: function(scope, el, attr){
+			var timer = null;
+			$timeout(function(){
+				el.on('keyup', function(e){
+					clearTimeout(timer);
+					timer = setTimeout(function(){
+						scope.$apply(function(){
+							scope.ngChangeLazy();
+						});
+					},300);
+				});
+
+				scope.$on('$destroy', function(){
+					el.off('keyup');
+				});
+			});
+
+			}
+		};
+	}]);
 
 angular.module('EMLMaker')
 .directive('onReturnPress', ['$timeout', function($timeout){
@@ -2054,8 +898,10 @@ angular.module('EMLMaker')
 					}
 				});
 
-
+				scope.$on('$destroy', function(){
+					el.off('keypress');
 				});
+			});
 
 			}
 		};
@@ -2093,7 +939,7 @@ angular.module('EMLMaker')
     restrict: "E",
     template: '<div class="query-string-editor" ng-hide="item.isLinkType(\'mailto\')"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
     <div class="ui tiny basic buttons" style="float:right;">\
-  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll()">Remove all</button>\
+  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll(); item.isLinkComplete()">Remove all</button>\
   <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
 </div></div>\
      <div ng-if="item.new.searchParams._entries.length==1&&item.new.searchParams._entries[0].length==0">Query strings will appear here.</div>\
@@ -2209,12 +1055,12 @@ angular.module('EMLMaker')
             template: "<style type=\"text/css\">\n    body { background-color: #DADADA; background-image: url(assets/bg.png); background-repeat:no-repeat; background-position: top right;}\n    body > .grid { height: 100% !important; }\n    .image { margin-top: -100px; }\n    .column {max-width: 450px; }\n    ng-view{height:100%;}\n  </style><div class=\"ui middle aligned center aligned grid\" style=\"height: 100%;\">\n  <div class=\"column\">\n    <h2 class=\"ui blue center aligned image header\">\n      <img class=\"ui image\" src=\"assets/logo128.png\" class=\"logo\"/>\n      <div class=\"content\">\n      {{ SecureGateway.loginTimer ? \"Logging you in to EML Maker ...\" : \"EML Maker\"}}\n      <div class=\"sub header\">Version {{versionNumber}}</div>\n      </div>\n    </h2>\n    <form class=\"ui large form\">\n      <div>\n        <div class=\"field\">\n          <div class=\"ui left icon input\" ng-class=\"{disabled: SecureGateway.loginTimer}\">\n            <i class=\"user icon\"></i>\n\n            <input type=\"text\" placeholder=\"Enter your email address\" ng-model=\"SecureGateway.sessionUserEmail\" on-return-press=\"SecureGateway.sessionUpdateUserEmail(SecureGateway.sessionUserEmail)\">\n\n          </div>\n        </div>\n        <i class=\"circular help icon link\" ui-popup popup-id=\"help-popup\"></i>\n        <div class=\"ui large blue button\" ng-if=\"!SecureGateway.loginTimer\" ng-click=\"SecureGateway.sessionUpdateUserEmail(SecureGateway.sessionUserEmail)\">Login</div>\n        <div class=\"ui large blue button\" ng-if=\"SecureGateway.loginTimer\" ng-click=\"SecureGateway.loginAsOther()\">Cancel login</div>\n        <div class=\"ui small inline loader\" ng-class=\"{active: SecureGateway.loginTimer}\"></div>\n      </div>\n\n      <div class=\"ui red message\" ng-if=\"SecureGateway.errorMessage\">{{SecureGateway.errorMessage}}</div>\n      <div class=\"ui popup\" id=\"help-popup\" ng-if=\"!SecureGateway.loginTimer\" style=\"text-align: left;\">\n      <div class=\"header\">Great news: You do not need a password.</div>\n      <div class=\"content\" style=\"width:330px\">\n      However, you will have to provide a valid email address before using EML Maker. You should only need to do this one time; Your email address will be stored in your browser and used to log you in next time. If you clear your cache or your browser loses your saved email address, you will need to input it again. Your email address is not tracked or saved in Google Analytics, a hash is generated and identifies you as a single user across browsers and dynamic IP Addresses.\n      </div>\n      </div>\n    </form>\n\n\n  </div>\n</div>"
         })
             .when('/offline', {
-            template: "\n    <a href=\"javascript:history.back()\"><i class=\"arrow left icon\"></i> Go back</a>\n      <h1>Using EML Maker offline (BETA)</h1>\n      <p>Let's face it. EML Maker has had some down time.\n      And, it was difficult to come up with a perfect solution, but this new feature is very close.</p>\n\n      <h2>What you need to do:</h2>\n      <p>You'll want to download the zip file, extract its contents into a safe folder on your computer.</p>\n\n      <p>You bookmark that file on your computer, in your browser. The offline version of EML Maker has the right\n      equipment to run directly from your machine without accessing the online version.</p>\n\n      <p>BUT, the best version is always the most up-to-date; so, what the offline version will do: it will ping the online version and see if it can access it.\n      If it can access the online version it will redirect you there. So, everyone wins.</p>\n\n      <p>If you have the \"old version\" of EML Maker saved locally on your computer, EML Maker will tell you the next time you access the online version that there is a new version available,\n      and you'll simply need to overwrite the file you downloaded on your computer with a new one.</p>\n\n      <div ng-if=\"!accessingFromOffline\"><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Install Now</a></div>\n      <div ng-if=\"update_version\" ><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a></div>\n    "
+            template: "\n    <a href=\"javascript:history.back()\"><i class=\"arrow left icon\"></i> Go back</a>\n      <h1>Using EML Maker offline (BETA)</h1>\n      <p>Let's face it. EML Maker has had some down time.\n      And, it was difficult to come up with a perfect solution, but this new feature is very close.</p>\n\n      <h2>What you need to do:</h2>\n      <p>You'll want to download the zip file, extract its contents into a safe folder on your computer.</p>\n\n      <p>You bookmark that file on your computer, in your browser. The offline version of EML Maker has the right\n      equipment to run directly from your machine without accessing the online version.</p>\n\n      <p>BUT, the best version is always the most up-to-date; so, what the offline version will do: it will ping the online version and see if it can access it.\n      If it can access the online version it will redirect you there. So, everyone wins.</p>\n\n      <p>If you have the \"old version\" of EML Maker saved locally on your computer, EML Maker will tell you the next time you access the online version that there is a new version available,\n      and you'll simply need to overwrite the file you downloaded on your computer with a new one.</p>\n\n      <div ng-if=\"!accessingFromOffline\"><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Install Now</a></div>\n      <div ng-if=\"UpdateModule.updateVersion\" ><a href=\"prod/single/EML_Maker_Offline.zip\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a></div>\n    "
         })
             .when('/main', {
-            template: "\n\n    <div class=\"ui icon message\" ng-if=\"!accessingFromOffline\">\n    <i class=\"info circle icon\"></i>\n\n    <div class=\"content\">\n\n\n\n\n    <div class=\"header\">You can now use EML Maker offline. (BETA)</div>\n      Get EML Maker now with (hopefully) ZERO downtime.\n      <a href=\"#/offline\">Learn more <i class=\"arrow right icon\"></i></a>\n      </div>\n      </div>\n\n    <div class=\"ui warning icon message\" ng-if=\"update_version&&update_forced\" style=\"align-items:flex-start;\">\n    <i class=\"warning sign icon\"></i>\n      <div class=\"content\">\n      <div class=\"header\">Update to version {{onlineVersion}}.</div>\n      It looks like you are using version {{offlineVersion}} of EML Maker offline. If you'd like to use the most up to date version and make this message go away, you should download the latest version today.\n      <div style=\"padding-top:.5em;\">\n      <a href=\"prod/single/EML_Maker_Offline.zip\" target=\"_blank\" class=\"ui primary compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a>\n      <a href=\"#/offline\" class=\"ui primary compact button\" >Learn more</a>\n      </div>\n      </div>\n    </div>\n\n    <div class=\"ui form\">\n\n\n\n\n      <div class=\"field\">\n        <label>HTML Source Code</label>\n        <div ace-editor class=\"aceEditor\" id=\"editor\" editor-id=\"editor\" >{{workspace.sourceCode}}</div>\n\n        <file-dropper ondropfile=\"workspace.importHtmlFromFileDrop(evt)\" label=\"Drop file here to import html\"></file-dropper>\n        </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n\n        <button class=\"ui button\" ng-click=\"blankSlate()\">Clear</button>\n        <button class=\"ui right floated primary button\" ng-click=\"workspace.processHtml()\">Continue <i class=\"ui long arrow right icon\"></i></button>\n        </div>\n      </div>\n      </div>"
+            template: "\n\n    <div class=\"ui icon message\" ng-if=\"UpdateModule.showTeaser()\">\n      <i class=\"info circle icon\"></i>\n      <div class=\"content\">\n        <div class=\"header\" >You can now use EML Maker offline. (BETA)</div>\n          Get EML Maker now with (hopefully) ZERO downtime.\n          <a href=\"#/offline\">Learn more <i class=\"arrow right icon\"></i></a>\n        </div>\n      </div>\n\n    <div class=\"ui warning icon message\" ng-if=\"UpdateModule.showMessage()\" style=\"align-items:flex-start;\">\n      <i class=\"warning sign icon\"></i>\n      <div class=\"content\">\n        <div class=\"header\">Update to version {{UpdateModule.onlineVersion}}.</div>\n        It looks like you are using version {{UpdateModule.offlineVersion}} of EML Maker offline. If you'd like to use the most up to date version and make this message go away, you should download the latest version today.\n        <div style=\"padding-top:.5em;\">\n          <a href=\"prod/single/EML_Maker_Offline.zip\" target=\"_blank\" class=\"ui purple compact button\" ><i class=\"file archive outline icon\"></i>Update Now</a>\n          <a href=\"#/offline\" class=\"ui compact button\" >Learn more</a>\n          </div>\n        </div>\n      </div>\n\n    <div class=\"ui form\">\n\n\n\n\n      <div class=\"field\">\n        <label>HTML Source Code</label>\n        <div ace-editor class=\"aceEditor\" id=\"editor\" editor-id=\"editor\" >{{workspace.sourceCode}}</div>\n\n        <!-- <file-dropper ondropfile=\"workspace.importHtmlFromFileDrop(evt)\" label=\"Drop file here to import html\"></file-dropper>-->\n        </div>\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\">\n        <div class=\"ui container\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n\n        <button class=\"ui button\" ng-click=\"blankSlate()\">Clear</button>\n        <button class=\"ui right floated primary button\" ng-click=\"workspace.processHtml()\">Continue <i class=\"ui long arrow right icon\"></i></button>\n        </div>\n      </div>\n      </div>"
         }).when('/links', {
-            template: "\n    <div style=\"float:right\">\n    <span style=\"display:inline-block;font-weight:bold; padding-right: 1em\">View </span>\n    <div class=\"ui mini compact menu\">\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='experimental'}\" ng-click=\"workspace.linksView='experimental'\">Experimental</a>\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='advanced'}\" ng-click=\"workspace.linksView='advanced'\">Advanced</a>\n    </div>\n    </div>\n    <h1>{{workspace.linkData.length>0 ? \"Review Links\" : \"Review\"}}</h1>\n    <p ng-if=\"workspace.linkData.length>0\">This section will find and replace the urls.</p>\n\n\n    <div ng-if=\"workspace.linkData.length==0\">\n\n\n\n    <div class=\"ui warning icon message\">\n  <i class=\"warning sign icon\"></i>\n  <div class=\"content\">\n    <div class=\"header\">\n      Did not find any links\n    </div>\n    <p>Although you can export your EML without links, if you intended to include links, you'll want to go back and make sure you've included some.</p>\n  </div>\n</div><br/>\n      </div>\n\n\n<div class=\"ui grid\">\n<div class=\"eleven wide column\">\n\n\n    <div class=\"ui form\">\n\n      <div ng-repeat=\"item in workspace.linkData\" class=\"field\" id=\"link-{{$index+1}}\" scrollspy>\n\n\n      <h4 class=\"ui horizontal divider header\">Link {{$index+1}}</h4>\n      <div class=\"link-section\" ng-class=\"{forRemoval:item.deleteOnRender, orange: item.needsTrackingCode(), green: item.hasTrackingCode()}\">\n        <div class=\"ui blue message\" ng-if=\"workspace.linksView=='advanced'||!item.__isComplete\" style=\"min-height:3.25em;\"><div class=\"old-url\"><strong>URL:</strong> <div class=\"url\">{{item.old.url}}&nbsp;</div></div></div>\n        <div class=\"ui message context\">\n          <div ><span class=\"line\"><i class=\"red cancel icon\" ng-if=\"item.deleteOnRender\"></i>{{item.line}}:</span> <div class=\"code prettyprint lang-js\" prettify ng-bind-html=\"item.displayFormattedURL()\"></div></div>\n        </div>\n        <div ng-if=\"item.linkImage&&(workspace.linksView=='advanced'||!item.__isComplete)\" class=\"ui message context\" style=\"background:#fff !important; min-height:90px\">\n          <div >\n          <span class=\"line\">Linked image preview:</span>\n\n          <div class=\"code\" style=\"background-image: url(assets/grid_bg.png);\">\n          <img ng-src=\"{{item.linkImage}}\" style=\"max-width:100%;\"/>\n          </div>\n          </div>\n          </div>\n\n        <div class=\"field\" ng-class=\"{error: !item.__isComplete}\" ng-if=\"!item.isLinkType('mailto')\">\n          <label>{{workspace.linksView=='experimental'&&item.__isComplete ? \"URL\" : \"New URL\" }}</label>\n          <input type=\"text\" ng-hide=\"item.deleteOnRender\" ng-model=\"item.new.url\" ng-keyup=\"item.new.searchParams.updateEntries();item.isLinkComplete()\" ng-blur=\"item.new.searchParams.updateSearchProp()\"/>\n          <div ng-show=\"item.deleteOnRender\">{{item.old.url==\"\"? \"Blank link\" : item.old.url}}</div>\n        </div   >\n\n        <query-string-editor\n          ng-hide=\"item.deleteOnRender\"\n          item=\"item\"\n          ng-if=\"item.new.searchParams.entries.length>0\">\n          </query-string-editor>\n\n        <div ng-if=\"item.isLinkType('mailto')\" mailto-link-editor>\n        <div class=\"ui field\" >\n        <label>New Email Link</label>\n          <div class=\"ui action input\" >\n            <input type=\"text\" ng-change=\"item.mailto.updateMailtoObj();item.isLinkComplete()\" ng-blur=\"item.mailto.inputOnBlur();item.isLinkComplete()\" ng-model=\"item.new.url\">\n            <button class=\"ui icon button mailtoEditor\" ng-click=\"item.mailto.initEmailEditor()\">\n               Editor <i class=\"pencil icon\"></i>\n            </button>\n          </div>\n\n\n        </div>\n        <div class=\"ui flowing top right popup\" style=\"min-width: 300px;\">\n\n            <div class=\"ui field\">\n              <label>Email Address</label>\n              <input ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.email\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Subject Line</label>\n              <input ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.subject\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Body Text</label>\n              <textarea ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%; height: 150px;\" ng-model=\"item.mailto.body\"></textarea>\n              </div>\n        </div>\n        </div>\n\n        <div class=\"\" ng-if=\"item.whiteListedUrl==item.new.url\">\n        <p>This link would normally require a special tracking code, but you have chosen to override that requirement. You can undo this by clicking the button below.</p>\n        <button class=\"ui grey compact icon button\" ng-click=\"item.whiteListedUrl='~~whitelist~~';item.isLinkComplete()\">\n        <i class=\"cancel icon\"></i>\n          Cancel tracking override</button></div>\n\n          <div class=\"\" ng-if=\"item.deleteOnRender\">\n          <p>This link will be removed when you export the code.</p>\n          <button class=\"ui grey compact icon button\" ng-click=\"item.deleteOnRender=false;item.new.url=item.old.url;item.isLinkComplete()\">\n          <i class=\"cancel icon\"></i>\n            Keep this link</button></div>\n\n        <message-center ng-hide=\"item.deleteOnRender||item.errors.data.length==0\" messages=\"item.errors\" item=\"item\">\n          </message-center>\n\n\n\n\n        </div>\n\n        </div>\n      </div>\n      </div>\n      <div class=\"five wide column\" id=\"stickyparent\" style=\"z-index:98;\">\n      <div sticky class=\"ui sticky\" style=\"display:block; margin-top:75px; margin-bottom:75px;\" >\n\n        <div class=\"ui secondary vertical pointing menu\"  style=\"margin-top: 75px; margin-bottom: 75px;\" >\n\n        <a class=\"item\" ng-repeat=\"item in workspace.linkData\" ng-class=\"{active: activeLinkId==$index+1}\" href=\"javascript:angular.noop()\" ng-click=\"scrollTo($index)\">\n        <span class=\"truncate\"><i class=\"red warning sign icon\" ng-if=\"!item.__isComplete||item.needsTrackingCode()\"></i><i class=\"red trash icon\" ng-if=\"item.deleteOnRender\"></i> {{ item.new.url==\"\"&&item.old.url==\"\" ? (item.deleteOnRender ? \"Delete: \" + (item.old.url==\"\"?\"Link is blank\":item.old) : \"Link is blank\") : item.new.url}}</span>\n        </a>\n\n        </div>\n        </div>\n\n      </div>\n\n\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\" style=\"z-index:99;\">\n      <div class=\"ui container\" style=\"padding-top:10px; padding-bottom:10px;\">\n      <div class=\"ui popup\"  id=\"error-messages\">\n        <div class=\"header\">\n          Some of these links did not pass validation.\n        </div>\n        <em>You cannot proceed until all high priority errors are&nbsp;fixed.</em>\n        </div>\n        <div>\n        <button class=\"ui right floated yellow button\" ng-if=\"!workspace.areLinksComplete()\" ui-popup popup-id=\"error-messages\" >\n        <i class=\"ui warning sign icon\"></i> {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n\n          </button>\n        <button class=\"ui right floated primary button\" ng-if=\"workspace.areLinksComplete()\" ng-click=\"workspace.updateLinksAndExport()\">\n        {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n          <i class=\"ui long arrow right icon\"></i>\n          </button>\n\n\n        <button class=\"ui button\" ng-click=\"workspace.downloadCsv()\">\n          <i class=\"ui download icon\"></i> Download Link CSV</button>\n\n        </div>\n\n\n        </div>\n      </div>\n\n    </div>"
+            template: "\n    <div style=\"float:right\">\n    <span style=\"display:inline-block;font-weight:bold; padding-right: 1em\">View </span>\n    <div class=\"ui mini compact menu\">\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='experimental'}\" ng-click=\"workspace.linksView='experimental'\">Experimental</a>\n      <a class=\"item\" ng-class=\"{active: workspace.linksView=='advanced'}\" ng-click=\"workspace.linksView='advanced'\">Advanced</a>\n    </div>\n    </div>\n    <h1>{{workspace.linkData.length>0 ? \"Review Links\" : \"Review\"}}</h1>\n    <p ng-if=\"workspace.linkData.length>0\">This section will find and replace the urls.</p>\n\n\n    <div ng-if=\"workspace.linkData.length==0\">\n      <div class=\"ui warning icon message\">\n      <i class=\"warning sign icon\"></i>\n      <div class=\"content\">\n        <div class=\"header\">Did not find any links</div>\n        <p>Although you can export your EML without links, if you intended to include links, you'll want to go back and make sure you've included some.</p>\n        </div>\n      </div><br/>\n    </div>\n\n\n<div class=\"ui grid\">\n<div class=\"eleven wide column\">\n  <div id=\"link-0\" ng-hide=\"workspace.intelligence.messages.length==0\">\n  <ol><li ng-repeat=\"message in workspace.intelligence.messages\">{{message}}</li></ol>\n  </div>\n\n    <div class=\"ui form\">\n\n      <div ng-repeat=\"item in workspace.linkData\" class=\"field\" id=\"link-{{$index+1}}\" scrollspy>\n\n\n      <h4 class=\"ui horizontal divider header\">Link {{$index+1}}</h4>\n      <div class=\"link-section\" ng-class=\"{forRemoval:item.deleteOnRender||item.readOnly, editable: !item.deleteOnRender&&!item.readOnly, orange: workspace.linksView=='advanced'&&item.needsTrackingCode(), green: workspace.linksView=='advanced'&&item.hasTrackingCode()}\">\n        <div ng-if=\"item.readOnly\">This link is READONLY</div>\n        <div class=\"ui blue message\" ng-if=\"workspace.linksView=='advanced'||!item.__isComplete\" style=\"min-height:3.25em;\">\n          <div class=\"old-url\"><strong>URL:</strong> <div class=\"url\">{{item.old.url}}&nbsp;</div></div></div>\n        <div class=\"ui message context\">\n          <div ><span class=\"line\"><i class=\"red cancel icon\" ng-if=\"item.deleteOnRender\"></i>{{item.line}}:</span> <div class=\"code prettyprint lang-js\" prettify ng-bind-html=\"item.displayFormattedURL()\"></div></div>\n        </div>\n        <div ng-if=\"item.linkImage&&(workspace.linksView=='advanced'||!item.__isComplete)\" class=\"ui message context\" style=\"background:#fff !important; min-height:90px\">\n          <div >\n          <span class=\"line\">Linked image preview:</span>\n\n          <div class=\"code linked-image\" >\n          <img ng-src=\"{{item.linkImage}}\" style=\"max-width:100%;\"/>\n          </div>\n          </div>\n          </div>\n\n        <div class=\"field\" ng-class=\"{error: !item.__isComplete}\" ng-if=\"!item.isLinkType('mailto')\">\n          <label ng-hide=\"item.readOnly\">{{workspace.linksView=='experimental'&&item.__isComplete ? \"URL\" : \"New URL\" }}</label>\n          <input type=\"text\" ng-hide=\"item.deleteOnRender||item.readOnly\" ng-model=\"item.new.url\" ng-change-lazy=\"item.new.searchParams.updateEntries();item.isLinkComplete()\" ng-blur=\"item.new.searchParams.updateSearchProp()\"/>\n          <div ng-show=\"item.deleteOnRender\">{{item.old.url==\"\"? \"Blank link\" : item.old.url}}</div>\n        </div   >\n\n        <query-string-editor\n          ng-hide=\"item.deleteOnRender||item.readOnly\"\n          item=\"item\"\n          ng-if=\"item.new.searchParams.entries.length>0\">\n          </query-string-editor>\n\n        <div ng-if=\"item.isLinkType('mailto')\" mailto-link-editor>\n        <div class=\"ui field\" >\n        <label>New Email Link</label>\n          <div class=\"ui action input\" >\n            <input type=\"text\" ng-change=\"item.mailto.updateMailtoObj();item.isLinkComplete()\" ng-blur=\"item.mailto.inputOnBlur();item.isLinkComplete()\" ng-model=\"item.new.url\">\n            <button class=\"ui icon button mailtoEditor\" ng-click=\"item.mailto.initEmailEditor()\">\n               Editor <i class=\"pencil icon\"></i>\n            </button>\n          </div>\n\n\n        </div>\n        <div class=\"ui flowing top right popup\" style=\"min-width: 300px;\">\n\n            <div class=\"ui field\">\n              <label>Email Address</label>\n              <input ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.email\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Subject Line</label>\n              <input ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%\" type=\"text\" ng-model=\"item.mailto.subject\"/>\n              </div>\n            <div class=\"ui field\">\n              <label>Body Text</label>\n              <textarea ng-change=\"item.mailto.composeEmail();item.isLinkComplete()\" style=\"width: 100%; height: 150px;\" ng-model=\"item.mailto.body\"></textarea>\n              </div>\n        </div>\n        </div>\n\n        <div class=\"\" ng-if=\"item.whiteListedUrl==item.new.url\">\n        <p>This link would normally require a special tracking code, but you have chosen to override that requirement. You can undo this by clicking the button below.</p>\n        <button class=\"ui grey compact icon button\" ng-click=\"item.whiteListedUrl='~~whitelist~~';item.isLinkComplete()\">\n        <i class=\"cancel icon\"></i>\n          Cancel tracking override</button></div>\n\n          <div class=\"\" ng-if=\"item.deleteOnRender\">\n          <p>This link will be removed when you export the code.</p>\n          <button class=\"ui grey compact icon button\" ng-click=\"item.deleteOnRender=false;item.new.url=item.old.url;item.isLinkComplete()\">\n          <i class=\"cancel icon\"></i>\n            Keep this link</button></div>\n\n        <message-center ng-hide=\"item.deleteOnRender||item.errors.messages.length==0\" errors=\"item.errors\" item=\"item\">\n          </message-center>\n\n\n\n\n        </div>\n\n        </div>\n      </div>\n      </div>\n      <div class=\"five wide column\" id=\"stickyparent\" style=\"z-index:98;\">\n      <div sticky class=\"ui sticky\" style=\"display:block; margin-top:75px; margin-bottom:75px;\" >\n\n        <div class=\"ui secondary vertical pointing menu\"  style=\"margin-top: 75px; margin-bottom: 75px;\" >\n        <a class=\"item\" ng-show=\"workspace.intelligence.messages.length>0\" href=\"javascript:angular.noop()\" ng-click=\"scrollTo(-1)\">{{workspace.intelligence.messages.length}} {{workspace.intelligence.messages.length>1 ? \"Messages\" : \"Message\"}}</a>\n        <a class=\"item\" ng-repeat=\"item in workspace.linkData\" ng-class=\"{active: activeLinkId==$index+1,wizard:item.errors.count['Suggestion']}\" href=\"javascript:angular.noop()\"  ng-click=\"scrollTo($index)\">\n        <span class=\"truncate\"><i class=\"red warning sign icon\" ng-if=\"!item.__isComplete||item.needsTrackingCode()\"></i><i class=\"red trash icon\" ng-if=\"item.deleteOnRender\"></i> {{ item.new.url==\"\"&&item.old.url==\"\" ? (item.deleteOnRender ? \"Delete: \" + (item.old.url==\"\"?\"Link is blank\":item.old) : \"Link is blank\") : item.new.url}}</span>\n        </a>\n\n        </div>\n        </div>\n\n      </div>\n\n\n\n      <div style=\"height: 100px;\"></div>\n      <div class=\"ui bottom fixed container\" style=\"z-index:99;\">\n      <div class=\"ui container\" style=\"padding-top:10px; padding-bottom:10px;\">\n      <div class=\"ui popup\"  id=\"error-messages\">\n        <div class=\"header\">\n          Some of these links did not pass validation.\n        </div>\n        <em>You cannot proceed until all high priority errors are&nbsp;fixed.</em>\n        </div>\n        <div>\n        <button class=\"ui right floated yellow button\" ng-if=\"!workspace.areLinksComplete()\" ui-popup popup-id=\"error-messages\" >\n        <i class=\"ui warning sign icon\"></i> {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n\n          </button>\n        <button class=\"ui right floated primary button\" ng-if=\"workspace.areLinksComplete()\" ng-click=\"workspace.updateLinksAndExport()\">\n        {{workspace.linkData.length==0 ? \"Continue\" : \"Update links and export\"}}\n          <i class=\"ui long arrow right icon\"></i>\n          </button>\n\n\n        <button class=\"ui button\" ng-click=\"workspace.downloadCsv()\">\n          <i class=\"ui download icon\"></i> Download Link CSV</button>\n\n        </div>\n\n\n        </div>\n      </div>\n\n    </div>"
         })
             .when('/export-eml', {
             template: "\n    <h1></h1>\n\n    <h1 class=\"ui center aligned icon header\">\n      <i class=\"download icon\"></i>\n      <div class=\"content\">\n        Convert your EML to an OFT\n      </div>\n    </h1>\n    <h2>Step 1: Locate file</h2>\n    <p>Once you've found the file in your directory, open it with Outlook.</p>\n\n    <h2>Step 2: Review make any necessary changes</h2>\n    <p>When you open the file, Outlook may render the HTML differently. Make sure to take this opportunity to review that the email has rendered as it should, including checking any links and alignments.</p>\n\n    <h2>Step 3: Save the file as an Outlook Template File</h2>\n    <p>From the file menu, select <em>Save As</em>. And make sure to set the dropdown menu for file type to <em>Outlook Template File</em>.</p>\n    <p>Next choose which directory you would like to save the file in and press <em>Save</em>.</p>\n\n    <div style=\"height: 100px;\"></div>\n    <div class=\"ui bottom fixed container\">\n      <div class=\"ui container\" style=\"padding-top:10px;padding-bottom:10px\">\n      <button class=\"ui button\" ng-click=\"navigateTo('export')\">\n        <i class=\"ui long arrow left icon\"></i>\n        Back</button>\n        <button class=\"ui button\" ng-click=\"createNewEML()\">Start Fresh</button>\n\n        </div>\n      </div>\n    </div>\n    "

@@ -5,6 +5,8 @@
     "scripts/js/libs/persistjs-min.js",
     "scripts/js/libs/jquery.min.js",
     "scripts/js/libs/semantic.min.js",
+    "scripts/js/UpdateModule.js",
+    "scripts/js/UserManagement.js",
     "scripts/js/EMLLinkAIEngine.js",
     "scripts/js/EMLEmailAIEngine.js",
     "scripts/js/EMLModule.js",

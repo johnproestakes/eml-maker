@@ -1,3 +1,4 @@
+
 interface Window {
     ga(option1, option2, option3, option4, option5): void;
     saveAs(option1?, option2?): void;
@@ -13,9 +14,10 @@ interface EventTarget {
 // window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
 
 enum ErrorSeverity {
-  Low,
+  High=1,
   Medium,
-  High
+  Low,
+  Zero
 }
 
 enum ErrorType {
@@ -53,7 +55,7 @@ enum ErrorType {
       this.description = description;
       this.handler = args.handler ===undefined ? function(){} : args.handler;
       this.ctaLabel = args.ctaLabel === undefined ? "" : args.ctaLabel;
-      this.severity = args.severity === undefined ? "low" : args.severity;
+      this.severity = args.severity === undefined ? ErrorSeverity.Zero : args.severity;
     }
   }
 
@@ -151,6 +153,7 @@ class URLObj {
   }
   prepareExport(){
   //do something here?
+    //this.searchParams.updateSearchProp();
   }
   contains(str:string): boolean{
     if(this.url.indexOf(str)>-1) {
@@ -160,7 +163,6 @@ class URLObj {
     }
   }
   get url(){
-
     this.prepareExport();
     return this.origin + this.search + this.hash;
   }
@@ -181,7 +183,7 @@ class URLObj {
       this.hash = "#" + urlParts.pop(); //jump link.. need to remove it from the other stuff.
       var parts = (urlParts.join("#")).split("?");
       this.origin = parts[0];
-      this.search = parts[1].length>0 ? "?"+parts[1]:"";
+      this.search = parts.length>0 ? "?"+parts[1]:"";
     }
     else {
 
@@ -304,7 +306,7 @@ class LinkObject {
   __requiresTrackingCodeRegExp : any;
   __requiredTrackingCodeWhitelist: any[];
 
-
+  readOnly: boolean;
   context: string;
   deleteOnRender: boolean;
   emailRegex: RegExp;
@@ -347,6 +349,7 @@ class LinkObject {
       if(href[0]=="href=\"\"") {
         LO.new =  new URLObj("#");
         LO.old = new URLObj("#");
+        this.context = this.context.replace(new RegExp("href=\"\"","g"),"href=\"#\"");
       } else {
         LO.new =  new URLObj((href[0].substr(6, href[0].length-7)).trim());
         LO.old = new URLObj((href[0].substr(6, href[0].length-7)).trim());
@@ -403,11 +406,41 @@ class LinkObject {
   displayFormattedURL(){
     //displays url;
     var content = this.context;
-    content = content.replace(new RegExp("<","g"), "&lt;");
+    var findStart = "href=\"";
+    var start = content.indexOf(findStart);
+    content = content.replace(new RegExp("href=\"\"","g"), "href=\"#\"");
+    content = content.substr(0, start) + findStart+ "|||+++|||" + content.substr(start + (findStart.length+(this.old.url.length)), content.length ) ;
+    content = content.replace(new RegExp("\"","g"), "&quot;");
+    content = content.replace(new RegExp("/","g"), "&#47;");
     content = content.replace(new RegExp(">","g"), "&gt;");
-    var start = content.indexOf("href=\"");
+    content = content.replace(new RegExp("<","g"), "&lt;");
 
-    content = content.substr(0, start) + "href=\"<strong>"+ (this.hasOwnProperty("deleteOnRender")&&this.deleteOnRender ? this.old.url : this.new.url) + "</strong>" + content.substr(start + ("href=\""+this.old.url).length, content.length ) ;
+    content = content.replace(
+      /([^\s]*?)\=/g,
+      "<span class=\"attr\">$1</span><span class=\"keyword\">=</span>");
+
+    content = content.replace(
+      /\&quot\;\&gt\;/g,
+      "&quot;<span class=\"tag\">&gt;</span>");
+
+    content = content.replace(
+      /\&\#47\;\&gt\;/g,
+      "<span class=\"tag\">&#47;&gt;</span>");
+
+    content = content.replace(
+      /\&quot\;(.*?)\&quot\;/g,
+      "<span class=\"value\">\"$1\"</span>");
+    content = content.replace(
+      /\&lt\;([a-z]+\s?)/g,
+      "<span class=\"tag\">&lt;$1</span>");
+    content = content.replace(
+      /\&lt\;\&\#47\;([a-z]+\s?)\&gt\;/g,
+      "<span class=\"tag\">&lt;&#47;$1&gt;</span>");
+    content = content.replace(
+      /\&gt\;/g,
+      "<span class=\"tag\">&gt;</span>");
+    content = content.replace(/\|\|\|\+\+\+\|\|\|/g, "<strong>"+(this.hasOwnProperty("deleteOnRender") && this.deleteOnRender ? this.old.url : this.new.url)+"</strong>");
+
     return content;
   }
 
@@ -417,30 +450,10 @@ class LinkObject {
 
    this._super.intelligence =  EMLMakerAIEngine.CheckEmail(this._super);
 
-
-
-    this.errors = {
-      count: {},
-      values: {},
-      data: []
-    };
     // this._super.messages = {"messages":[],"canProceed":true};
 
-    let errors: any = EMLMakerAIEngine.CheckLink(this, errorObject );
-    this.errors.data = errors.messages;
-
-    for(var i =0; i < errors.messages.length; i++) {
-      if(this.errors.values[ErrorType[errors.messages[i].type]] === undefined) {
-        this.errors.values[ErrorType[errors.messages[i].type]] = errors.messages[i].type;
-      }
-      if(this.errors.count[ErrorType[errors.messages[i].type]] === undefined) {
-        this.errors.count[ErrorType[errors.messages[i].type]] = 0;
-      }
-
-      this.errors.count[ErrorType[errors.messages[i].type]]++;
-    }
-
-    this.__isComplete= errors.canContinue;
+    this.errors = EMLMakerAIEngine.CheckLink(this );
+    this.__isComplete= this.errors.canContinue;
     if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
     return this.__isComplete;
   }
@@ -508,6 +521,7 @@ class EMLWorkspace {
   linksView: string;
   sourceCode: string;
   outputCode: string;
+  intelligence: any;
   messages: any[];
   fileName: string;
   linkData: LinkObject[];
@@ -528,7 +542,7 @@ class EMLWorkspace {
     this.linksView = 'experimental'; //advanced shows all
     this.sourceCode = html; //inital
     this.outputCode = ""; //final
-    this.fileName = "untitled";
+    this.fileName = "eml-maker-untitled";
     this.linkData = [];
     this.defaultScode = "s=email";
     this.header = {"subject":""};
@@ -586,26 +600,33 @@ class EMLWorkspace {
     window.ga('send', 'event', "HTML", "download", "HTML Export");
   }
   exportCodeToHTML(){
+    let trackingOptOut = false;
     if(this.exportForEloqua && this.exportForEloqua == "Yes") {
-      var Wksp = this;
-      for(var i =0;i< Wksp.linkData.length;i++){
-        if(!Wksp.linkData[i].isLinkType("mailto")
-        && !Wksp.linkData[i].new.searchParams.has("elqTrack")
-        && !/app\.info\.optum\.com/gi.test(Wksp.linkData[i].new.url)){
-          Wksp.linkData[i].new.searchParams.append("elqTrack=true");
-          Wksp.linkData[i].refreshURL();
-
+      this.mapLinkObjects(function(LinkObject){
+        trackingOptOut = LinkObject.whiteListedUrl == LinkObject.new.url;
+        if(!LinkObject.isLinkType("mailto")
+        && !LinkObject.new.searchParams.has("elqTrack")
+        && !/app\.info\.optum\.com/gi.test(LinkObject.new.url)){
+          LinkObject.new.searchParams.append("elqTrack=true");
+          LinkObject.refreshURL();
+          if(trackingOptOut) {
+            LinkObject.whiteListedUrl = LinkObject.new.url;
+          }
         }
-      }
+      });
       window.ga('send', 'event', "HTML", "Add Eloqua Tracking", "Add Eloqua Tracking");
     } else {
-      var Wksp = this;
-      for(var i =0;i< this.linkData.length;i++){
-        if(Wksp.linkData[i].queryStrings.indexOf("elqTrack=true")>-1){
-          Wksp.linkData[i].queryStrings.splice(Wksp.linkData[i].queryStrings.indexOf("elqTrack=true"),1);
-          Wksp.linkData[i].refreshURL();
+      this.mapLinkObjects(function(LinkObject){
+        if(LinkObject.new.searchParams.has("elqTrack")){
+          let index = LinkObject.new.searchParams.entries.indexOf("elqTrack=true");
+          if(index>-1){
+            LinkObject.new.searchParams.deleteAtIndex(index);
+          }
+          LinkObject.refreshURL();
         }
-      }
+
+      });
+
 
     }
     this.generateOutputCode();
@@ -656,7 +677,11 @@ class EMLWorkspace {
       }
     }
 
-    var re1 = /<a\b[^>]*?>(.*?)<\/a>/gm;
+    var re1 = /<a\b[^>]*?>([\r\n]|.)*?<\/a>/gm;
+    workingCode = workingCode.replace(re1, function(rep){
+      // console.log('matched', rep);
+      return rep.replace(new RegExp("\n|\t","g"), "");
+    });
     var codeLines = workingCode.split("\n");
     var _super = this;
     var n =1;
@@ -666,10 +691,16 @@ class EMLWorkspace {
 
         found.forEach(function(context){
           if(/(href\=\"([^\"\>]*)\"?)/g.test(context)){
+
             var a = new LinkObject(line, context, _super);
+            // console.log(a);
+
             a.id = n;
+            a.readOnly = (a.new.contains(".com/e/es.aspx")&& a.new.contains("~~eloqua"));
             _super.linkData.push(a);
             n++;
+
+
           }
         });
       }
@@ -707,28 +738,30 @@ class EMLWorkspace {
     workingCode = workingCode.replace(new RegExp("</a>","ig"), "</a>\n");
 
     var codeLines = workingCode.split("\n");
-    this.linkData.forEach(function(link){
-      var line = link.line - 1;
+
+
+    this.mapLinkObjects(function(LinkObject){
+      var line = LinkObject.line - 1;
       if(codeLines[line] === undefined) return false;
       // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
-      if(link.whiteListedUrl==link.new.url){
+      if(LinkObject.whiteListedUrl==LinkObject.new.url){
         //report the non tracked link;
-        window.ga('send', 'event', "Tracking-Optout", "override", this.new);
+        window.ga('send', 'event', "Tracking-Optout", "override", LinkObject.new.url);
       }
 
-
-      if(link.hasOwnProperty("deleteOnRender")&&link.deleteOnRender){
-        var contextStart = codeLines[line].indexOf(link.context);
-        codeLines[line] = codeLines[line].replace(new RegExp(link.context, "gi"), "");
+      if(LinkObject.hasOwnProperty("deleteOnRender")&&LinkObject.deleteOnRender){
+        var contextStart = codeLines[line].indexOf(LinkObject.context);
+        codeLines[line] = codeLines[line].replace(new RegExp(LinkObject.context, "gi"), "");
       } else {
-        var start = codeLines[line].indexOf("href=\"" + link.old.url);
-        codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + link.new.url + codeLines[line].substr(start+6+link.old.url.length, codeLines[line].length);
+        var start = codeLines[line].indexOf("href=\"" + LinkObject.old.url);
+        codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + LinkObject.new.url + codeLines[line].substr(start+6+LinkObject.old.url.length, codeLines[line].length);
       }
 
     });
 
     this.outputCode = codeLines.join("\n");
     this.outputCode = this.outputCode.replace(new RegExp("</a>\n","ig"), "</a>");
+
     try {
       // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
       this.outputCode = this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
