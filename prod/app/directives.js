@@ -222,7 +222,7 @@ angular.module('EMLMaker')
   return {
     restrict: "E",
     template: '<div class="message-center"><div class="ui tiny secondary pointing menu">\
-    <div class="item mnu-title">MESSAGES:</div>\
+    <div class="item mnu-title">{{title === undefined ? "MESSAGES:" : title }}</div>\
     <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{errors.messages.length}}</span></a>\
     <a class="item" ng-repeat="(tab,value) in errors.tabs track by $index" ng-show="errors.count[tab]" ng-click="search.type=value" ng-class="{active: search.type==value}">{{tab | uncamelize}} <span class="ui tiny label">{{errors.count[tab]}}</span></a>\
     </div>\
@@ -232,6 +232,7 @@ angular.module('EMLMaker')
     </div>',
     scope: {
       errors:"=",
+      title:"@",
       item:"="
     },
     link: function(scope, el, attr){
@@ -241,8 +242,8 @@ angular.module('EMLMaker')
 
         Object.defineProperty(scope, "search", {
           get: function(){
-            var b = ["","Fix", "BestPractice", "Suggestion"];
-            if(scope.errors.count[b[scope._search.type]]==undefined) scope._search.type = "";
+            var b = scope.errors.tabs;
+            if(scope.errors.count && scope.errors.count[b[scope._search.type]]==undefined) scope._search.type = "";
             return scope._search;
           }
         });

@@ -297,6 +297,12 @@ class URLObjSearchParams {
   }
   delete(param){
     //doesnt do anything yet.
+    for(let i=0;i < this._entries.length;i++){
+      if(this._entries[i].substr(0,param.length+1)==param+"="){
+        this.deleteAtIndex(i);
+        // break;
+      }
+    }
   }
 }
 

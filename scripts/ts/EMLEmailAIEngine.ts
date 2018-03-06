@@ -47,8 +47,46 @@ namespace EMLMakerAIEngine {
     }
     emailAILastEval = Date.now();
     let EmailAI = new EmailIntelligence(EMLWorkspace);
-    // console.log();
-    // EmailAI
+
+    EmailAI
+    .when(
+      (function(){
+        let output = false;
+        EMLWorkspace.linkData.forEach(function(LinkObject){
+          if(!LinkObject.readOnly && (LinkObject.new.searchParams.has('elqTrack')||LinkObject.new.searchParams.has('elqTrackId'))){
+            output = true;
+          }
+        });
+        return output;
+      })(),
+      function(EMLWorkspace, EmailAI){
+        EmailAI.messages.push(
+          new errorObject(
+          ErrorType.Suggestion,
+          "Want to remove the junk Eloqua query strings?",
+          `I can remove those tags for you to clean things up, Eloqua will add them back anyways.`,
+          {
+            severity: ErrorSeverity.Low,
+            handler: function(EMLWorkspace){
+              console.log("werd");
+              console.log(EMLWorkspace);
+              EMLWorkspace.linkData.forEach(function(LinkObject){
+                console.log(LinkObject.new.url);
+                if(LinkObject.readOnly) return true;
+                emailAILastEval = Date.now()-400;
+                LinkObject.new.searchParams.delete("elqTrack");
+                LinkObject.new.searchParams.delete("elqTrackId");
+                LinkObject.new.searchParams.updateSearchProp();
+                LinkObject.isLinkComplete();
+
+              });
+            },
+            ctaLabel: "Remove them"
+          }
+        ));
+      }
+
+    );
     // .when(
     //   EMLWorkspace.linkData.length>10,
     //   function(EMLWorkspace, EmailAI){
