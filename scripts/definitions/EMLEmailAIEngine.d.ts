@@ -3,7 +3,6 @@ declare namespace EMLMakerAIEngine {
         messages: any[];
         canContinue: boolean;
         EMLWorkspace: EMLWorkspace;
-        lastEval: number;
         constructor(EMLWorkspace?: any);
         when(condition: any, callback: any): this;
         tabs: {};
@@ -11,5 +10,6 @@ declare namespace EMLMakerAIEngine {
     }
     var emailAILastEval: number;
     var emailAILastCheck: EmailIntelligence;
+    function resetCache(): void;
     function CheckEmail(EMLWorkspace: any): EmailIntelligence;
 }

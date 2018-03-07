@@ -5,12 +5,10 @@ namespace EMLMakerAIEngine {
     messages : any[];
     canContinue : boolean;
     EMLWorkspace: EMLWorkspace;
-    lastEval: number;
     constructor(EMLWorkspace?){
       this.messages = [];
       this.canContinue = true;
       this.EMLWorkspace = EMLWorkspace;
-      this.lastEval = Date.now();
     }
     when(condition, callback ){
       if(condition) callback(this.EMLWorkspace, this);
@@ -35,9 +33,11 @@ namespace EMLMakerAIEngine {
       return output;
     }
   }
-  export var emailAILastEval = Date.now();
-  export var emailAILastCheck = new EmailIntelligence;
-
+  export var emailAILastEval = 0;
+  export var emailAILastCheck = new EmailIntelligence();
+  export function resetCache(): void{
+    emailAILastEval = 0;
+  }
   export function CheckEmail(EMLWorkspace) : EmailIntelligence {
     if((Date.now()-emailAILastEval) < 300) {
       // console.log(Date.now()-emailAILastEval);
@@ -68,10 +68,7 @@ namespace EMLMakerAIEngine {
           {
             severity: ErrorSeverity.Low,
             handler: function(EMLWorkspace){
-              console.log("werd");
-              console.log(EMLWorkspace);
               EMLWorkspace.linkData.forEach(function(LinkObject){
-                console.log(LinkObject.new.url);
                 if(LinkObject.readOnly) return true;
                 emailAILastEval = Date.now()-400;
                 LinkObject.new.searchParams.delete("elqTrack");

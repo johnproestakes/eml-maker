@@ -222,9 +222,9 @@ angular.module('EMLMaker')
   return {
     restrict: "E",
     template: '<div class="message-center"><div class="ui tiny secondary pointing menu">\
-    <div class="item mnu-title">{{title === undefined ? "MESSAGES:" : title }}</div>\
+    <div class="item mnu-title">{{heading === undefined ? "MESSAGES:" : heading }}</div>\
     <a class="item" ng-click="search.type=\'\'" ng-class="{active: search.type==\'\'}">All <span class="ui tiny label">{{errors.messages.length}}</span></a>\
-    <a class="item" ng-repeat="(tab,value) in errors.tabs track by $index" ng-show="errors.count[tab]" ng-click="search.type=value" ng-class="{active: search.type==value}">{{tab | uncamelize}} <span class="ui tiny label">{{errors.count[tab]}}</span></a>\
+    <a class="item" ng-repeat="(tab,val) in errors.tabs track by $index" ng-show="errors.count[tab]" ng-click="search.type=val" ng-class="{active: search.type==val}">{{tab | uncamelize}} <span class="ui tiny label">{{errors.count[tab]}}</span></a>\
     </div>\
     <div id="error-messages-list" class="ui middle aligned divided list">\
       <message-item item="item" class="item" ng-repeat="obj in errors.messages | filter: search" error="obj"></message-item>\
@@ -232,7 +232,7 @@ angular.module('EMLMaker')
     </div>',
     scope: {
       errors:"=",
-      title:"@",
+      heading:"@",
       item:"="
     },
     link: function(scope, el, attr){
@@ -243,7 +243,7 @@ angular.module('EMLMaker')
         Object.defineProperty(scope, "search", {
           get: function(){
             var b = scope.errors.tabs;
-            if(scope.errors.count && scope.errors.count[b[scope._search.type]]==undefined) scope._search.type = "";
+            //if(scope.errors.count && scope.errors.count[b[scope._search.type]]==undefined) scope._search.type = "";
             return scope._search;
           }
         });
@@ -299,12 +299,17 @@ angular.module('EMLMaker')
 		},
 		link: function(scope, el, attr){
 			var timer = null;
+			var lastValue = "----";
 			$timeout(function(){
 				el.on('keyup', function(e){
 					clearTimeout(timer);
 					timer = setTimeout(function(){
 						scope.$apply(function(){
-							scope.ngChangeLazy();
+							if(lastValue !== el[0].value){
+								scope.ngChangeLazy();
+								lastValue = el[0].value;
+							}
+
 						});
 					},300);
 				});
@@ -471,12 +476,36 @@ angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
   })
 ;
 
+  var resizeTimer = null;
+
+  var ResizeSticky = function(){
+    resizeTimer = setTimeout(function(){
+      var a = $('.ui.secondary.vertical.pointing.menu');
+      a[0].style.height = "";
+      // console.log(a.height(),window.innerHeight,200);
+      if(a[0].clientHeight > (window.innerHeight - (75+60)) ){
+        a[0].style.height = window.innerHeight - (75+75) + "px";
+        a.addClass('scrolling');
+        // console.log('too big');
+
+      } else {
+        a.removeClass('scrolling');
+      }
+      jQuery(el)
+.sticky("refresh");
+
+    },200);
+
+  };
 
 
+    $(window).on('resize', ResizeSticky);
 
+    ResizeSticky();
 
         scope.$on('$destroy', function(){
           //$(el).popup("destroy");
+          $(window).off('resize', ResizeSticky);
           jQuery(el).sticky("destroy");
         });
     });

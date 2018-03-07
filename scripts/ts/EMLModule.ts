@@ -451,15 +451,9 @@ class LinkObject {
   }
 
   isLinkComplete(){
-
-
-
-   this._super.intelligence =  EMLMakerAIEngine.CheckEmail(this._super);
-
-    // this._super.messages = {"messages":[],"canProceed":true};
-
+    this._super.intelligence =  EMLMakerAIEngine.CheckEmail(this._super);
     this.errors = EMLMakerAIEngine.CheckLink(this );
-    this.__isComplete= this.errors.canContinue;
+    this.__isComplete= this.errors.canContinue && this._super.intelligence.canContinue;
     if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
     return this.__isComplete;
   }
@@ -711,7 +705,14 @@ class EMLWorkspace {
         });
       }
     }
+    console.log("testing email");
+    EMLMakerAIEngine.resetCache();
+    this.mapLinkObjects(function(LinkObject){
+      LinkObject.isLinkComplete();
+    });
+    console.log(this.intelligence);
     //redirect
+
     location.href="#/links";
   }
   addNewHeaderField(value){
@@ -832,6 +833,7 @@ class EMLWorkspace {
           WS.sourceCode = dropText;
         }
         WS.processHtml();
+        // WS.intelligence = EMLMakerAIEngine.CheckEmail(WS);
         location.href = "#/links";
       };
       reader.readAsText(files[0]);
