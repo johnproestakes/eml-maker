@@ -136,6 +136,7 @@ declare class EMLWorkspace {
     downloadCsv(): void;
     downloadHtml(): void;
     exportCodeToHTML(): void;
+    setUpShortcutKeys(): void;
     replaceSpecialCharacters(text: any): string;
     processHtml(): void;
     addNewHeaderField(value: any): void;

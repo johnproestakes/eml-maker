@@ -634,6 +634,60 @@ class EMLWorkspace {
     location.href= "#/export-html";
   }
 
+  setUpShortcutKeys():void{
+    var _this= this;
+    document.onkeyup = function(e){
+      // console.log('keyup',e);
+      if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 51) {
+        //apply all suggestions ctrl shift 2
+        _this.scope.$apply(function(){
+          _this.mapLinkObjects(function(LinkObject){
+            if(LinkObject.errors.messages.length>0){
+              LinkObject.errors.messages.forEach(function(errorObject){
+                if(errorObject.type == ErrorType.Suggestion){
+                  errorObject.handler(LinkObject);
+                }
+              });
+              LinkObject.isLinkComplete();
+            }
+          });
+        });
+      } else if((e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 50){
+        //ctrl shift 2
+        _this.scope.$apply(function(){
+          _this.mapLinkObjects(function(LinkObject){
+            if(!LinkObject.readOnly
+              && /resource|campaign/g.test(LinkObject.new.url)
+            && !LinkObject.new.searchParams.has('s')){
+              LinkObject.new.searchParams.append('s=email');
+              LinkObject.isLinkComplete();
+            }
+          });
+        });
+
+      } else if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 49) {
+        //remove all query string paramaters; ctrl shift 1
+        console.log('we did it');
+        _this.scope.$apply(function(){
+          _this.mapLinkObjects(function(LinkObject){
+            if(LinkObject.readOnly) return true;
+            LinkObject.new.searchParams.delete("o");
+            LinkObject.new.searchParams.delete("oin");
+            LinkObject.new.searchParams.delete("v");
+            LinkObject.new.searchParams.delete("oiex");
+            LinkObject.new.searchParams.delete("elqTrack");
+            LinkObject.new.searchParams.delete("elqTrackId");
+            LinkObject.new.searchParams.delete("s");
+            LinkObject.new.searchParams.delete("s3");
+            EMLMakerAIEngine.emailAILastEval = 0;
+            LinkObject.isLinkComplete();
+            _this.areLinksComplete();
+          });
+
+        });
+      }
+    };
+  }
   replaceSpecialCharacters(text):string{
     var replace = {
       174: ["&reg;"],
@@ -658,6 +712,7 @@ class EMLWorkspace {
     return text;
   }
   processHtml():void{
+    this.setUpShortcutKeys();
     this.linkData = [];
     window.scrollTo(0,0);
     var workingCode = this.replaceSpecialCharacters(this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n"));

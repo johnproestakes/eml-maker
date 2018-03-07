@@ -52,6 +52,25 @@ namespace EMLMakerAIEngine {
     let AIMod = new LinkIntelligence(LinkObject);
 
     AIMod.when(
+      LinkObject.new.searchParams.has("v"),
+      function(LinkObject, AIModule){
+        AIModule.canContinue = false;
+        AIModule.messages.push(
+          new errorObject(
+            ErrorType.Fix,
+            "V= cannot be used in emails.",
+            "This query string parameter is reserved for vanity urls, and should never be used in an email.",
+            {
+            severity: ErrorSeverity.High,
+            handler: function(LinkObject){
+              LinkObject.new.searchParams.delete("v");
+              LinkObject.isLinkComplete();
+            } ,
+            ctaLabel:'Remove parameter'
+          }
+              ));
+
+      }).when(
       (LinkObject.whiteListedUrl!==LinkObject.new.url)
       &&LinkObject.needsTrackingCode()&&!LinkObject.new.contains("optum.co/"),
       function(LinkObject, AIModule){
@@ -79,7 +98,7 @@ namespace EMLMakerAIEngine {
             "Style matters",
             "You should not put punctuation inside of a link unless it is a button, and even then it's a little weird.",
             {
-            severity: ErrorSeverity.High
+            severity: ErrorSeverity.Medium
           }));
       }
     )
@@ -103,10 +122,10 @@ namespace EMLMakerAIEngine {
         AIModule.messages.push(
           new errorObject(ErrorType.Fix,
             "Missing content",
-          ["This link doesn't contain any text or image.",
-          "This might be a mistake; you can remove it from",
-          "the code, or by clicking the button to the right,",
-          "and this link will be removed when you export the code."].join(" "),
+          `This link doesn't contain any text or image.
+          This might be a mistake; you can remove it
+          from the code, or by clicking the button to the
+          right, and this link will be removed when you export the code.`,
 
             {
             severity: ErrorSeverity.High,
