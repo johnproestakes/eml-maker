@@ -49,6 +49,7 @@ angular.module('EMLMaker')
   };
 
   $scope.scrollTo = function(id){
+    console.log("scrolling to " +id);
     $scope.isScrolling = 1;
     jQuery("html,body").animate({scrollTop: jQuery('#link-'+(id*1 + 1)).offset().top - 75}, 300);
     setTimeout(function(){

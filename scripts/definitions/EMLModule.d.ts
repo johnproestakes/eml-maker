@@ -119,6 +119,7 @@ declare class EMLWorkspace {
     sourceCode: string;
     outputCode: string;
     intelligence: any;
+    keyBoardShortcuts: string[];
     messages: any[];
     fileName: string;
     linkData: LinkObject[];
@@ -154,7 +155,4 @@ declare class EMLWorkspace {
     __removeWhiteSpace(code: any): string;
     __buildHeaders(): string;
     __getCharsetFromHTML(content: any): string;
-}
-declare class LocateText {
-    constructor();
 }

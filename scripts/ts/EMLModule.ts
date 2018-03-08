@@ -522,6 +522,7 @@ class EMLWorkspace {
   sourceCode: string;
   outputCode: string;
   intelligence: any;
+  keyBoardShortcuts: string[];
   messages: any[];
   fileName: string;
   linkData: LinkObject[];
@@ -550,6 +551,7 @@ class EMLWorkspace {
     this.errors = {messages:[], canProceed:true};
     this.exportForEloqua  = "Yes";
     this.__emlHeaders = "";
+    this.keyBoardShortcuts = [];
     this.__allowableHeaderFields = {
       "to": {syntax:"To: ", label:"To", instructions: "A list of email addresses separated by commas."},
       "subject": {syntax: "Subject: ", label:"Subject", instructions: ""},
@@ -636,9 +638,16 @@ class EMLWorkspace {
 
   setUpShortcutKeys():void{
     var _this= this;
+
+    _this.keyBoardShortcuts.push(["CTRL + SHIFT + 1", "Remove all query strings from email"]);
+    _this.keyBoardShortcuts.push(["CTRL + SHIFT + 2", "Add s=email to all links"]);
+    _this.keyBoardShortcuts.push(["CTRL + SHIFT + 3", "Apply all suggestions"]);
+
+
     document.onkeyup = function(e){
       // console.log('keyup',e);
       if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 51) {
+
         //apply all suggestions ctrl shift 2
         _this.scope.$apply(function(){
           _this.mapLinkObjects(function(LinkObject){
@@ -653,6 +662,7 @@ class EMLWorkspace {
           });
         });
       } else if((e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 50){
+
         //ctrl shift 2
         _this.scope.$apply(function(){
           _this.mapLinkObjects(function(LinkObject){
@@ -666,8 +676,8 @@ class EMLWorkspace {
         });
 
       } else if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 49) {
+
         //remove all query string paramaters; ctrl shift 1
-        console.log('we did it');
         _this.scope.$apply(function(){
           _this.mapLinkObjects(function(LinkObject){
             if(LinkObject.readOnly) return true;
@@ -686,6 +696,7 @@ class EMLWorkspace {
 
         });
       }
+
     };
   }
   replaceSpecialCharacters(text):string{
@@ -969,10 +980,4 @@ class EMLWorkspace {
     return charset;
   }
 
-}
-
-class LocateText {
-  constructor(){
-
-  }
 }

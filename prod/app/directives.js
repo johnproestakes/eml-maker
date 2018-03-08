@@ -382,7 +382,7 @@ angular.module('EMLMaker')
     restrict: "E",
     template: '<div class="query-string-editor" ng-hide="item.isLinkType(\'mailto\')"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
     <div class="ui tiny basic buttons" style="float:right;">\
-  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll(); item.isLinkComplete()">Remove all</button>\
+  <button class="ui icon button" ng-click="item.new.searchParams.deleteAll();item.isLinkComplete();scrollToItem(item.id);">Remove all</button>\
   <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
 </div></div>\
      <div ng-if="item.new.searchParams._entries.length==1&&item.new.searchParams._entries[0].length==0">Query strings will appear here.</div>\
@@ -399,7 +399,7 @@ angular.module('EMLMaker')
        <i class="close icon"></i></a></li></ul>\
        </div>\
       </div>',
-    scope: {item:"="},
+    scope: {item:"=", scrollTo:"&"},
     link: function(scope, el, attr){
       $timeout(function(){
         var View = (function(View){
@@ -407,6 +407,24 @@ angular.module('EMLMaker')
           View[View["EDIT"]=1] = "EDIT";
           return View;
         })({});
+        window.qs_debug = scope;
+        var pointer = scope;
+        do {
+          console.log(pointer);
+          pointer = pointer.$parent;
+        } while (pointer.scrollTo === undefined);
+
+        scope.scrollToItem = function(param){
+          setTimeout(function(){
+            scope.$apply(function(){
+              pointer.scrollTo(param-1);
+            });
+
+
+          },50);
+
+
+        }
         scope.view = View.DEFAULT;
 
         scope.$on('$destroy', function(){
@@ -480,16 +498,19 @@ angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
 
   var ResizeSticky = function(){
     resizeTimer = setTimeout(function(){
-      var a = $('.ui.secondary.vertical.pointing.menu');
+      var a = $('#right-panel');
+      var b = a.find('.ui.secondary.vertical.pointing.menu');
+      var c = a.find('.message-area');
       a[0].style.height = "";
       // console.log(a.height(),window.innerHeight,200);
       if(a[0].clientHeight > (window.innerHeight - (75+60)) ){
         a[0].style.height = window.innerHeight - (75+75) + "px";
-        a.addClass('scrolling');
+        b[0].style.height = a[0].clientHeight - c[0].clientHeight + "px";
+        b.addClass('scrolling');
         // console.log('too big');
 
       } else {
-        a.removeClass('scrolling');
+        b.removeClass('scrolling');
       }
       jQuery(el)
 .sticky("refresh");
