@@ -22,6 +22,8 @@ class UpdateModule {
     this.offlineVersion = window.OFFLINE_VERSION === undefined ? "" : window.OFFLINE_VERSION ;
     this.onlineVersion = window.CURRENT_VERSION;
 
+    //treat localhost:8888 as internet
+    if(location.href.indexOf("localhost")>-1){ window.LOCALHOST = false;}
 
     if(window.OFFLINE_VERSION == ""){
       this.accessingFromOffline = false;
@@ -40,7 +42,7 @@ class UpdateModule {
     return this.updateVersion && this.updateForced;
   }
   showTeaser(){
-    return this.offlineVersion=="";
+    return this.offlineVersion=="" && !window.LOCALHOST;
   }
   forceUpdate(offline, online){
     var offlineVersion = offline.split("."),

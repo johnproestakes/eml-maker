@@ -244,7 +244,7 @@ namespace EMLMakerAIEngine {
     ).when(/^http(.*)#/g.test(LinkObject.new.url),
     function(LinkObject, AIModule){
       AIModule.messages.push(new errorObject(ErrorType.Suggestion,
-        "Email links can't jump.",
+        "Jumplinks in Emails",
         `It looks like you're trying to send traffic to a
         <em>Jump link</em> AKA <em>Anchor link</em>. The only
         time that is acceptible is when the destination is on

@@ -457,15 +457,15 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
 
         };
         jQuery(el).visibility({
-    once: false,
-    // update size when new content loads
-    observeChanges: true,
-    // load content on bottom edge visible
-    onTopVisible: func,
-    onTopPassedReverse: func
+            once: false,
+            // update size when new content loads
+            observeChanges: true,
+            // load content on bottom edge visible
+            onTopVisible: func,
+            onTopPassedReverse: func
 
 
-  });
+          });
 
 
 
@@ -512,8 +512,7 @@ angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
       } else {
         b.removeClass('scrolling');
       }
-      jQuery(el)
-.sticky("refresh");
+      jQuery(el).sticky("refresh");
 
     },200);
 
@@ -521,12 +520,14 @@ angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
 
 
     $(window).on('resize', ResizeSticky);
+    $(window).on('scroll', ResizeSticky);
 
     ResizeSticky();
 
         scope.$on('$destroy', function(){
           //$(el).popup("destroy");
           $(window).off('resize', ResizeSticky);
+          $(window).off('scroll', ResizeSticky);
           jQuery(el).sticky("destroy");
         });
     });

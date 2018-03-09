@@ -8,7 +8,7 @@
   /* -------------------------
        ALWAYS BE UPDATING.
     -------------------------- */
-    window.CURRENT_VERSION= "1.0.3.1";
+    window.CURRENT_VERSION= "1.0.4.0";
     window.PAGE_TITLE = document.title;
 
     (function(){
@@ -81,7 +81,7 @@
       <a href="javascript:angular.noop()" class="item" ng-click="createNewEML()">Start Fresh</a>
       <div class="right menu">
         <div class="narrow-view ui pointing dropdown item" ui-dropdown>
-            <i class="content icon"></i>
+            <i class="content icon" alt="Menu"></i>
             <div class="menu">
             <div class="item" ng-click="navigateTo('main')">HTML</div>
             <div class="item" ng-click="navigateTo('links')">Review</div>
@@ -118,7 +118,7 @@
 
           <div class="ui pointing dropdown item" ui-dropdown>
             <span class="truncate" style="width:8em;">{{SecureGateway.sessionUserEmail}}</span>
-            <i class="dropdown icon"></i>
+            <i class="dropdown icon" alt="[+]"></i>
             <div class="menu">
               <div class="item" ng-click="SecureGateway.logOut()">Log off</div>
               </div>
