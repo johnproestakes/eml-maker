@@ -44,7 +44,7 @@ namespace EMLMakerAIEngine {
 
   let landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g;
   let extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/gi;
-  let linkEncapsulatedPunctuation = /\<a ([^<].*)([\.\?\,\:])\<\/a/gi;
+  let linkEncapsulatedPunctuation = /([\.\?\,\:])<\/a>/g;
 
 
 
@@ -98,9 +98,15 @@ namespace EMLMakerAIEngine {
             "Style matters",
             "You should not put punctuation inside of a link unless it is a button, and even then it's a little weird.",
             {
-            severity: ErrorSeverity.Medium
-          }));
-      }
+              handler: function(link){
+                link.context = link.context.replace(linkEncapsulatedPunctuation, "</a>$1");
+                link.isLinkComplete();
+              },
+              ctaLabel: 'Move the punctuation',
+              severity: ErrorSeverity.Medium
+            })
+          );
+        }
     )
     .when(
       /http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new.url),
@@ -222,6 +228,19 @@ namespace EMLMakerAIEngine {
 
 
     ).when(
+      LinkObject.LinkedImage && !/^http/.test(LinkObject.LinkedImage.src),
+      function(LinkObject,AIModule){
+        AIModule.canContinue = false;
+        AIModule.messages.push(
+          new errorObject(
+            ErrorType.Fix,
+            "Linked image URL is relative",
+            "The image is probably stored on your computer somewhere or the image is broken. Emails should only be referenced by absolute URLs.", {
+            severity: ErrorSeverity.High
+          })
+        );
+    })
+    .when(
       LinkObject.context && /click|click\shere/g.test(LinkObject.context),
       function(LinkObject, AIModule){
         AIModule.messages.push(new errorObject(ErrorType.BestPractice,
@@ -230,17 +249,18 @@ namespace EMLMakerAIEngine {
         ));
       }
     ).when(
-      LinkObject.linkImage&& LinkObject.linkImage.length>0,
+      LinkObject.LinkedImage && (LinkObject.LinkedImage.alt===undefined||LinkObject.LinkedImage.alt==""),
       function(LinkObject,AIModule){
-        var img = window.jQuery(LinkObject.context).find("img").get(0);
-        if(img.alt === undefined ||  img.alt == ""){
-          AIModule.messages.push(
-            new errorObject(ErrorType.BestPractice,
-              "Add an ALT tag",
-            "Linked image should have an ALT tag.", {severity:ErrorSeverity.Low})
-          );
+        AIModule.canContinue = false;
+        AIModule.messages.push(
+          new errorObject(ErrorType.BestPractice,
+            "ALT tag on image required",
+            "Linked image should have an ALT tag.",
+            {
+              severity:ErrorSeverity.High
+            })
+        );
         }
-      }
     ).when(/^http(.*)#/g.test(LinkObject.new.url),
     function(LinkObject, AIModule){
       AIModule.messages.push(new errorObject(ErrorType.Suggestion,
@@ -442,13 +462,12 @@ namespace EMLMakerAIEngine {
              a value from the query string to track the channel source\
               of the form submission.<br><br><em>NOTE: You can change\
                the value of the s-code to whatever you'd like, but we'll\
-                add <code>s=email</code> by default.</em>",
+                add the <code>"+LinkObject._super._defaultSCode+"</code> by default.</em>",
           {
-            handler:function(link){
-            link.new.searchParams.append("s=email");
-            link.refreshURL();
-            link.isLinkComplete();
-            window.ga('send', 'event', "Suggestion", "Add s-code", "Add s-code");
+            handler:function(LinkObject){
+            LinkObject.new.searchParams.append(LinkObject._super._defaultSCode);
+            LinkObject.isLinkComplete();
+            window.ga('send', 'event', "Suggestion", "Add s-code", LinkObject._super._defaultSCode);
           },
           severity: ErrorSeverity.Low,
           ctaLabel: "<i class=\"wizard icon\"></i>Add S-Code"

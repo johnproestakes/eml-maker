@@ -51,6 +51,55 @@ namespace EMLMakerAIEngine {
     EmailAI
     .when(
       (function(){
+        let hasSCode = 0, needsSCode = 0, foundSCodes = [];
+        EMLWorkspace.linkData.forEach(function(LinkObject){
+          //needsTracking and is campaign page and has s code. ignore readOnly
+          if(!LinkObject.readOnly && (LinkObject.needsTrackingCode() && /resource|campaign/g.test(LinkObject.new.url))){
+            needsSCode++;
+            if(LinkObject.new.searchParams.has("s")){
+              hasSCode++;
+              foundSCodes.push(LinkObject.new.searchParams.get("s"));
+            }
+          }
+        });
+        //remove duplicates;
+        foundSCodes.sort().filter(function(item, pos, ary){
+          return !pos || item != ary[pos - 1];
+        });
+        if(foundSCodes.length == 1){
+          EMLWorkspace.defaultSCode = "s=" + foundSCodes[0];
+        } else {
+          EMLWorkspace.defaultSCode = "s=email";
+        }
+
+        return hasSCode<needsSCode;
+
+      })(),
+      function(EMLWorkspace, EmailAI){
+        EmailAI.messages.push(
+          new errorObject(
+          ErrorType.Suggestion,
+          "Want to update s-codes to [" + EMLWorkspace._defaultSCode + "]",
+          `some description`,
+          {
+            severity: ErrorSeverity.Low,
+            handler: function(EMLWorkspace){
+              EMLWorkspace.linkData.forEach(function(LinkObject){
+                if(LinkObject.readOnly||!(LinkObject.needsTrackingCode() && /resource|campaign/g.test(LinkObject.new.url))) return true;
+                emailAILastEval = Date.now()-400;
+                LinkObject.new.searchParams.append(EMLWorkspace._defaultSCode);
+                LinkObject.isLinkComplete();
+
+              });
+            },
+            ctaLabel: "Add s-code"
+          }
+        ));
+      }
+
+    )
+    .when(
+      (function(){
         let output = false;
         EMLWorkspace.linkData.forEach(function(LinkObject){
           if(!LinkObject.readOnly && (LinkObject.new.searchParams.has('elqTrack')||LinkObject.new.searchParams.has('elqTrackId'))){

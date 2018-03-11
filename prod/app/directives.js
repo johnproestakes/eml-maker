@@ -118,43 +118,29 @@ angular.module('EMLMaker').directive('uiDropdown', ['$timeout', function($timeou
 }]);
 
 angular.module('EMLMaker')
-.directive('fileDropper', ['$timeout', function($timeout){
+.directive('gaEvent', ['$timeout', function($timeout){
 	return {
-		restrict: "E",
-		transclude: true,
-		scope: {label: "@", ondropfile:"&", dataTransferEvt:"="},
-		template: "<div class=\"file-dropper\">{{label}}</div>",
+		restrict: "A",
+		scope: {
+			gaEvent:"@"
+		},
 		link: function(scope, el, attr){
-			var fileDropper = el.find('.file-dropper');
-
-			//reset
-			var dropperReset = function(evt){
-				evt.stopPropagation();
-    			evt.preventDefault();
-
-				fileDropper.css({border: "",color:"", background: ""});
-				};
-
 
 			$timeout(function(){
-
-			fileDropper.get(0).addEventListener('drop', function(evt){
-				evt.stopPropagation();
-    			evt.preventDefault();
-					scope.ondropfile({"evt":evt});
-
-					dropperReset(evt);
-				}, false);
-			fileDropper.get(0).addEventListener('dragend', dropperReset, false);
-			fileDropper.get(0).addEventListener('dragleave', dropperReset, false);
-			fileDropper.get(0).addEventListener('dragover', function(evt){
-				evt.dataTransfer.dropEffect = 'copy';
-				fileDropper.css({border: "solid 3px blue", color:"blue", background: "lightblue"});
-				evt.preventDefault();
-				}, false);
-
-
+				var reportEvent = function(){
+					var args = ["send","event"], newArgs = scope.gaEvent.split(/\,|\|/);
+					for(var i =0; i<newArgs.length;i++){
+						args.push(newArgs[i]);
+					}
+					window.ga.apply(null, args);
+					// window.ga('send', 'event', "Tracking-Optout", "override", LinkObject.new.url);
+				};
+				el.on('click', reportEvent);
 				});
+
+			scope.$on('$destroy', function(){
+				el.on('off',reportEvent);
+			});
 
 			}
 		};
@@ -289,6 +275,64 @@ angular.module('EMLMaker')
 }]);
 
 angular.module('EMLMaker')
+.directive('messagesNotify', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    template: '<div class="ui fluid labeled button" ng-click="ngClick()" ng-class="{\'animate-tada\': doAnimation}">\
+      <div class="ui fluid button" ng-class="{\'yellow\':doAnimation, \'red\': !workspace.intelligence.canContinue}">\
+        <i class="warning icon" alt="[!]" ng-show="!workspace.intelligence.canContinue"></i>\
+        <i class="info icon" alt="(i)" ng-show="workspace.intelligence.canContinue"></i>\
+        {{ count>1 ? "Messages" : "Message"}}\
+        </div>\
+      <div class="ui label" ng-class="{\'yellow\':doAnimation, \'red label\': !workspace.intelligence.canContinue}">\
+        {{count}}\
+        </div>\
+      </div>\
+      </div>',
+    scope: {
+      workspace: "=",
+      ngClick: "&",
+      count: "="
+    },
+    link: function(scope, el, attr){
+      scope.doAnimation = true;
+      setTimeout(function(){
+        scope.$apply(function(){
+          scope.doAnimation = false;
+        });
+      }, 1500);
+      scope.$watch("count", function(newValue, oldValue, scope){
+        if(newValue > oldValue) {
+
+            scope.doAnimation = true;
+
+          console.log("UPDATED");
+          setTimeout(function(){
+            scope.$apply(function(){
+              scope.doAnimation = false;
+            });
+
+          },1500);
+        }
+      });
+      $timeout(function(){
+        setTimeout(function(){
+          scope.$apply(function(){
+            scope.doAnimation = false;
+          });
+        }, 2000);
+
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+    });
+  }
+};
+
+
+}]);
+
+angular.module('EMLMaker')
 .directive('ngChangeLazy', ['$timeout', function($timeout){
 	return {
 		restrict: "A",
@@ -410,7 +454,6 @@ angular.module('EMLMaker')
         window.qs_debug = scope;
         var pointer = scope;
         do {
-          console.log(pointer);
           pointer = pointer.$parent;
         } while (pointer.scrollTo === undefined);
 
@@ -452,7 +495,6 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
           var id = jQuery(el).attr("id").split("-").pop();
           scope.$apply(function(){
             scope.activeLinkId =id*1;
-
           });
 
         };
@@ -514,7 +556,7 @@ angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){
       }
       jQuery(el).sticky("refresh");
 
-    },200);
+    },300);
 
   };
 

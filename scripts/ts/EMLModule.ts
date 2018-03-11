@@ -40,12 +40,16 @@ enum ErrorType {
     args: {
       handler: ()=>void,
       ctaLabel: string,
-      severity: ErrorSeverity
+      severity: ErrorSeverity,
+      inputModel: string,
+      inputLabel: string
     };
     handler: any;
     ctaLabel: string;
     severity: string;
     cleanType: string;
+    inputModel: string;
+    inputLabel: string;
 
     constructor(type, title, description, args?){
       if(args===undefined) args = {};
@@ -56,6 +60,9 @@ enum ErrorType {
       this.handler = args.handler ===undefined ? function(){} : args.handler;
       this.ctaLabel = args.ctaLabel === undefined ? "" : args.ctaLabel;
       this.severity = args.severity === undefined ? ErrorSeverity.Zero : args.severity;
+      this.inputModel = "";
+      this.inputLabel = "";
+
     }
   }
 
@@ -306,6 +313,39 @@ class URLObjSearchParams {
   }
 }
 
+class LinkedImage {
+  src: string|boolean;
+  alt: string|boolean;
+  height: number|boolean;
+  width: number|boolean;
+  context: string;
+
+
+  constructor (_super, code) {
+    this.context = code;
+    var tags = ["src", "alt", "height", "width"];
+    for(tag of tags){
+      var regex = new RegExp(tag+"=\"([^\"].*?)?\"","i");
+      if(regex.test(code)){
+        this[tag] = code.match(regex)[1];
+      }
+    }
+
+  }
+  generateOutput(content):string {
+    var _this= this;
+    if(this.context.indexOf("alt")>-1){
+      content = content.replace(this.context, function(f){
+        return f.replace(/alt\=\"([^\"].*?)?\"/g, "alt=\"" + (_this.alt===undefined?"":_this.alt) + "\"");
+      });
+    } else {
+      content = content.replace(this.context, function(f){
+        return f.replace("<img", "<img alt=\""+(_this.alt===undefined?"":_this.alt)+"\"");});
+    }
+    return content;
+  }
+}
+
 class LinkObject {
   _super: EMLWorkspace;
   __isComplete: boolean;
@@ -319,7 +359,7 @@ class LinkObject {
   errors: any;
   id: number;
   line: number;
-  linkImage: string;
+  LinkedImage: string;
   mailto: MailtoLinkObject;
   new: URLObj;
   old: URLObj;
@@ -363,11 +403,10 @@ class LinkObject {
 
     }
     //find image
-    if(/src=\"(.*?)\"/.test(context)){
-      var found = context.match(/src=\"(.*?)\"/);
+    if(/\<img([^>].*?)\>/.test(context)){
+      var found = context.match(/\<img([^>].*?)\>/);
       if(found.length>0){
-        console.log("image found");
-        LO.linkImage = found[1];
+        LO.LinkedImage = new LinkedImage(LO, found[0]);
       }
     }
     //need to set the url before you do this;
@@ -412,40 +451,39 @@ class LinkObject {
   displayFormattedURL(){
     //displays url;
     var content = this.context;
+    content = content.replace(/\seml\-id\=\"([0-9]*)\"/, "");
+
     var findStart = "href=\"";
     var start = content.indexOf(findStart);
     content = content.replace(new RegExp("href=\"\"","g"), "href=\"#\"");
-    content = content.substr(0, start) + findStart+ "|||+++|||" + content.substr(start + (findStart.length+(this.old.url.length)), content.length ) ;
+    // var imgReg = /\<img([^>].*?)\>/g;
+    if(this.LinkedImage){
+      content = this.LinkedImage.generateOutput(content);
+    }
+    content = content.substr(0, start) + findStart+ "|||a.href|||" + content.substr(start + (findStart.length+(this.old.url.length)), content.length ) ;
     content = content.replace(new RegExp("\"","g"), "&quot;");
     content = content.replace(new RegExp("/","g"), "&#47;");
     content = content.replace(new RegExp(">","g"), "&gt;");
     content = content.replace(new RegExp("<","g"), "&lt;");
 
-    content = content.replace(
-      /([^\s]*?)\=/g,
-      "<span class=\"attr\">$1</span><span class=\"keyword\">=</span>");
+    content = content.replace(/([^\s]*?)\=/g,"<span class=\"attr\">$1</span><span class=\"keyword\">=</span>");
+    content = content.replace(/\&quot\;\&gt\;/g,"&quot;<span class=\"tag\">&gt;</span>");
+    content = content.replace(/\&\#47\;\&gt\;/g,"<span class=\"tag\">&#47;&gt;</span>");
+    content = content.replace(/\&quot\;(.*?)\&quot\;/g,"<span class=\"value\">\"$1\"</span>");
+    content = content.replace(/\&lt\;([a-z]+\s?)/g,"<span class=\"tag\">&lt;$1</span>");
+    content = content.replace(/\&lt\;\&\#47\;([a-z]+\s?)\&gt\;/g,"<span class=\"tag\">&lt;&#47;$1&gt;</span>");
+    content = content.replace(/\n/g,"<br>");
+    content = content.replace(/\&gt\;/g,"<span class=\"tag\">&gt;</span>");
 
-    content = content.replace(
-      /\&quot\;\&gt\;/g,
-      "&quot;<span class=\"tag\">&gt;</span>");
+    // if(this.LinkedImage) {
+    //   content = content.replace(/\|\|\|img\.alt\|\|\|/g, this.LinkedImage.alt === undefined ? "" : this.LinkedImage.alt);
+    // }
 
-    content = content.replace(
-      /\&\#47\;\&gt\;/g,
-      "<span class=\"tag\">&#47;&gt;</span>");
+    content = content.replace(/\|\|\|a\.href\|\|\|/g, "<strong>"+(this.hasOwnProperty("deleteOnRender") && this.deleteOnRender ? this.old.url : this.new.url)+"</strong>");
 
-    content = content.replace(
-      /\&quot\;(.*?)\&quot\;/g,
-      "<span class=\"value\">\"$1\"</span>");
-    content = content.replace(
-      /\&lt\;([a-z]+\s?)/g,
-      "<span class=\"tag\">&lt;$1</span>");
-    content = content.replace(
-      /\&lt\;\&\#47\;([a-z]+\s?)\&gt\;/g,
-      "<span class=\"tag\">&lt;&#47;$1&gt;</span>");
-    content = content.replace(
-      /\&gt\;/g,
-      "<span class=\"tag\">&gt;</span>");
-    content = content.replace(/\|\|\|\+\+\+\|\|\|/g, "<strong>"+(this.hasOwnProperty("deleteOnRender") && this.deleteOnRender ? this.old.url : this.new.url)+"</strong>");
+
+
+
 
     return content;
   }
@@ -520,13 +558,14 @@ class EMLWorkspace {
   buffer: any;
   linksView: string;
   sourceCode: string;
+  workingCode: string;
   outputCode: string;
   intelligence: any;
   keyBoardShortcuts: string[];
   messages: any[];
   fileName: string;
   linkData: LinkObject[];
-  defaultScode: string;
+  _defaultSCode: string;
   header: any;
   errors: any;
   exportForEloqua: string;
@@ -542,10 +581,10 @@ class EMLWorkspace {
     this.scope = $scope;
     this.linksView = 'experimental'; //advanced shows all
     this.sourceCode = html; //inital
-    this.outputCode = ""; //final
+    this.workingCode = "";
     this.fileName = "eml-maker-untitled";
     this.linkData = [];
-    this.defaultScode = "s=email";
+    this._defaultSCode = "s=email";
     this.header = {"subject":""};
     this.messages = [];
     this.errors = {messages:[], canProceed:true};
@@ -577,9 +616,7 @@ class EMLWorkspace {
   }
 
   downloadEml():void{
-    this.generateOutputCode();
-    this.outputCode = this.__replaceEloquaMergeFields(this.outputCode);
-    var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.outputCode);
+    var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.__replaceEloquaMergeFields(this.generateOutputCode()));
     this.fileName = this.__formatFileName(this.fileName);
     window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".eml");
     window.ga('send', 'event', "EML", "download", "EML Export");
@@ -587,21 +624,20 @@ class EMLWorkspace {
   }
   downloadCsv():void{
     var output = "Context,Original URL,Modified URL\n";
-    this.linkData.forEach(function(link) {
-      output += link.context.replace(/,/g, "(comma)") + "," + link.old.url + "," +link.new.url + "\n";
+    this.mapLinkObjects(function(LinkObject) {
+      output += LinkObject.context.replace(/,/g, "(comma)") + "," + LinkObject.old.url + "," +LinkObject.new.url + "\n";
     });
     this.fileName = this.__formatFileName(this.fileName);
     window.saveAs(new Blob([output], {type:"text/csv"}), this.fileName+"_links.csv");
     window.ga('send', 'event', "CSV", "download", "CSV Export");
   }
   downloadHtml():void{
-    this.generateOutputCode();
-    var output = this.outputCode;
+    var output = this.generateOutputCode();
     this.fileName = this.__formatFileName(this.fileName);
     window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".html");
     window.ga('send', 'event', "HTML", "download", "HTML Export");
   }
-  exportCodeToHTML(){
+  exportCodeToHTML():void{
     let trackingOptOut = false;
     if(this.exportForEloqua && this.exportForEloqua == "Yes") {
       this.mapLinkObjects(function(LinkObject){
@@ -610,7 +646,7 @@ class EMLWorkspace {
         && !LinkObject.new.searchParams.has("elqTrack")
         && !/app\.info\.optum\.com/gi.test(LinkObject.new.url)){
           LinkObject.new.searchParams.append("elqTrack=true");
-          LinkObject.refreshURL();
+
           if(trackingOptOut) {
             LinkObject.whiteListedUrl = LinkObject.new.url;
           }
@@ -631,11 +667,10 @@ class EMLWorkspace {
 
 
     }
-    this.generateOutputCode();
+    this.outputCode = this.generateOutputCode();
     window.ga('send', 'event', "HTML", "view sourcecode", "Export/View HTML");
     location.href= "#/export-html";
   }
-
   setUpShortcutKeys():void{
     var _this= this;
 
@@ -723,10 +758,12 @@ class EMLWorkspace {
     return text;
   }
   processHtml():void{
+
     this.setUpShortcutKeys();
     this.linkData = [];
     window.scrollTo(0,0);
-    var workingCode = this.replaceSpecialCharacters(this.sourceCode.replace(new RegExp("</a>","ig"), "</a>\n"));
+    // .replace(new RegExp("</a>","ig"), "</a>\n")
+    this.workingCode = this.replaceSpecialCharacters(this.sourceCode);
     //determine email headers
     this.__emlHeaders = this.__buildHeaders();
     //   $scope.data.header,
@@ -735,48 +772,45 @@ class EMLWorkspace {
     //replace merge fields
     if(this.fileName=="untitled"){
       var titleReg = /<title>([^<].*?)<\/title>/gi;
-      if(titleReg.test(workingCode)){
-        var titleTag = workingCode.match(titleReg);
+      if(titleReg.test(this.workingCode)){
+        var titleTag = this.workingCode.match(titleReg);
         if(titleTag.length>0){
           this.fileName = this.__formatFileName(titleTag[0].replace(titleReg, "$1"));
         }
       }
     }
-
-    var re1 = /<a\b[^>]*?>([\r\n]|.)*?<\/a>/gm;
-    workingCode = workingCode.replace(re1, function(rep){
-      // console.log('matched', rep);
-      return rep.replace(new RegExp("\n|\t","g"), "");
-    });
-    var codeLines = workingCode.split("\n");
     var _super = this;
-    var n =1;
-    for(var line=0; line<codeLines.length;line++){
-      var found = codeLines[line].match(re1);
-      if(found){
+    var re1 = /<a\b[^>]*?>([\r\n]|.)*?<\/a>/gm, n = 0;
+    this.workingCode = this.workingCode.replace(re1, function(found){
+      n++; return found.replace("<a", "<a eml-id=\""+n+"\"");
+    });
 
-        found.forEach(function(context){
-          if(/(href\=\"([^\"\>]*)\"?)/g.test(context)){
+    n = 0;
+    this.workingCode = this.workingCode.replace(re1, function(context){
+      n++;
+      //get line
+      var line = _super.workingCode.substr(0, _super.workingCode.indexOf(context)).split("\n").length-1;
 
-            var a = new LinkObject(line, context, _super);
-            // console.log(a);
-
-            a.id = n;
-            a.readOnly = (a.new.contains(".com/e/es.aspx")&& a.new.contains("~~eloqua"));
-            _super.linkData.push(a);
-            n++;
-
-
-          }
-        });
+      if(/(href\=\"([^\"\>]*)\"?)/g.test(context)){
+        n++;
+        var a = new LinkObject(line, context, _super);
+        a.id = n;
+        a.readOnly = (a.new.contains(".com/e/es.aspx") && a.new.contains("~~eloqua"));
+        _super.linkData.push(a);
+        return "{{EMLMaker_Link:"+n+"}}";
+      } else {
+        return context;
       }
-    }
-    console.log("testing email");
+
+    });
+
     EMLMakerAIEngine.resetCache();
     this.mapLinkObjects(function(LinkObject){
       LinkObject.isLinkComplete();
     });
-    console.log(this.intelligence);
+
+
+    // console.log(this.intelligence);
     //redirect
 
     location.href="#/links";
@@ -806,16 +840,9 @@ class EMLWorkspace {
     return output;
   }
   generateOutputCode():void{
-
-    var workingCode = this.replaceSpecialCharacters(this.sourceCode);
-    workingCode = workingCode.replace(new RegExp("</a>","ig"), "</a>\n");
-
-    var codeLines = workingCode.split("\n");
-
-
+    var _this = this;
+    var output:string = this.workingCode;
     this.mapLinkObjects(function(LinkObject){
-      var line = LinkObject.line - 1;
-      if(codeLines[line] === undefined) return false;
       // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
       if(LinkObject.whiteListedUrl==LinkObject.new.url){
         //report the non tracked link;
@@ -823,25 +850,32 @@ class EMLWorkspace {
       }
 
       if(LinkObject.hasOwnProperty("deleteOnRender")&&LinkObject.deleteOnRender){
-        var contextStart = codeLines[line].indexOf(LinkObject.context);
-        codeLines[line] = codeLines[line].replace(new RegExp(LinkObject.context, "gi"), "");
+        output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), "");
+      } else if(LinkObject.readOnly) {
+        output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), LinkObject.context);
       } else {
-        var start = codeLines[line].indexOf("href=\"" + LinkObject.old.url);
-        codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + LinkObject.new.url + codeLines[line].substr(start+6+LinkObject.old.url.length, codeLines[line].length);
+        var start = LinkObject.context.indexOf("href=\"" + LinkObject.old.url);
+        // codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + LinkObject.new.url + codeLines[line].substr(start+6+LinkObject.old.url.length, codeLines[line].length);
+        //this is where we update the context;
+        var newContext = LinkObject.context;
+        newContext = newContext.substr(0,start) + "href=\"" + LinkObject.new.url + newContext.substr(start+6+LinkObject.old.url.length, newContext.length);
+        if(LinkObject.LinkedImage){
+          newContext = LinkObject.LinkedImage.generateOutput(newContext);
+        }
+        newContext = newContext.replace(/\s?eml\-id\=\"[0-9]*\"/g,"");
+        //then update the working code with the new context;
+        output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), newContext);
       }
 
     });
 
-    this.outputCode = codeLines.join("\n");
-    this.outputCode = this.outputCode.replace(new RegExp("</a>\n","ig"), "</a>");
-
     try {
       // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
-      this.outputCode = this.outputCode.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
+      output = output.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
     } catch(e){
       console.log("error merging lines with links that previously had punctuation.");
     }
-
+    return output;
   }
   updateLinksAndExport():boolean{
     if(!this.areLinksComplete()) {
@@ -878,8 +912,8 @@ class EMLWorkspace {
     });
     return data;
   }
-  importHtmlFromFileDrop(evt){
-    if(this.sourceCode.length>0) { this.sourceCode = (this.outputCode = ""); }
+  importHtmlFromFileDrop(evt):void{
+    if(this.sourceCode.length>0) { this.sourceCode = ""; }
     var files = evt.dataTransfer.files;
     if(evt.dataTransfer.files.length>1){
       alert('you can only import one file at at time.');
@@ -906,6 +940,19 @@ class EMLWorkspace {
       window.ga('send', 'event', "HTML", "import", "HTML Import File Drop");
     }
   }
+
+  set defaultSCode(newValue){
+    let old =this._defaultSCode;
+
+    if(old!==newValue){
+      this._defaultSCode = newValue;
+      this.mapLinkObjects(function(LinkObject){
+        LinkObject.isLinkComplete();
+      });
+    }
+
+  }
+
 
   __formatFileName(name):string {
     let _slugify_strip_re = /[^\w\s-]/g;

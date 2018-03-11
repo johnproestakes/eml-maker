@@ -31,11 +31,15 @@ declare class errorObject {
         handler: () => void;
         ctaLabel: string;
         severity: ErrorSeverity;
+        inputModel: string;
+        inputLabel: string;
     };
     handler: any;
     ctaLabel: string;
     severity: string;
     cleanType: string;
+    inputModel: string;
+    inputLabel: string;
     constructor(type: any, title: any, description: any, args?: any);
 }
 declare class MailtoLinkObject {
@@ -80,6 +84,15 @@ declare class URLObjSearchParams {
     deleteAtIndex(index: any): void;
     delete(param: any): void;
 }
+declare class LinkedImage {
+    src: string | boolean;
+    alt: string | boolean;
+    height: number | boolean;
+    width: number | boolean;
+    context: string;
+    constructor(_super: any, code: any);
+    generateOutput(content: any): string;
+}
 declare class LinkObject {
     _super: EMLWorkspace;
     __isComplete: boolean;
@@ -92,7 +105,7 @@ declare class LinkObject {
     errors: any;
     id: number;
     line: number;
-    linkImage: string;
+    LinkedImage: string;
     mailto: MailtoLinkObject;
     new: URLObj;
     old: URLObj;
@@ -117,13 +130,14 @@ declare class EMLWorkspace {
     buffer: any;
     linksView: string;
     sourceCode: string;
+    workingCode: string;
     outputCode: string;
     intelligence: any;
     keyBoardShortcuts: string[];
     messages: any[];
     fileName: string;
     linkData: LinkObject[];
-    defaultScode: string;
+    _defaultSCode: string;
     header: any;
     errors: any;
     exportForEloqua: string;
@@ -149,6 +163,7 @@ declare class EMLWorkspace {
     areLinksComplete(): boolean;
     getLinksSummary(): any;
     importHtmlFromFileDrop(evt: any): void;
+    defaultSCode: any;
     __formatFileName(name: any): string;
     __replaceEloquaMergeFields(content: any): string;
     __stripHtmlAndSubjectFromEML(code: any): string;
