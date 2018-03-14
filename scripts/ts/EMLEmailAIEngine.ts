@@ -21,7 +21,7 @@ namespace EMLMakerAIEngine {
       }
       return output;
     }
-
+    
     get count(){
       let output = {};
       for(var i =0; i < this.messages.length; i++) {

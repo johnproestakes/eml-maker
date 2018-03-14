@@ -1,11 +1,11 @@
 
 
 interface Window {
-    ga(option1, option2, option3, option4, option5): void;
-    saveAs(option1?, option2?): void;
-    jQuery(option): any;
-    decodeURIComponent(option): string;
-    encodeURIComponent(option): string;
+    ga(option1:string, option2:string, option3:string, option4:string, option5:string): void;
+    saveAs(option1?:string, option2?:string): void;
+    jQuery(option:string): any;
+    decodeURIComponent(option:string): string;
+    encodeURIComponent(option:string): string;
 }
 
 namespace EMLMakerAIEngine {
@@ -23,10 +23,18 @@ namespace EMLMakerAIEngine {
       let output = {};
       for(let i = 0; i<this.messages.length; i++){
         output[ErrorType[this.messages[i].type]] = this.messages[i].type;
+        // output[this.messages[i].type] = ErrorType[this.messages[i].type];
       }
       return output;
     }
 
+    get types(){
+      let output = {};
+      for(let i = 0; i<this.messages.length; i++){
+        output[this.messages[i].type] = ErrorType[this.messages[i].type];
+      }
+      return output;
+    }
     get count(){
       let output = {};
       for(var i =0; i < this.messages.length; i++) {
@@ -46,7 +54,7 @@ namespace EMLMakerAIEngine {
 
   let landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/i;
   let extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/i;
-  let linkEncapsulatedPunctuation = /([\.\?\,\:\*]+)<\/a>$/;
+  let linkEncapsulatedPunctuation = /([\.\?\,\:\*]+)((\n|\r|\s)+)?<\/a>$/;
 
 
 

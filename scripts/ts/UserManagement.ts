@@ -26,7 +26,7 @@ class SecureGateway{
     this.timerDelay = 500;
     this.salt = "47dafea9aae3b28ab5c39eb7f7d2c924";
     this.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    this.sessionIdLocalStorageKey = "EMLMaker.emlUserID";
+    this.sessionIdLocalStorageKey = "EMLMaker.emlSessionUID";
 
     if(!window.persist_store)
     {window.persist_store = new window.Persist.Store('EMLMaker');
@@ -68,7 +68,7 @@ class SecureGateway{
     this.sessionId = "";
     this.sessionUserEmail = "";
     window.persist_store.remove(this.sessionIdLocalStorageKey);
-    if(location.hasOwnProperty("reload")){
+    if("reload" in location){
       location.reload();
     } else {
       document.location.href = document.location.href;
@@ -94,16 +94,34 @@ class SecureGateway{
     var savedEmailId = window.persist_store.get(this.sessionIdLocalStorageKey);
     // console.log(savedEmailId);
     if(savedEmailId){
-      this.sessionId = savedEmailId;
+      this.sessionId = this.decrypt(savedEmailId);
       return true;
     } else {
       this.sessionId = "";
       return false;
     }
   }
+  encrypt(text){
+    var output=text+"";
+    output = output.replace(/./gi,function(ch){
+    //console.log(ch.charCodeAt(0)+1);
+      return String.fromCharCode(ch.charCodeAt(0)+1);
+    });
+    return output;
+
+  }
+  decrypt(text){
+    var output=text+"";
+    output = output.replace(/./gi,function(ch){
+    //console.log(ch.charCodeAt(0)+1);
+      return String.fromCharCode(ch.charCodeAt(0)-1);
+    });
+    return output;
+
+  }
   setCurrentUser(email){
     var hash = window.CryptoJS.MD5(email + this.salt).toString();
-    window.persist_store.set(this.sessionIdLocalStorageKey, email);
+    window.persist_store.set(this.sessionIdLocalStorageKey, this.encrypt(email));
     window.ga('set', 'userId', hash);
   }
   isValidEmailAddress(email):boolean{

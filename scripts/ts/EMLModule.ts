@@ -474,6 +474,7 @@ namespace EMLModule {
       content = content.replace(new RegExp(">","g"), "&gt;");
       content = content.replace(new RegExp("<","g"), "&lt;");
 
+
       content = content.replace(/([^\s]*?)\=/g,"<span class=\"attr\">$1</span><span class=\"keyword\">=</span>");
       content = content.replace(/\&quot\;\&gt\;/g,"&quot;<span class=\"tag\">&gt;</span>");
       content = content.replace(/\&\#47\;\&gt\;/g,"<span class=\"tag\">&#47;&gt;</span>");
@@ -481,7 +482,9 @@ namespace EMLModule {
       content = content.replace(/\&lt\;([a-z]+\s?)/g,"<span class=\"tag\">&lt;$1</span>");
       content = content.replace(/\&lt\;\&\#47\;([a-z]+\s?)\&gt\;/g,"<span class=\"tag\">&lt;&#47;$1&gt;</span>");
       content = content.replace(/\n/g,"<br>");
+
       content = content.replace(/\&gt\;/g,"<span class=\"tag\">&gt;</span>");
+      content = content.replace(/\s{3}/g,"&nbsp;&nbsp;&nbsp");
 
       // if(this.LinkedImage) {
       //   content = content.replace(/\|\|\|img\.alt\|\|\|/g, this.LinkedImage.alt === undefined ? "" : this.LinkedImage.alt);
