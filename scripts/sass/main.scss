@@ -154,14 +154,17 @@ pre {background-color: #fafafa;padding: .5em;}
 }
 
 
-
-.query-string-editor {
-  padding-top:.5em;
-  margin-top:.5em;
-  padding: 1em 1.5em;
-  background-color: #fff;
+.well-component {
   box-shadow: 0 0 0 1px rgba(34,36,38,.22) inset, 0 0 0 0 transparent;
   border-radius: .28571429rem;
+  background-color: #fff;
+  padding-top:.5em;
+  padding: 1em 1.5em;
+}
+
+
+
+.query-string-editor {
   a {color: #a333c8}
 }
 .tags-layout {
@@ -279,6 +282,16 @@ pre {background-color: #fafafa;padding: .5em;}
     animation-duration: 4s;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
+  }
+}
+
+simple-accordion {
+  display: block;
+  .accordion-title {
+    user-select: none;padding:.5em 0; cursor: pointer;
+    &:hover span {
+      text-decoration: underline;
+    }
   }
 }
 

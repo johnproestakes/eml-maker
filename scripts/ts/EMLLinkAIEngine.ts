@@ -1,3 +1,5 @@
+
+
 interface Window {
     ga(option1, option2, option3, option4, option5): void;
     saveAs(option1?, option2?): void;
@@ -10,9 +12,9 @@ namespace EMLMakerAIEngine {
   export class LinkIntelligence {
     messages : any[];
     canContinue : boolean;
-    LinkObject: LinkObject;
-    EMLWorkspace: EMLWorkspace;
-    constructor(LinkObject: LinkObject){
+    LinkObject: EMLModule.LinkObject;
+    EMLWorkspace: EMLModule.EMLWorkspace;
+    constructor(LinkObject: EMLModule.LinkObject){
       this.canContinue = true;
       this.LinkObject = LinkObject;
       this.messages = [];
@@ -42,9 +44,9 @@ namespace EMLMakerAIEngine {
     }
   }
 
-  let landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/g;
-  let extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/gi;
-  let linkEncapsulatedPunctuation = /([\.\?\,\:])<\/a>/g;
+  let landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/i;
+  let extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/i;
+  let linkEncapsulatedPunctuation = /([\.\?\,\:\*]+)<\/a>$/;
 
 
 
@@ -56,7 +58,7 @@ namespace EMLMakerAIEngine {
       function(LinkObject, AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
-          new errorObject(
+          new EMLModule.MessageObject(
             ErrorType.Fix,
             "V= cannot be used in emails.",
             "This query string parameter is reserved for vanity urls, and should never be used in an email.",
@@ -76,7 +78,7 @@ namespace EMLMakerAIEngine {
       function(LinkObject, AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
-          new errorObject(ErrorType.Fix,
+          new EMLModule.MessageObject(ErrorType.Fix,
             "This URL needs a tracking code.",
             "Create and add one to make this message go away.",
               !/\/campaign\/|\/resources\//gi.test(LinkObject.new.url) ?
@@ -90,10 +92,11 @@ namespace EMLMakerAIEngine {
                 ctaLabel:'<i class="unlock alternate icon"></i> Do not track link'
               }: {severity: ErrorSeverity.High}));
       })
-    .when(linkEncapsulatedPunctuation.test(LinkObject.context),
+    .when(
+      linkEncapsulatedPunctuation.test(LinkObject.context),
       function(LinkObject, AIModule){
         AIModule.messages.push(
-          new errorObject(
+          new EMLModule.MessageObject(
             ErrorType.BestPractice,
             "Style matters",
             "You should not put punctuation inside of a link unless it is a button, and even then it's a little weird.",
@@ -112,7 +115,7 @@ namespace EMLMakerAIEngine {
       /http(.*)\/content\/optum(.*)\.html/gi.test(LinkObject.new.url),
       function(LinkObject, AIModule){
         AIModule.messages.push(
-          new errorObject(
+          new EMLModule.MessageObject(
             ErrorType.Fix,
             "This URL is not correct.",
             "/content/optum3/en/ is only for use in author in AEM, not on the live site.",
@@ -122,11 +125,11 @@ namespace EMLMakerAIEngine {
         AIModule.canContinue = false;
       }
     ).when(
-      (window.jQuery(LinkObject.context).find("img").length ==0 && jQuery(LinkObject.context).text().trim() =="" ) && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender),
+      (window.jQuery(LinkObject.context).find("img").length ==0 && window.jQuery(LinkObject.context).text().trim() =="" ) && (!LinkObject.hasOwnProperty("deleteOnRender")||!LinkObject.deleteOnRender),
       function(LinkObject, AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
-          new errorObject(ErrorType.Fix,
+          new EMLModule.MessageObject(ErrorType.Fix,
             "Missing content",
           `This link doesn't contain any text or image.
           This might be a mistake; you can remove it
@@ -149,7 +152,7 @@ namespace EMLMakerAIEngine {
       function(LinkObject, AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
-          new errorObject(ErrorType.Fix,
+          new EMLModule.MessageObject(ErrorType.Fix,
             "Link has spaces",
           `You should not have spaces in your link,
           either rename the asset so that it does
@@ -171,20 +174,27 @@ namespace EMLMakerAIEngine {
       LinkObject.hasDuplicateQueryStrings(),
       function(LinkObject, AIModule){
         AIModule.canContinue = false;
-        AIModule.messages.push(new errorObject(
+        AIModule.messages.push(new EMLModule.MessageObject(
           ErrorType.Fix,
           "Duplicate query strings",
           "It looks like you have duplicate query strings. When you have duplicate parameters, only one will be valid, so make sure to remove the incorrect or duplicate parameters.\
            Pay attention to these parameters: " + LinkObject.hasDuplicateQueryStrings().join(", "),
-          {severity: ErrorSeverity.High}
+          {
+            severity: ErrorSeverity.High,
+            handler: function(LinkObject){
+              LinkObject.showQueryStringEditor = true;
+            },
+            ctaLabel: "Open editor"
+
+          }
         ));
       }
     )
 
     .when(
-      !LinkObject.isLinkType('mailto') && !LinkObject.urlRegex.test(LinkObject.new.url),
+      !LinkObject.isLinkType('mailto') && !LinkObject.new.isValid(),
       function(LinkObject, AIModule){
-        AIModule.messages.push(new errorObject(
+        AIModule.messages.push(new EMLModule.MessageObject(
           ErrorType.Fix,
         "Invalid URL",
           "This is not a valid URL",
@@ -200,7 +210,7 @@ namespace EMLMakerAIEngine {
         if(match.length>0){
           var ext = match[0].toUpperCase().substr(1,match[0].length);
           AIModule.messages.push(
-            new errorObject(
+            new EMLModule.MessageObject(
               ErrorType.BestPractice,
             "Landing page preferred",
             ["When you direct email ",
@@ -215,10 +225,11 @@ namespace EMLMakerAIEngine {
       }
     ).when(
       /.com?(\.[a-z]{2,3})?\/([a-zA-Z0-9\-]+)\/*(\?.*)?$/.test(LinkObject.new.url.trim())
-      && !LinkObject.new.contains('info.optum'),
+      && !LinkObject.new.contains('info.optum')
+      && !/(twitter|linkedin|facebook|youtube)\.com?/.test(LinkObject.new.url),
       function(LinkObject, AIModule){
         AIModule.canContinue = (LinkObject.new.contains("optum.co")) ? false : true;
-        AIModule.messages.push(new errorObject(
+        AIModule.messages.push(new EMLModule.MessageObject(
           (LinkObject.new.contains("optum.co")) ? ErrorType.Fix : ErrorType.BestPractice,
           "Don't use shortlinks or vanity URLs in emails",
           "Always use the long link. Adding query string parameter to a vanity\
@@ -232,7 +243,7 @@ namespace EMLMakerAIEngine {
       function(LinkObject,AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
-          new errorObject(
+          new EMLModule.MessageObject(
             ErrorType.Fix,
             "Linked image URL is relative",
             "The image is probably stored on your computer somewhere or the image is broken. Emails should only be referenced by absolute URLs.", {
@@ -243,7 +254,7 @@ namespace EMLMakerAIEngine {
     .when(
       LinkObject.context && /click|click\shere/g.test(LinkObject.context),
       function(LinkObject, AIModule){
-        AIModule.messages.push(new errorObject(ErrorType.BestPractice,
+        AIModule.messages.push(new EMLModule.MessageObject(ErrorType.BestPractice,
           "Use descriptive CTAs",
           "\"Click here\" links aren't really descriptive enough to be effective CTAs. It's better to introduce a link by saying something like: <br>'Read the new <a href=\"javascript:angular.noop()\">Product brochure</a>.'"
         ));
@@ -253,7 +264,7 @@ namespace EMLMakerAIEngine {
       function(LinkObject,AIModule){
         AIModule.canContinue = false;
         AIModule.messages.push(
-          new errorObject(ErrorType.BestPractice,
+          new EMLModule.MessageObject(ErrorType.BestPractice,
             "ALT tag on image required",
             "Linked image should have an ALT tag.",
             {
@@ -263,7 +274,7 @@ namespace EMLMakerAIEngine {
         }
     ).when(/^http(.*)#/g.test(LinkObject.new.url),
     function(LinkObject, AIModule){
-      AIModule.messages.push(new errorObject(ErrorType.Suggestion,
+      AIModule.messages.push(new EMLModule.MessageObject(ErrorType.Suggestion,
         "Jumplinks in Emails",
         `It looks like you're trying to send traffic to a
         <em>Jump link</em> AKA <em>Anchor link</em>. The only
@@ -287,14 +298,14 @@ namespace EMLMakerAIEngine {
     }).when(
       LinkObject.new.contains(".oft"),
       function(LinkObject, AIModule){
-          AIModule.messages.push(new errorObject(
+          AIModule.messages.push(new EMLModule.MessageObject(
             ErrorType.BestPractice,
             "We don't link to OFTs in emails we send.",
             "You should not be sending OFTs to external contacts.\
               OFTs only work with Outlook on PCs, and that is less\
                than half of the population of email clients these days."
           ));
-          AIModule.messages.push(new errorObject(
+          AIModule.messages.push(new EMLModule.MessageObject(
             ErrorType.Suggestion,
             "Forward to a colleague?",
             "If you are trying to do a Forward to a Colleague (FTAC)\
@@ -327,7 +338,7 @@ namespace EMLMakerAIEngine {
       if(match.length>0){
         var ext = match[0].toUpperCase().substr(1,match[0].length);
         var phrase = /^[aeiouAEIOU]/gi.test(ext) ? "an " : "a " + ext;
-        AIModule.messages.push(new errorObject(ErrorType.Suggestion,
+        AIModule.messages.push(new EMLModule.MessageObject(ErrorType.Suggestion,
           "Unnecessary tracking link",
           `It looks like you added a tracking code to ${phrase} file.
           In fact, you can only track web pages with these tracking codes.`,
@@ -352,7 +363,7 @@ namespace EMLMakerAIEngine {
     }).when(
       LinkObject.isLinkType('mailto')&&LinkObject.mailto.has('email')&&!LinkObject.mailto.isValidEmailAddress(),
       function(LinkObject, AIModule){
-        AIModule.messages.push(new errorObject(
+        AIModule.messages.push(new EMLModule.MessageObject(
           ErrorType.Fix,
           "Invalid email address",
           "Fix invalid email address.", {severity: ErrorSeverity.High}));
@@ -361,7 +372,7 @@ namespace EMLMakerAIEngine {
     ).when(
       LinkObject.isLinkType('mailto') && !LinkObject.mailto.has('subject'),
       function(LinkObject, AIModule){
-        AIModule.messages.push(new errorObject(
+        AIModule.messages.push(new EMLModule.MessageObject(
           ErrorType.BestPractice,
           "Always include a subject line.",
           "You can add a subject line using the Editor button.",
@@ -383,7 +394,7 @@ namespace EMLMakerAIEngine {
         && LinkObject.mailto.has('body')
         && (LinkObject.mailto.body.indexOf("https://")>-1 || LinkObject.mailto.body.indexOf("http://")>-1)){
           AIModule.messages.push(
-            new errorObject(ErrorType.BestPractice,
+            new EMLModule.MessageObject(ErrorType.BestPractice,
               "Implementing FTAC?",
             ["It looks like you're trying to implement a Forward to a ",
             "Colleague (FTAC) feature. Use the Mailto Editor to adjust ",
@@ -394,10 +405,13 @@ namespace EMLMakerAIEngine {
           ));
         } else {
           AIModule.messages.push(
-            new errorObject(
+            new EMLModule.MessageObject(
               ErrorType.Warn,
               "No email address set",
-            "This mailto link does not have an email address set."
+              "This mailto link does not have an email address set.",
+            {
+              severity:ErrorSeverity.Zero
+            }
           ));
         }
       }
@@ -413,7 +427,7 @@ namespace EMLMakerAIEngine {
           }
         });
         if(affected){
-          AIModule.messages.push(new errorObject(ErrorType.Suggestion,
+          AIModule.messages.push(new EMLModule.MessageObject(ErrorType.Suggestion,
             "Need a hand?",
             "I noticed you added a tracking code to this link, great job.\
              If you want I can add the same tracking code to the other links in this email \
@@ -455,7 +469,7 @@ namespace EMLMakerAIEngine {
       && /resource|campaign/g.test(LinkObject.new.url)
       && !LinkObject.new.searchParams.has("s"),
       function(LinkObject,AIModule){
-        AIModule.messages.push(new errorObject(ErrorType.Suggestion,
+        AIModule.messages.push(new EMLModule.MessageObject(ErrorType.Suggestion,
           "Are you tracking channel source with your form?",
           "If this link directs to a page with a form, consider adding\
             an s-code to the URL so you can populate a form field with\

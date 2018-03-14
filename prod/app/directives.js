@@ -65,15 +65,16 @@ angular.module('EMLMaker')
 			$timeout(function(){
 
 			fileDropper.get(0).addEventListener('drop', function(evt){
-
+				if(location.hash !== "#/main") return false;
 				evt.stopPropagation();
     			evt.preventDefault();
 					counter++;
 					dropperReset(evt);
-					scope.ondropfile({"evt":evt});
-					setTimeout(function(){
+					if(location.hash = "#/main"){
+						scope.ondropfile({"evt":evt});
+					}
 
-					},100);
+
 
 				}, false);
 			fileDropper.get(0).addEventListener('dragend', dropperReset, false);
@@ -83,6 +84,7 @@ angular.module('EMLMaker')
 				// evt.stopPropagation();
 
 				clearTimeout(timer);
+				if(location.hash !== "#/main") return false;
 				evt.dataTransfer.dropEffect = 'copy';
 				fileDropper.addClass("active");
 				fileDropper.css({border: "solid 3px blue", color:"blue", background: "lightblue"});
@@ -108,9 +110,10 @@ angular.module('EMLMaker').directive('uiDropdown', ['$timeout', function($timeou
     link: function(scope, el, attr){
       $timeout(function(){
         $(el).dropdown();
-
       });
-
+      scope.$on('$destroy',function(){
+        $(el).dropdown("destroy");
+      });
     }
   };
 
@@ -154,40 +157,41 @@ angular.module('EMLMaker')
     link: function(scope, el, attr){
       $timeout(function(){
         var thePopup = jQuery(el).find('.ui.popup');
-        var theButton = jQuery(el).find('.ui.button');
-        theButton.popup({
+        var theFocus = jQuery(el).find('.input-field');
+        console.log(theFocus);
+        theFocus.popup({
           popup: thePopup.get(0),
-          position: 'top right',
+          // position: 'top right',
           on: 'manual'
         });
 
-        theButton.visibility({
+        theFocus.visibility({
           once: true,
           onBottomPassed: function(){
-            theButton.popup("hide");
+            theFocus.popup("hide");
           console.log("offscreen");
 
         },onTopPassed: function(){
-          theButton.popup("hide");
+          theFocus.popup("hide");
         console.log("offscreen");
       }});
 
-        jQuery(el).find('.ui.icon.button').on('click', function(){
-          //track this event;
-          theButton.popup("toggle");
-          theButton.visibility({
-            once: true,
-            onBottomPassed: function(){
-              theButton.popup("hide");
-            console.log("offscreen");
-
-          },onTopPassed: function(){
-            theButton.popup("hide");
-          console.log("offscreen");
-        }});
-          window.ga('send', 'event', "Mailto Editor", "Click", "Clicked Mailto Editor");
-
-        });
+        // jQuery(el).find('input').on('click', function(){
+        //   //track this event;
+        //   theFocus.popup("toggle");
+        //   theFocus.visibility({
+        //     once: true,
+        //     onBottomPassed: function(){
+        //       theButton.popup("hide");
+        //     console.log("offscreen");
+        //
+        //   },onTopPassed: function(){
+        //     theFocus.popup("hide");
+        //   console.log("offscreen");
+        // }});
+        //   window.ga('send', 'event', "Mailto Editor", "Click", "Clicked Mailto Editor");
+        //
+        // });
 
 
         // $(el).find('.ui.icon.button').on('click', function(){
@@ -424,7 +428,7 @@ angular.module('EMLMaker')
 .directive('queryStringEditor', ['$timeout', function($timeout){
   return {
     restrict: "E",
-    template: '<div class="query-string-editor" ng-hide="item.isLinkType(\'mailto\')"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
+    template: '<div class="query-string-editor well-component" ng-hide="item.isLinkType(\'mailto\')"><div style="overflow:hidden;padding-bottom:.5em;"><strong>QUERY STRING EDITOR</strong>\
     <div class="ui tiny basic buttons" style="float:right;">\
   <button class="ui icon button" ng-click="item.new.searchParams.deleteAll();item.isLinkComplete();scrollToItem(item.id);">Remove all</button>\
   <button class="ui icon button" ng-click="view == 1 ? view=0 : view=1">{{view==1? "Close" : "Edit"}}</button>\
@@ -440,7 +444,7 @@ angular.module('EMLMaker')
       <ul class="tags-layout">\
        <li ng-if="str.length>0" ng-repeat="str in item.new.searchParams.entries track by $index">\
        {{str}} <a href="javascript:angular.noop()" ng-click="item.new.searchParams.deleteAtIndex($index);item.isLinkComplete()">\
-       <i class="close icon"></i></a></li></ul>\
+       <i class="close icon" alt="[X]"></i></a></li></ul>\
        </div>\
       </div>',
     scope: {item:"=", scrollTo:"&"},
@@ -522,6 +526,35 @@ angular.module('EMLMaker').directive('scrollspy', ['$timeout', function($timeout
 };
 
 
+}]);
+
+angular.module('EMLMaker')
+.directive('simpleAccordion', ['$timeout', function($timeout){
+  return {
+    restrict: "E",
+    transclude: true,
+    scope:{heading:"@",show: "="},
+    template: '<div ng-class="{expanded: show, collapsed: !show}"><div ng-click="togglePane()" class="accordion-title">\
+    <i class="chevron right icon" ng-show="!show" alt="[+]"></i>\
+    <i class="chevron down icon" ng-show="show" alt="[-]"></i>\
+     <span>{{heading}}</span></div><ng-transclude ng-show="show"></ng-transclude></div>',
+    link: function(scope, el, attr){
+      scope.show = false;
+      $timeout(function(){
+        scope.togglePane = function(){
+          scope.show = !scope.show;
+        };
+        jQuery.extend(jQuery(el),{"toggleAccordion": function(){
+          scope.$apply(function(){
+            scope.togglePane();
+          });
+        }});
+        scope.$on('$destroy', function(){
+          // jQuery(el).popup("destroy");
+        });
+      });
+    }
+  };
 }]);
 
 angular.module('EMLMaker').directive('sticky', ['$timeout', function($timeout){

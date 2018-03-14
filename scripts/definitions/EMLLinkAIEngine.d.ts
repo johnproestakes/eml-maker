@@ -9,9 +9,9 @@ declare namespace EMLMakerAIEngine {
     class LinkIntelligence {
         messages: any[];
         canContinue: boolean;
-        LinkObject: LinkObject;
-        EMLWorkspace: EMLWorkspace;
-        constructor(LinkObject: LinkObject);
+        LinkObject: EMLModule.LinkObject;
+        EMLWorkspace: EMLModule.EMLWorkspace;
+        constructor(LinkObject: EMLModule.LinkObject);
         tabs: {};
         count: {};
         when(condition: any, callback: any): this;

@@ -4,7 +4,7 @@ namespace EMLMakerAIEngine {
   export class EmailIntelligence {
     messages : any[];
     canContinue : boolean;
-    EMLWorkspace: EMLWorkspace;
+    EMLWorkspace: EMLModule.EMLWorkspace;
     constructor(EMLWorkspace?){
       this.messages = [];
       this.canContinue = true;
@@ -77,7 +77,7 @@ namespace EMLMakerAIEngine {
       })(),
       function(EMLWorkspace, EmailAI){
         EmailAI.messages.push(
-          new errorObject(
+          new EMLModule.MessageObject(
           ErrorType.Suggestion,
           "Want to update s-codes to [" + EMLWorkspace._defaultSCode + "]",
           `some description`,
@@ -110,7 +110,7 @@ namespace EMLMakerAIEngine {
       })(),
       function(EMLWorkspace, EmailAI){
         EmailAI.messages.push(
-          new errorObject(
+          new EMLModule.MessageObject(
           ErrorType.Suggestion,
           "Want to remove the junk Eloqua query strings?",
           `I can remove those tags for you to clean things up, Eloqua will add them back anyways.`,
@@ -158,7 +158,7 @@ namespace EMLMakerAIEngine {
 // var preheader = jQueryObject.find(".preheader");
 // console.log("preheader", preheader);
 // if( preheader.length == 0 || preheader.text().trim()!==""){
-//   errors.messages.push(new errorObject('BEST PRACTICE',
+//   errors.messages.push(new EMLModule.MessageObject('BEST PRACTICE',
 //   "<h4>Missing preheader</h4>Your email doesn't look like it has a preheader. Preheaders are great for improving open rates in some email clients so you should generally always include a preheader. If you cannot come up with new a preheader for each email, consider something generic that you can reuse."));
 // }
 
@@ -176,5 +176,5 @@ namespace EMLMakerAIEngine {
 //
 //   }
 // }
-// errors.messages.push(new errorObject('BEST PRACTICE', "You have too many links in this email."));
+// errors.messages.push(new EMLModule.MessageObject('BEST PRACTICE', "You have too many links in this email."));
 // console.log(errors);

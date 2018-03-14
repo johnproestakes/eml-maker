@@ -2,7 +2,7 @@ declare namespace EMLMakerAIEngine {
     class EmailIntelligence {
         messages: any[];
         canContinue: boolean;
-        EMLWorkspace: EMLWorkspace;
+        EMLWorkspace: EMLModule.EMLWorkspace;
         constructor(EMLWorkspace?: any);
         when(condition: any, callback: any): this;
         tabs: {};

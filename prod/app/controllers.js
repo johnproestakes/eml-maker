@@ -28,7 +28,7 @@ angular.module('EMLMaker')
   };
 
   $scope.blankSlate = function(){
-    $scope.workspace = new EMLWorkspace("", $scope);
+    $scope.workspace = new EMLModule.EMLWorkspace("", $scope);
   };
 
   //only load once!

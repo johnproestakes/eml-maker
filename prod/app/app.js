@@ -16,3 +16,8 @@ angular.module('EMLMaker', ['ngRoute','ngSanitize'])
     .replace(/^./, function(str){ return str.toUpperCase(); });
   }
 });
+
+$.fn.toggleAccordion = function(scope){
+  var _this = $(this);
+  scope.show = !scope.show;
+};
