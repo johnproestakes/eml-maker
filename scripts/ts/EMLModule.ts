@@ -32,6 +32,47 @@ interface $Sce {
 
 
 
+namespace RememberValues {
+  export function setupStorage(){
+    if(!window.persist_store)
+    {window.persist_store = new window.Persist.Store('EMLMaker');
+    window.addEventListener('unload', function(){
+      window.persist_store.save();
+    });}
+  }
+  export function add(name, value) {
+    this.setupStorage();
+    var a = window.persist_store.get("remember-"+name);
+    console.log(a);
+    if(a===null || a === undefined){
+      a = {values:[]};
+    } else {
+      a = JSON.parse(a);
+    }
+    if(a.values.indexOf(value)==-1){
+      a.values.push(value);
+      window.persist_store.set("remember-"+name, JSON.stringify(a));
+    }
+
+
+
+
+  }
+  export function get(name) {
+    this.setupStorage();
+    var a = window.persist_store.get("remember-"+name);
+    if(a===undefined){
+      a = {values:[]};
+    } else {
+      a = JSON.parse(a);
+    }
+    return a;
+
+  }
+}
+
+
+
 
 namespace EMLModule {
 
@@ -686,6 +727,21 @@ namespace EMLModule {
       var _this= this;
       this.keyBoardShortcuts = [];
 
+      _this.keyBoardShortcuts.push(
+        new KeyboardShortcut(
+          function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 52; },
+          function(){
+            //dothis;
+            _this.scope.$apply(function(){
+              console.log('downloading file');
+              _this.downloadHtml();
+
+            });
+          },
+          "CTRL + SHIFT + 4",
+          "Download HTML"
+        )
+      );
 
       _this.keyBoardShortcuts.push(
         new KeyboardShortcut(
@@ -760,6 +816,8 @@ namespace EMLModule {
           "Remove all query strings from email"
         )
       );
+
+
 
       document.onkeyup = function(e){
         for(let shortcut of _this.keyBoardShortcuts){
@@ -889,6 +947,11 @@ namespace EMLModule {
         } else if(LinkObject.readOnly) {
           output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), LinkObject.context);
         } else {
+          if(LinkObject.isLinkType("mailto")&&LinkObject.mailto.subject!==""){
+            //save subject to persist;
+            RememberValues.add("mailto-subject", LinkObject.mailto.subject);
+            console.log(LinkObject.mailto.subject);
+          }
           var start = LinkObject.context.indexOf("href=\"" + LinkObject.old.url);
           // codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + LinkObject.new.url + codeLines[line].substr(start+6+LinkObject.old.url.length, codeLines[line].length);
           //this is where we update the context;

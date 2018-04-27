@@ -234,6 +234,13 @@ html-viewer {
 
 
 
+ul.inline {
+  list-style: none;padding:0;
+  li {display: inline-block; }
+}
+.autocomplete-list {
+  a {padding:.5em 1em; }
+}
 
 .editable html-viewer li strong {
   background-color: #ffdf82;
