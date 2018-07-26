@@ -21,6 +21,7 @@ enum ErrorSeverity {
 
 enum ErrorType {
   Fix=1,
+  QA,
   BestPractice,
   Suggestion,
   Warn
@@ -30,7 +31,66 @@ interface $Sce {
   trustAsHtml(str: string): any;
 }
 
+namespace GlobalVars {
+  export let TelephoneRegex = /(\+?\d{1,2}(\s|-|\.))?\(?\d{3}\)?[\s.-]\d{3,}[\s.-]\d{4,}/;
+  export let TelephoneRegexGlobal = /(\+?\d{1,2}(\s|-|\.))?\(?\d{3}\)?[\s.-]\d{3,}[\s.-]\d{4,}/g;
+  export let EmailRegex = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+  export let EmailRegexGlobal = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/g;
+  export let UrlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
+}
 
+
+
+class IntelligenceEngine {
+  messages: EMLModule.MessageObject[];
+  canContinue: boolean;
+  cachedResults: EMLModule.MessageObject[];
+  EMLWorkspace: EMLModule.EMLWorkspace;
+  overridden: string[];
+
+  constructor(EMLWorkspace?){
+    this.messages = [];
+    this.canContinue = true;
+    this.cachedResults = [];
+    this.overridden = [];
+    this.EMLWorkspace = EMLWorkspace;
+  }
+  when(condition, callback ){
+    if(condition) callback(this.EMLWorkspace, this);
+    return this;
+  }
+
+  reset(){
+    this.messages = [];
+    this.canContinue = true;
+  }
+
+  get tabs(){
+    let output = {};
+    for(let i = 0; i<this.messages.length; i++){
+      output[ErrorType[this.messages[i].type]] = this.messages[i].type;
+      // output[this.messages[i].type] = ErrorType[this.messages[i].type];
+    }
+    return output;
+  }
+  get types(){
+    let output = {};
+    for(let i = 0; i<this.messages.length; i++){
+      output[this.messages[i].type] = ErrorType[this.messages[i].type];
+    }
+    return output;
+  }
+  get count(){
+    let output = {};
+    for(var i =0; i < this.messages.length; i++) {
+      if(output[ErrorType[this.messages[i].type]] === undefined) {
+        output[ErrorType[this.messages[i].type]] = 0;
+      }
+      output[ErrorType[this.messages[i].type]]++;
+    }
+    return output;
+  }
+}
 
 namespace RememberValues {
   export function setupStorage(){
@@ -72,7 +132,14 @@ namespace RememberValues {
 }
 
 
-
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
 
 namespace EMLModule {
 
@@ -80,6 +147,7 @@ namespace EMLModule {
     type: ErrorType;
     description: string;
     title: string;
+    id: string;
     args: {
       handler: ()=>void,
       ctaLabel: string,
@@ -87,6 +155,7 @@ namespace EMLModule {
       inputModel: string,
       inputLabel: string
     };
+    override: boolean;
     handler: any;
     ctaLabel: string;
     severity: string;
@@ -94,18 +163,25 @@ namespace EMLModule {
     inputModel: string;
     inputLabel: string;
 
-    constructor(type, title, description, args?){
+    constructor( type, title, description, args?){
       if(args===undefined) args = {};
       this.type = type;
       this.cleanType = ErrorType[type];
       this.title = title;
+      this.override = false;
       this.description = description;
+      this.id = args.id === undefined ? "msg-" + guid() : "custom-" + args.id;
       this.handler = args.handler ===undefined ? function(){} : args.handler;
       this.ctaLabel = args.ctaLabel === undefined ? "" : args.ctaLabel;
       this.severity = args.severity === undefined ? ErrorSeverity.Zero : args.severity;
       this.inputModel = "";
       this.inputLabel = "";
+      console.log(this.id);
 
+    }
+    setOverrideStatus(val){
+      this.override = val;
+      console.log(this.id + " - overridden");
     }
   }
 
@@ -130,8 +206,7 @@ namespace EMLModule {
        return this[option] && this[option].trim()!=="";
      }
      isValidEmailAddress(){
-       let emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-       return emailRegex.test(this.email);
+       return GlobalVars.EmailRegex.test(this.email);
      }
      deinitEmailEditor(){
        this.email = "";
@@ -205,8 +280,7 @@ namespace EMLModule {
       //this.searchParams.updateSearchProp();
     }
     isValid():boolean {
-      let urlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
-      return urlRegex.test(this.url);
+      return GlobalVars.UrlRegex.test(this.url);
     }
     contains(str:string): boolean{
       if(this.url.indexOf(str)>-1) {
@@ -433,7 +507,7 @@ namespace EMLModule {
       this.line = line + 1;
       this.context = context;
       this.queryStrings = [];
-      this.errors = [];
+      this.errors = new EMLMakerAIEngine.LinkIntelligence(parent);
       this.id = 0;
       this.whiteListedUrl = "~~whitelist~~";
 
@@ -541,9 +615,9 @@ namespace EMLModule {
     }
 
     isLinkComplete(){
-      this._super.intelligence =  EMLMakerAIEngine.CheckEmail(this._super);
-      this.errors = EMLMakerAIEngine.CheckLink(this );
-      this.__isComplete= this.errors.canContinue && this._super.intelligence.canContinue;
+      this._super.intelligence.checkEmail();
+      this.errors.checkLink(this);
+      this.__isComplete= this.errors.canContinue;
       if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
       return this.__isComplete;
     }
@@ -613,6 +687,7 @@ namespace EMLModule {
     workingCode: string;
     outputCode: string;
     intelligence: any;
+    overriddenIds:string[];
     keyBoardShortcuts: any[];
     messages: any[];
     fileName: string;
@@ -626,6 +701,7 @@ namespace EMLModule {
     headers: string[];
 
     constructor(html: string, $scope: any){
+      this.overriddenIds = [];
       if( html === undefined) html = "";
       if( $scope === undefined) $scope = "";
       var Workspace = this;
@@ -641,6 +717,7 @@ namespace EMLModule {
       this.messages = [];
       this.errors = {messages:[], canProceed:true};
       this.exportForEloqua  = "Yes";
+
       this.__emlHeaders = "";
       this.keyBoardShortcuts = [];
       this.__allowableHeaderFields = {
@@ -655,6 +732,7 @@ namespace EMLModule {
         "X-Uniform-Type-Identifier: com.apple.mail-draft",
         "Content-Transfer-Encoding: 7bit"
       ];
+      this.intelligence = new EMLMakerAIEngine.EmailIntelligence(this);
     }
     mapLinkObjects(callback){
       if(this.linkData.length>0){
@@ -805,7 +883,7 @@ namespace EMLModule {
                 LinkObject.new.searchParams.delete("elqTrackId");
                 LinkObject.new.searchParams.delete("s");
                 LinkObject.new.searchParams.delete("s3");
-                EMLMakerAIEngine.emailAILastEval = 0;
+
                 LinkObject.isLinkComplete();
                 _this.areLinksComplete();
               });
@@ -854,6 +932,7 @@ namespace EMLModule {
 
       this.setUpShortcutKeys();
       this.linkData = [];
+      this.intelligence.checkEmail();
       window.scrollTo(0,0);
       // .replace(new RegExp("</a>","ig"), "</a>\n")
       this.workingCode = this.replaceSpecialCharacters(this.sourceCode);
@@ -897,7 +976,7 @@ namespace EMLModule {
 
       });
 
-      EMLMakerAIEngine.resetCache();
+
       this.mapLinkObjects(function(LinkObject){
         LinkObject.isLinkComplete();
       });
@@ -920,6 +999,21 @@ namespace EMLModule {
     }
     verifyLinkSectionComplete():boolean{
       var output = false;
+      // are there problems in the EMLEmailAIEngine
+
+      // if(this.intelligence.messages.length>0){
+      //   for(var i =0; i<this.intelligence.messages.length; i++){
+      //     // this.intelligence[i].
+      //     if(this.intelligence.messages[i].severity==1 && !this.intelligence.messages[i].override){
+      //       output = false;
+      //       }
+      //     }
+      //   }
+      if(this.intelligence && !this.intelligence.canContinue){
+        return false;
+        }
+
+      // are there link issues?
       if (this.linkData && this.linkData.length == 0) {
         output = false;
       } else {
@@ -945,7 +1039,8 @@ namespace EMLModule {
         if(LinkObject.hasOwnProperty("deleteOnRender")&&LinkObject.deleteOnRender){
           output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), "");
         } else if(LinkObject.readOnly) {
-          output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), LinkObject.context);
+          let readOnlyUrl = LinkObject.context.replace(/eml\-id\=\"[0-9]{1,}\"\s/g,"");
+          output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), readOnlyUrl);
         } else {
           if(LinkObject.isLinkType("mailto")&&LinkObject.mailto.subject!==""){
             //save subject to persist;
@@ -987,7 +1082,9 @@ namespace EMLModule {
     }
     areLinksComplete():boolean{
       var output = true;
+      // this.intelligence.checkEmail();
       this.mapLinkObjects(function(LinkObject){
+
         if(!LinkObject.__isComplete){
           output = false;
         }
@@ -1134,6 +1231,7 @@ namespace EMLModule {
     keys: string;
 
     constructor(when, doThis, keys, description){
+
       this.when = when;
       this.doThis = doThis;
       this.keys = keys;
