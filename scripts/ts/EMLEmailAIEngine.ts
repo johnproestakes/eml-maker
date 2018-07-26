@@ -9,6 +9,38 @@ namespace EMLMakerAIEngine {
 
 
       let outputCode = EMLWorkspace.generateOutputCode();
+
+      EmailAI.when(
+        (function(){
+          var output = false;
+
+          ["<o:OfficeDocumentSettings","<o:AllowPNG","<o:PixelsPerInch"].forEach(function(item){
+            let re = new RegExp(item, "gi");
+            if(!re.test(outputCode)){
+              console.log(item);
+              output = true;
+            }
+          });
+
+          return output;
+        })()
+        ,function(EMLWorkspace, EmailAI){
+          EmailAI.messages.push(
+            new EMLModule.MessageObject(
+            ErrorType.BestPractice,
+            "Zoom fix code not detected",
+             "Your email might not display correctly in MS Outlook on Windows 10 or displays with resolutions set higher than 96 pixels per inch",
+            {
+              id: "zoom-fix-code-not-detected",
+              severity: ErrorSeverity.High,
+              handler: function(){
+                EmailAI.overridden.push("custom-zoom-fix-code-not-detected");
+                EMLWorkspace.intelligence.checkEmail();
+              }
+            }
+          ));
+
+        });
       EmailAI.when(GlobalVars.EmailRegex.test(outputCode),function(EMLWorkspace, EmailAI){
 
         var results = [];
