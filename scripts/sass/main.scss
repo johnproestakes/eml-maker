@@ -265,14 +265,27 @@ ul.inline {
 
 
 }
+// enum ErrorType {
+//   Fix=1,
+//   Warn,
+//   Suggestion,
+//   QA,
+//   BestPractice
+// }
+
 
 .message-center {
-  .type-1, .type-2, .type-3 {border-left: solid 5px; padding-left:.75em;}
+  .type-1, .type-2, .type-3, .type-4 {border-left: solid 5px; padding-left:.75em;}
   .level-1 { border-color: #DB2828;}
   .level-2 { border-color: #F2711C;}
   .level-3 { border-color: #fbbd08;}
   .level-4 { border-color: rgba(0,0,0,.1);}
-  .type-3 { border-color: #6435C9;}//suggestion
+
+  .type-1 { border-color: #DB2828;}
+  .type-2 { border-color: #F2711C;}
+  .type-3 { border-color: #6435C9;}
+
+  //suggestion
   // .level-1 { border-color: #DB2828;}
 }
 
