@@ -115,7 +115,7 @@ class UpdateModule {
 
     this.updateVersion = false;
     this.updateForced = false;
-    this.offlineVersion = window.OFFLINE_VERSION === undefined ? "" : window.OFFLINE_VERSION ;
+    this.offlineVersion = window.OFFLINE_VERSION === undefined ? getOfflineVersionNumber() : window.OFFLINE_VERSION ;
     this.onlineVersion = window.CURRENT_VERSION;
 
     //treat localhost:8888 as internet
@@ -133,7 +133,7 @@ class UpdateModule {
           onV = new ApplicationVersion(window.CURRENT_VERSION);
         this.updateForced = ofV.compareAgainst(onV)<=AppVersionDifferenceType.PATCH;
         console.log("UPDATEFORCED?", this.updateForced, ofV,onV);
-      } 
+      }
     }
 
   }
