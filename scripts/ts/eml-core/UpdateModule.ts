@@ -71,7 +71,7 @@ class AccessOnlineVersion {
       r.onerror = function(){
         args.onerror();
        };
-       
+
       r.src= !this.isLocalMachine() ? "" : "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
       setTimeout(function(){
         a.parentNode.insertBefore(r,m);
@@ -130,7 +130,7 @@ class UpdateModule {
       if(window.OFFLINE_VERSION && (window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
         this.updateVersion = true;
         let ofV = new ApplicationVersion(window.OFFLINE_VERSION), onV = new ApplicationVersion(window.CURRENT_VERSION);
-        this.updateForced = ofV.compareAgainst(onV)>=AppVersionDifferenceType.PATCH;
+        this.updateForced = ofV.compareAgainst(onV)<=AppVersionDifferenceType.PATCH;
       }
     }
 
