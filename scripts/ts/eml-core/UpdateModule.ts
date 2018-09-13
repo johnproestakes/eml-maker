@@ -60,7 +60,7 @@ class AccessOnlineVersion {
       r.onerror = function(){
         args.onerror();
        };
-      r.src=this.isLocalMachine() ? "canredirect.js" : "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
+      r.src= !this.isLocalMachine() ? "canredirect.js" : "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
       setTimeout(function(){
         a.parentNode.insertBefore(r,m);
       },2000);

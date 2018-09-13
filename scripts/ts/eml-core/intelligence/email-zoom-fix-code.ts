@@ -13,7 +13,7 @@ EMLIntelligence.module("email").register("email-zoom-fix-code",[
       label: "",
       handler: function(){
         // EmailAI.overridden.push("custom-zoom-fix-code-not-detected");
-        // EMLWorkspace.intelligence.checkEmail();
+
       }
     },
     when: function(){

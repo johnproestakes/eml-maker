@@ -18,7 +18,6 @@ EMLIntelligence.module("hyperlink").register("hyperlink-mailto-link-matches-cont
           LinkObject._super.overriddenIds.splice(LinkObject._super.overriddenIds.indexOf("custom-confrim-contact-email-addresses"),1);
         }
         LinkObject.isLinkComplete();
-        LinkObject._super.intelligence.checkEmail();
         window.ga('send', 'event', "Fix", "Update label", LinkObject._super._defaultSCode);
       }
     },
