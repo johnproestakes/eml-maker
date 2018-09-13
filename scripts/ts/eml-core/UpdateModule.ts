@@ -133,7 +133,7 @@ class UpdateModule {
           onV = new ApplicationVersion(window.CURRENT_VERSION);
         this.updateForced = ofV.compareAgainst(onV)<=AppVersionDifferenceType.PATCH;
         console.log("UPDATEFORCED?", this.updateForced, ofV,onV);
-      }
+      } 
     }
 
   }
