@@ -72,7 +72,9 @@ class AccessOnlineVersion {
         args.onerror();
        };
 
-      r.src= !this.isLocalMachine() ? "" : "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
+       if(this.isLocalMachine()){
+         r.src= "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
+       }
       setTimeout(function(){
         a.parentNode.insertBefore(r,m);
       },2000);
@@ -98,7 +100,7 @@ class AccessOnlineVersion {
   }
   isLocalMachine(){
     // return false;
-    return location.href.indexOf('johnproestakes.github.io')==-1;
+    return location.href.indexOf('johnproestakes.github.io')==-1 && location.href.indexOf('localhost:')==-1;
   }
 }
 
