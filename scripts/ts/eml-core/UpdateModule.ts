@@ -121,17 +121,17 @@ class UpdateModule {
     //treat localhost:8888 as internet
     if(location.href.indexOf("localhost")>-1){ window.LOCALHOST = false;}
 
-    if(window.OFFLINE_VERSION == ""){
+    if(this.offlineVersion == ""){
       this.accessingFromOffline = false;
     } else {
-      if(window.OFFLINE_VERSION && window.LOCALHOST){
+      if(this.offlineVersion && window.LOCALHOST){
         this.accessingFromOffline = true;
       }
-      if(window.OFFLINE_VERSION && (window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
+      if(this.offlineVersion && (this.offlineVersion !== this.onlineVersion)){
         this.updateVersion = true;
-        let ofV = new ApplicationVersion(window.OFFLINE_VERSION),
-          onV = new ApplicationVersion(window.CURRENT_VERSION);
-        this.updateForced = ofV.compareAgainst(onV)<=AppVersionDifferenceType.PATCH;
+        let ofV = new ApplicationVersion(this.offlineVersion),
+          onV = new ApplicationVersion(this.onlineVersion);
+        this.updateForced = ofV.compareAgainst(onV) <= AppVersionDifferenceType.PATCH;
         console.log("UPDATEFORCED?", this.updateForced, ofV,onV);
       }
     }
