@@ -7,7 +7,18 @@ interface Window {
   PAGE_TITLE: string;
   redirectJsonpCallback: (string)=>void;
 }
-
+function getOfflineVersionNumber(){
+  var output = "";
+  if(window.location.search.indexOf("offline_version")) {
+    var params = window.location.search.substr(1,window.location.search.length).split("&");
+    params.forEach(function(param){
+      if(param.indexOf("offline_version=")>-1){
+        output = param.substr("offline_version=".length, param.length);
+      }
+    });
+  }
+  return output;
+}
 class AccessOnlineVersion {
   headline: string;
   message: string;
@@ -26,7 +37,7 @@ class AccessOnlineVersion {
     if(args.onerror === undefined) args.onerror=function(){};
 
     window.LOCALHOST = this.isLocalMachine();
-    window.OFFLINE_VERSION = this.getOfflineVersionNumber();
+    window.OFFLINE_VERSION = getOfflineVersionNumber();
 
     if(window.LOCALHOST){
       window.scrollTo(0, 0);
@@ -41,7 +52,7 @@ class AccessOnlineVersion {
   }
   obtainKeyFromServer(args){
 
-    if(window.LOCALHOST){
+    if(this.isLocalMachine()){
       var r, a, m;
         window.redirectJsonpCallback = function(result){
           if(result == true) {
@@ -60,7 +71,8 @@ class AccessOnlineVersion {
       r.onerror = function(){
         args.onerror();
        };
-      r.src= !this.isLocalMachine() ? "canredirect.js" : "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
+       
+      r.src= !this.isLocalMachine() ? "" : "http://johnproestakes.github.io/eml-maker/prod/app/canredirect.js";
       setTimeout(function(){
         a.parentNode.insertBefore(r,m);
       },2000);
@@ -117,7 +129,8 @@ class UpdateModule {
       }
       if(window.OFFLINE_VERSION && (window.OFFLINE_VERSION !== window.CURRENT_VERSION)){
         this.updateVersion = true;
-        this.updateForced = this.forceUpdate(window.OFFLINE_VERSION, window.CURRENT_VERSION);
+        let ofV = new ApplicationVersion(window.OFFLINE_VERSION), onV = new ApplicationVersion(window.CURRENT_VERSION);
+        this.updateForced = ofV.compareAgainst(onV)>=AppVersionDifferenceType.PATCH;
       }
     }
 
@@ -139,5 +152,37 @@ class UpdateModule {
       output = true;
     }
     return output;
+  }
+}
+
+enum AppVersionDifferenceType{
+  MAJOR=0,
+  MINOR,
+  PATCH,
+  SUBPATCH,
+  NONE
+}
+class ApplicationVersion {
+  _version: string;
+  versionObject: number[];
+  constructor(version:string){
+    this._version = version;
+    this.versionObject = this._version.split(".").map((n:string)=>parseInt(n));
+  }
+  compareAgainst(OtherVersion:ApplicationVersion):AppVersionDifferenceType{
+    var me = this.versionObject,
+      other = OtherVersion.versionObject,
+      match = 0,
+      output = false;
+
+    for(var i=0; i<4;i++){
+      if(me[i]== other[i]){
+         match++;
+       } else {
+         break;
+       }
+     }
+
+    return AppVersionDifferenceType[AppVersionDifferenceType[match]];
   }
 }
