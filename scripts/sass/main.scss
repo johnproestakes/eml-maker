@@ -7,6 +7,8 @@
   // .wide-view {}
 }
 
+message-center,
+message-item {display:block;}
 
 .ui.image.header .eml-logo {
   vertical-align: middle;
@@ -115,7 +117,9 @@ pre {background-color: #fafafa;padding: .5em;}
   }
 }
 
+.link-section {
 
+}
 
 
 .link-section {
@@ -275,15 +279,17 @@ ul.inline {
 
 
 .message-center {
-  .type-1, .type-2, .type-3, .type-4 {border-left: solid 5px; padding-left:.75em;}
+  .type-1, .type-2, .type-3, .type-4, .type-5 {border-left: solid 5px; padding-left:.75em;}
   .level-1 { border-color: #DB2828;}
   .level-2 { border-color: #F2711C;}
   .level-3 { border-color: #fbbd08;}
   .level-4 { border-color: rgba(0,0,0,.1);}
 
+
   .type-1 { border-color: #DB2828;}
   .type-2 { border-color: #F2711C;}
   .type-3 { border-color: #6435C9;}
+  .type-5 { border-color: transparent;}
 
   //suggestion
   // .level-1 { border-color: #DB2828;}
@@ -298,7 +304,7 @@ ul.inline {
 }
 
 
-#content {margin-bottom:3em; }
+#content { }
 .step {
   cursor:hand;
 }
@@ -350,6 +356,13 @@ simple-accordion {
   animation-iteration-count: 1;
   animation-timing-function: linear;
 }
+.animate-pulse {
+  animation-name: pulse;
+  animation-duration: 500ms;
+  animation-iteration-count: 1;
+  animation-timing-function: linear;
+}
+
 .ui.secondary.pointing.menu.scrolling {
   overflow-y: scroll;
   overflow-x: hidden;
@@ -428,4 +441,43 @@ simple-accordion {
 .tada {
   -webkit-animation-name: tada;
   animation-name: tada;
+}
+
+@-webkit-keyframes pulse {
+  from {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  50% {
+    -webkit-transform: scale3d(1.05, 1.05, 1.05);
+    transform: scale3d(1.05, 1.05, 1.05);
+  }
+
+  to {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes pulse {
+  from {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  50% {
+    -webkit-transform: scale3d(1.05, 1.05, 1.05);
+    transform: scale3d(1.05, 1.05, 1.05);
+  }
+
+  to {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.pulse {
+  -webkit-animation-name: pulse;
+  animation-name: pulse;
 }

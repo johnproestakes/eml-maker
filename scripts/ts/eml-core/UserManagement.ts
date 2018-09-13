@@ -17,9 +17,12 @@ class SecureGateway{
   timerDelay: number;
   salt: string;
   emailRegex: RegExp;
+  canLogin: boolean;
+  AOV: AccessOnlineVersion;
 
 
-  constructor(loginCallback){
+  constructor(loginCallback, $scope){
+    this.canLogin = false;
     this.loginCallback = loginCallback;
     this.loginTimer = null;
     this.sessionUserEmail = "";
@@ -33,18 +36,26 @@ class SecureGateway{
     window.addEventListener('unload', function(){
       window.persist_store.save();
     });}
-
-
+    let SG = this;
+    location.href="#/login";
+  }
+  init(){
 
     if(this.hasSavedSessionId()){
       if(this.isValidEmailAddress(this.sessionId)){
         this.sessionUserEmail = this.sessionId;
         // loginCallback();
         location.href="#/login";
+
+        //auto logs in;
+        //is offline ->get online version.
         this.loginTimer = setTimeout(()=>{
           location.href="#/main";
           this.setCurrentUser(this.sessionUserEmail);
         }, this.timerDelay);
+
+
+
       } else {
         location.href="#/login";
         this.sessionUserEmail = "";
@@ -53,16 +64,12 @@ class SecureGateway{
       location.href="#/login";
       this.sessionUserEmail = "";
     }
-
     window.addEventListener('hashchange', ()=>{
       if( this.sessionUserEmail == "" || !this.hasSavedSessionId()) {
         location.href="#/login";
       }
     });
-
-
   }
-
   logOut():void {
     this.loginAsOther();
     this.sessionId = "";

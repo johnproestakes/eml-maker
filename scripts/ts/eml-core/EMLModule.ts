@@ -11,14 +11,26 @@ interface EventTarget {
 }
 // declare var window: MyWindow;
 
-// window.EMLMaker_EMLModule = !window.EMLMaker_EMLModule ? function(args){
+interface $Sce {
+  trustAsHtml(str: string): any;
+}
+
+interface SearchStringPayload {
+  added: string[],
+  updated: string[],
+  removed: string[],
+}
+interface ChangeMonitorMsg {
+  message: string,
+  data: any[]
+}
+
 enum ErrorSeverity {
   High=1,
   Medium,
   Low,
   Zero
 }
-
 enum ErrorType {
   Fix=1,
   Warn,
@@ -27,11 +39,14 @@ enum ErrorType {
   BestPractice
 }
 
-interface $Sce {
-  trustAsHtml(str: string): any;
-}
 
 namespace GlobalVars {
+  export let landingPagePreferred = /(\.mp4|\.avi|\.mpeg|\.mp3|\.swf|\.mov|\.pdf)/i;
+  export let extDoesNotrequireTrackingCode = /(\.pdf|\.oft|\.ics|\.png|\.jpeg|\.jpg)/i;
+  export let linkEncapsulatedPunctuation = /([\.\?\,\:\*]+)((\n|\r|\s)+)?<\/a>$/;
+
+  export let RequiresSCodeRegex = /http(.*)optum(.*)\/(campaign|resource)/i;
+  export let RequiresTrackingCodeRegex = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
   export let TelephoneRegex = /(\+?\d{1,2}(\s|-|\.))?\(?\d{3}\)?[\s.-]\d{3,}[\s.-]\d{4,}/;
   export let TelephoneRegexGlobal = /(\+?\d{1,2}(\s|-|\.))?\(?\d{3}\)?[\s.-]\d{3,}[\s.-]\d{4,}/g;
   export let EmailRegex = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
@@ -39,153 +54,16 @@ namespace GlobalVars {
   export let UrlRegex = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
   export let LinkHasTitleTagRegexGlobal = /<a\s([^<]*)title=\"(.*?)\">/gi;
   export let PreheaderRegexGlobal = /\<p\s[^\<]*class=\"preheader\"[^\>]*\>/gi;
+  export let RequiredTrackingCodeWhitelist: any[] = [
+    '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
+    'optum.webex.com','twitter.com','facebook.com','linkedin.com','info.optum'
+  ];
 }
 
-
-
-class IntelligenceEngine {
-  messages: EMLModule.MessageObject[];
-  canContinue: boolean;
-  cachedResults: EMLModule.MessageObject[];
-  EMLWorkspace: EMLModule.EMLWorkspace;
-  overridden: string[];
-
-  constructor(EMLWorkspace?){
-    this.messages = [];
-    this.canContinue = true;
-    this.cachedResults = [];
-    this.overridden = [];
-    this.EMLWorkspace = EMLWorkspace;
-  }
-  when(condition, callback ){
-    if(condition) callback(this.EMLWorkspace, this);
-    return this;
-  }
-
-  reset(){
-    this.messages = [];
-    this.canContinue = true;
-  }
-
-  get tabs(){
-    let output = {};
-    for(let i = 0; i<this.messages.length; i++){
-      output[ErrorType[this.messages[i].type]] = this.messages[i].type;
-      // output[this.messages[i].type] = ErrorType[this.messages[i].type];
-    }
-    return output;
-  }
-  get types(){
-    let output = {};
-    for(let i = 0; i<this.messages.length; i++){
-      output[this.messages[i].type] = ErrorType[this.messages[i].type];
-    }
-    return output;
-  }
-  get count(){
-    let output = {};
-    for(var i =0; i < this.messages.length; i++) {
-      if(output[ErrorType[this.messages[i].type]] === undefined) {
-        output[ErrorType[this.messages[i].type]] = 0;
-      }
-      output[ErrorType[this.messages[i].type]]++;
-    }
-    return output;
-  }
-}
-
-namespace RememberValues {
-  export function setupStorage(){
-    if(!window.persist_store)
-    {window.persist_store = new window.Persist.Store('EMLMaker');
-    window.addEventListener('unload', function(){
-      window.persist_store.save();
-    });}
-  }
-  export function add(name, value) {
-    this.setupStorage();
-    var a = window.persist_store.get("remember-"+name);
-    console.log(a);
-    if(a===null || a === undefined){
-      a = {values:[]};
-    } else {
-      a = JSON.parse(a);
-    }
-    if(a.values.indexOf(value)==-1){
-      a.values.push(value);
-      window.persist_store.set("remember-"+name, JSON.stringify(a));
-    }
-
-
-
-
-  }
-  export function get(name) {
-    this.setupStorage();
-    var a = window.persist_store.get("remember-"+name);
-    if(a===undefined){
-      a = {values:[]};
-    } else {
-      a = JSON.parse(a);
-    }
-    return a;
-
-  }
-}
-
-
-function guid() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1);
-  }
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-}
 
 namespace EMLModule {
 
-  export class MessageObject {
-    type: ErrorType;
-    description: string;
-    title: string;
-    id: string;
-    args: {
-      handler: ()=>void,
-      ctaLabel: string,
-      severity: ErrorSeverity,
-      inputModel: string,
-      inputLabel: string
-    };
-    override: boolean;
-    handler: any;
-    ctaLabel: string;
-    severity: string;
-    cleanType: string;
-    inputModel: string;
-    inputLabel: string;
 
-    constructor( type, title, description, args?){
-      if(args===undefined) args = {};
-      this.type = type;
-      this.cleanType = ErrorType[type];
-      this.title = title;
-      this.override = false;
-      this.description = description;
-      this.id = args.id === undefined ? "msg-" + guid() : "custom-" + args.id;
-      this.handler = args.handler ===undefined ? function(){} : args.handler;
-      this.ctaLabel = args.ctaLabel === undefined ? "" : args.ctaLabel;
-      this.severity = args.severity === undefined ? ErrorSeverity.Zero : args.severity;
-      this.inputModel = "";
-      this.inputLabel = "";
-      console.log(this.id);
-
-    }
-    setOverrideStatus(val){
-      this.override = val;
-      console.log(this.id + " - overridden");
-    }
-  }
 
   export class MailtoLinkObject {
      parent: LinkObject;
@@ -221,6 +99,15 @@ namespace EMLModule {
        for(var i =0; i<options.length; i++){
          if(this[options[i]] && this[options[i]] !== "") {
            this.parent.new.searchParams.set(options[i], this[options[i]]);
+         } else if(this[options[i]]==""){
+           this.parent.new.searchParams.delete(options[i]);
+           // ["subject","body"].forEach((option)=>{
+           //   if(this[option] == "") {
+           //
+           //    }
+           //  });
+           // //delete it;
+           // this.parent.new.searchParams.delete(options[i]);
          }
        }
      }
@@ -229,6 +116,7 @@ namespace EMLModule {
        var a = this.parent.new.url.substr(7, this.parent.new.url.length-7);
        var b = a.split("?");
        this.email = b[0];
+
        this.parent.new.searchParams.updateEntries();
        if(b.length>1){
          ["subject","body"].forEach((option)=>{
@@ -236,6 +124,9 @@ namespace EMLModule {
              this[option] = window.decodeURIComponent(this.parent.new.searchParams.get(option));
            }
          });
+       } else {
+         this.subject= "";
+         this.body = "";
        }
      }
      inputOnBlur(){
@@ -293,7 +184,9 @@ namespace EMLModule {
     }
     get url(){
       this.prepareExport();
-      return this.origin + this.search + this.hash;
+      var u = this.origin + this.search + this.hash;
+      u = u.replace("?undefined","");
+      return u;
     }
     set url(url){
       this.search = "";
@@ -369,15 +262,17 @@ namespace EMLModule {
     }
     updateSearchProp():void{
       var output = [];
-      for(var i =0;i<this._entries.length;i++){
-        var prop =this._entries[i].split("=");
-        if(/[a-z]{1,4}=(.*?:){3,9}/gi.test(this._entries[i])) {
-          output.push(this._entries[i]);
-        } else {
-          output.push(prop[0]+(prop.length>1 ? "="+ encodeURIComponent(decodeURIComponent(prop[1])) : ""));
+      if(this._entries.length>0){
+        for(var i =0;i<this._entries.length;i++){
+          var prop =this._entries[i].split("=");
+          if(/[a-z]{1,4}=(.*?:){3,9}/gi.test(this._entries[i])) {
+            output.push(this._entries[i]);
+          } else {
+            output.push(prop[0]+(prop.length>1 ? "="+ encodeURIComponent(decodeURIComponent(prop[1])) : ""));
+          }
         }
-
       }
+
       this.parent.search = output.length>0 ? "?"+output.join("&") : "";
     }
     has(param):boolean{
@@ -441,10 +336,12 @@ namespace EMLModule {
     height: number|boolean;
     width: number|boolean;
     context: string;
+    _super: LinkObject;
 
 
     constructor (_super, code) {
       this.context = code;
+      this._super = _super;
       var tags = ["src", "alt", "height", "width"];
       for(let tag of tags){
         var regex = new RegExp(tag+"=\"([^\"].*?)?\"","i");
@@ -452,7 +349,31 @@ namespace EMLModule {
           this[tag] = code.match(regex)[1];
         }
       }
+      let hasWidth = this.width && parseInt(this.width.toString());
+      let hasHeight = this.height && parseInt(this.height.toString());
 
+      if(!hasWidth || !hasHeight){
+        if(typeof this.src === "string"){
+          this.preloadImage(this.src);
+        }
+      } //either is not set
+
+    }
+    preloadImage(src){
+      var LI = this;
+        var img = new Image();
+        // img.style.visibility = "hidden";
+        img.onload=function(){
+          LI.height = img.height;
+          LI.width = img.width;
+          console.log(img.height,img.width);
+          img.parentNode.removeChild(img);
+        };
+
+
+        img.src = <string>LI.src;
+        console.log(img);
+        document.body.appendChild(img);
     }
     generateOutput(content):string {
       var _this= this;
@@ -471,8 +392,7 @@ namespace EMLModule {
   export class LinkObject {
     _super: EMLWorkspace;
     __isComplete: boolean;
-    __requiresTrackingCodeRegExp : any;
-    __requiredTrackingCodeWhitelist: any[];
+
 
     readOnly: boolean;
     context: string;
@@ -482,9 +402,11 @@ namespace EMLModule {
     id: number;
     line: number;
     LinkedImage: LinkedImage;
+    LinkedImageOld: LinkedImage;
     mailto: MailtoLinkObject;
     new: URLObj;
     old: URLObj;
+    ChangeMonitor: ChangeMonitor;
     showMailtoEditor: boolean;
     showQueryStringEditor: boolean;
     queryStrings: string[];
@@ -493,50 +415,55 @@ namespace EMLModule {
 
 
     constructor(line: number, context: string, parent: EMLWorkspace){
-      var LO = this;
       this.__isComplete = false;
+      this._super = parent;
 
       this.showQueryStringEditor = false;
       this.showMailtoEditor = false;
 
-      this._super = parent;
-      this.__requiresTrackingCodeRegExp = RegExp("^http(s)?:\/\/(.*?)?optum(.*?)?\.co[m\.]?");
-      this.__requiredTrackingCodeWhitelist = [
-        '.pdf','.ics','.oft','optumsurveys.co','healthid.optum.com','learning.optum.com','app.info.optum.com',
-        'optum.webex.com','twitter.com','facebook.com','linkedin.com','info.optum'
-      ];
-
+      this.id = 0;
       this.line = line + 1;
       this.context = context;
       this.queryStrings = [];
-      this.errors = new EMLMakerAIEngine.LinkIntelligence(parent);
-      this.id = 0;
+
+      this.ChangeMonitor = new ChangeMonitor(this);
+      this.errors = EMLIntelligence.module("hyperlink").monitor();
+      this.errors.associateVariable("LinkObject", this);
+
       this.whiteListedUrl = "~~whitelist~~";
 
-      var re2 = /href\=\"([^\"\>]*)\"/g;
-      var href = context.match(re2);
-      if(href.length>0){
-
-        if(href[0]=="href=\"\"") {
-          LO.new =  new URLObj("#");
-          LO.old = new URLObj("#");
-          this.context = this.context.replace(new RegExp("href=\"\"","g"),"href=\"#\"");
-        } else {
-          LO.new =  new URLObj((href[0].substr(6, href[0].length-7)).trim());
-          LO.old = new URLObj((href[0].substr(6, href[0].length-7)).trim());
-        }
-
-      }
+      //find href
+      this.__locateHref(context);
       //find image
-      if(/\<img([^>].*?)\>/.test(context)){
-        var found = context.match(/\<img([^>].*?)\>/);
-        if(found.length>0){
-          LO.LinkedImage = new LinkedImage(LO, found[0]);
-        }
-      }
+      this.__locateLinkedImage(context);
+
       //need to set the url before you do this;
       this.mailto = new MailtoLinkObject(this);
       this.isLinkComplete();
+    }
+    __locateHref(context){
+      var re2 = /href\=\"([^\"\>]*)\"/g;
+      var href = context.match(re2);
+      if(href.length>0){
+        if(href[0]=="href=\"\"") {
+          this.new =  new URLObj("#");
+          this.old = new URLObj("#");
+          this.context = this.context.replace(new RegExp("href=\"\"","g"),"href=\"#\"");
+        } else {
+          this.new = new URLObj((href[0].substr(6, href[0].length-7)).trim());
+          this.old = new URLObj((href[0].substr(6, href[0].length-7)).trim());
+        }
+
+      }
+    }
+    __locateLinkedImage(context){
+      if(/\<img([^>].*?)\>/.test(context)){
+        var found = context.match(/\<img([^>].*?)\>/);
+        if(found.length>0){
+          this.LinkedImage = new LinkedImage(this, found[0]);
+          this.LinkedImageOld = new LinkedImage(this, found[0]);
+        }
+      }
     }
 
     hasDuplicateQueryStrings(): string[]|boolean {
@@ -561,15 +488,6 @@ namespace EMLModule {
 
     }
 
-    hasQueryStringParameter(id):boolean{
-      console.warn("hasQueryStringParameter has depreciated, use the relevant URLObjSearchParams method");
-      return this.new.searchParams.has(id);
-    }
-    removeJumpLink(){
-      //can move to url obj class.. but tbh it's just resetting the hash value;
-      this.new.hash = "";
-      this.isLinkComplete();
-    }
     overrideTrackingRequirements(){
       this.whiteListedUrl = this.new.url;
     }
@@ -617,8 +535,12 @@ namespace EMLModule {
     }
 
     isLinkComplete(){
-      this._super.intelligence.checkEmail();
-      this.errors.checkLink(this);
+      //intelligence scans:
+      this._super.intelligence.evaluateRules();
+      this.errors.evaluateRules();
+      //track changes:
+      this.ChangeMonitor.update();
+
       this.__isComplete= this.errors.canContinue;
       if(this.hasOwnProperty("deleteOnRender")&& this.deleteOnRender) this.__isComplete = true;
       return this.__isComplete;
@@ -643,7 +565,7 @@ namespace EMLModule {
       return output;
     }
 
-    hasTrackingCode(obj?): boolean {
+    hasTrackingCode(obj?): boolean {//suspect
       if(obj===undefined) obj = this.new.url;
       // if(this.whiteListedUrl==this.new) return true;
       var a = /[a-z]{1,4}=(.*?:){3,9}/ig;
@@ -651,18 +573,25 @@ namespace EMLModule {
     }
     requiresTrackingCode(obj?): boolean {
       var output: boolean = false;
-      if(this.__requiresTrackingCodeRegExp.test(this.new.url)) {
+      if(GlobalVars.RequiresTrackingCodeRegex.test(this.new.url)) {
         output = true;
         // iterate ofer whitelist
-        for(var i =0; i < this.__requiredTrackingCodeWhitelist.length; i++){
-          if( this.__requiredTrackingCodeWhitelist[i] instanceof RegExp) {
-            if(this.__requiredTrackingCodeWhitelist[i]["test"](this.new.url)) { output = false; }
+        for(var i =0; i < GlobalVars.RequiredTrackingCodeWhitelist.length; i++){
+          if( GlobalVars.RequiredTrackingCodeWhitelist[i] instanceof RegExp) {
+            if(GlobalVars.RequiredTrackingCodeWhitelist[i]["test"](this.new.url)) { output = false; }
           } else {
-            if(this.new.url.indexOf(this.__requiredTrackingCodeWhitelist[i])>-1) { output = false; }
+            if(this.new.url.indexOf(GlobalVars.RequiredTrackingCodeWhitelist[i])>-1) { output = false; }
           }
         }
       }
       return output;
+    }
+    requiresSCode(): boolean {
+      if(GlobalVars.RequiresSCodeRegex.test(this.new.url)){
+        return true;
+      } else {
+        return false;
+      }
     }
     needsTrackingCode(): boolean {
       var output: boolean = this.requiresTrackingCode();
@@ -673,13 +602,147 @@ namespace EMLModule {
       }
       return output;
     }
-    refreshURL(){
-      console.warn("refreshURL has depreciated, use the relevant URLObj method");
-      // if(this.new.indexOf("#")>-1){
+    updateInput(){
+      if(this.isLinkType('mailto')){
+        this.mailto.updateMailtoObj();
+      } else {
+        this.new.searchParams.updateEntries()
+      }
       this.isLinkComplete();
     }
+
   }
 
+
+
+
+  export class ChangeMonitor{
+    _super: LinkObject;
+    messages: ChangeMonitorMsg[];
+    visible: boolean;
+
+    constructor(_super){
+      this.visible = false;
+      this._super = _super;
+      this.messages = [];
+    }
+    compareOldAndNew(): string[]{
+      let urlParams = ["protocol","origin","search","hash"];
+      var changed = [];
+      var _super = this._super;
+      urlParams.forEach(function(param){
+        if(_super.old.hasOwnProperty(param) && _super.old[param]!== _super.new[param]){
+          changed.push(param);
+        }
+      });
+      if(_super.LinkedImage && _super.LinkedImage.alt!==_super.LinkedImageOld.alt){
+        changed.push("alt");
+      }
+      return changed;
+    }
+    beforeDidReturnChanges(){ }
+    afterDidReturnChanges(){ }
+    update(){
+      if(this._super.readOnly == false){
+        var output = [];
+        let changes = this.compareOldAndNew();
+        var CM = this;
+        changes.forEach(function(scope){
+          output.push(CM.articulateChanges(scope, {}));
+        });
+        this.messages = output;
+      }
+    }
+
+    compareSearchStrings(oldP, newP): SearchStringPayload {
+      var payload: SearchStringPayload = {
+        added: [],
+        updated: [],
+        removed:[]
+      };
+      for(var i in oldP){
+        if(newP.indexOf(oldP[i])===-1){ payload.removed.push(oldP[i]) }
+      }
+      for(i in newP){
+        if(oldP.indexOf(newP[i])===-1){ payload.added.push(newP[i]) }
+      }
+      let find_pattern_inArray = function(pattern:RegExp, arr: string[]){
+        var output: number = -1;
+         for(var y=0;y<arr.length;y++){
+           // console.log("uupdatred?",y);
+           if(pattern.test(arr[y])){
+             output = y;
+           }
+         }
+        return output;
+      };
+      for(i in oldP){
+        var re = new RegExp(oldP[i].split("=")[0]+"=");
+        var found = find_pattern_inArray(re, payload.added);
+        if(found>-1){
+          payload.updated.push(payload.added[found]);
+          var other = find_pattern_inArray(re, payload.removed);
+          payload.removed.splice(other,1);
+          payload.added.splice(found,1);
+        }
+      }
+      return payload;
+    }
+    articulateChanges(scope, args): {message: string, data: any} {
+      if(scope=="protocol"){
+        if(this._super.new.protocol == "mailto:"){
+          return {message: "Changed to mailto link.", data: []};
+        } else {
+          return {
+            message: (this._super.old.protocol=="" ? "Updated" : "Changed")+" protocol to " + this._super.new.protocol,
+            data: []
+          };
+        }
+      } else if(scope=="origin"){
+        if(this._super.new.protocol == "mailto:"){
+          return {message: "Changed mailto link to " + this._super.new.origin, data: []};
+        } else {
+          return {message: "Changed link URL to " + this._super.new.origin, data: []};
+        }
+      } else if(scope=="alt") {
+        if(this._super.LinkedImage.alt == ""){
+          return {message: "Removed linked image ALT text", data: []};
+        } else {
+          return {message: "Updated linked image ALT text to <b>" + this._super.LinkedImage.alt + "</b>", data: []};
+        }
+      } else if(scope=="search") {
+
+        let oldParams = this._super.old.searchParams._entries;
+        let newParams = this._super.new.searchParams._entries;
+
+        let searchChanges = this.compareSearchStrings(oldParams, newParams);
+
+        var message = "";
+        var _super = this._super;
+        ["updated","added","removed"].forEach(function(key){
+          if(searchChanges[key].length>0){
+            message = message + key[0].toUpperCase()+key.substr(1,key.length) + " "+(_super.new.protocol=="mailto:" ? "parameter" : "query string")+(searchChanges[key].length>1 ? "s": "") + ": <b>" + searchChanges[key].join(", ") + "</b><br>";
+          }
+        });
+
+        return { message: message, data: [] };
+
+
+      } else if(scope=="hash") {
+        if(this._super.old.hash =="") {
+          return {message: "You added the hash " + this._super.new.hash, data:[]};
+        } else {
+          if(this._super.new.hash ==""){
+            return {message: "You removed the hash " + this._super.old.hash, data:[]};
+          } else {
+            return {message: "You changed the hash from " + this._super.old.hash + " to " + this._super.new.hash, data:[]};
+          }
+
+        }
+      }
+
+    }
+  }
   export class EMLWorkspace {
 
     scope: any;
@@ -717,7 +780,6 @@ namespace EMLModule {
       this._defaultSCode = "s=email";
       this.header = {"subject":""};
       this.messages = [];
-      this.errors = {messages:[], canProceed:true};
       this.exportForEloqua  = "Yes";
 
       this.__emlHeaders = "";
@@ -734,7 +796,8 @@ namespace EMLModule {
         "X-Uniform-Type-Identifier: com.apple.mail-draft",
         "Content-Transfer-Encoding: 7bit"
       ];
-      this.intelligence = new EMLMakerAIEngine.EmailIntelligence(this);
+      this.intelligence = EMLIntelligence.module("email").monitor();
+      this.intelligence.associateVariable("EMLWorkspace", this);
     }
     mapLinkObjects(callback){
       if(this.linkData.length>0){
@@ -748,12 +811,37 @@ namespace EMLModule {
     }
 
     downloadEml():void{
-      var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.__replaceEloquaMergeFields(this.generateOutputCode()));
+      this.beforeDidDownloadEml();
+      var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.__replaceEloquaMergeFields(this.generateOutputCode("oft")));
       this.fileName = this.__formatFileName(this.fileName);
       window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".eml");
+      this.afterDidDownloadEml();
+    }
+    beforeDidDownloadEml(){
+      this.mapLinkObjects(function(LinkObject){
+        if(LinkObject.new.searchParams.has("elqTrack")){
+          let index = LinkObject.new.searchParams.entries.indexOf("elqTrack=true");
+          if(index>-1){
+            LinkObject.new.searchParams.deleteAtIndex(index);
+          }
+        }
+        if(!LinkObject.new.searchParams.has("s")&& LinkObject.requiresSCode()){
+          LinkObject.new.searchParams.append("s=oft");
+        } else {
+          if(LinkObject.new.searchParams.get("s")=="email"){
+            LinkObject.new.searchParams.set("s","oft");
+          }
+        }
+      });
+      this.mapLinkObjects(function(LinkObject){
+        LinkObject.ChangeMonitor.update();
+      });
+    }
+    afterDidDownloadEml(){
       window.ga('send', 'event', "EML", "download", "EML Export");
       location.href= "#/export-eml";
     }
+
     downloadCsv():void{
       var output = "Context,Original URL,Modified URL\n";
       this.mapLinkObjects(function(LinkObject) {
@@ -763,15 +851,30 @@ namespace EMLModule {
       window.saveAs(new Blob([output], {type:"text/csv"}), this.fileName+"_links.csv");
       window.ga('send', 'event', "CSV", "download", "CSV Export");
     }
+
     downloadHtml():void{
-      var output = this.generateOutputCode();
+      var output = this.beforeDidDownloadHtml(this.generateOutputCode("email"));
       this.fileName = this.__formatFileName(this.fileName);
       window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".html");
+      this.afterDidDownloadHtml();
+    }
+    beforeDidDownloadHtml(code){
+      return code;
+    }
+    afterDidDownloadHtml(){
       window.ga('send', 'event', "HTML", "download", "HTML Export");
     }
+
+
     exportCodeToHTML():void{
+      this.beforeDidExportCodeToHTML();
+      this.outputCode = this.generateOutputCode("email");
+      this.afterDidExportCodeToHTML();
+    }
+    beforeDidExportCodeToHTML(){
       let trackingOptOut = false;
       if(this.exportForEloqua && this.exportForEloqua == "Yes") {
+        window.ga('send', 'event', "HTML", "Add Eloqua Tracking", "Add Eloqua Tracking");
         this.mapLinkObjects(function(LinkObject){
           trackingOptOut = LinkObject.whiteListedUrl == LinkObject.new.url;
           if(!LinkObject.isLinkType("mailto")
@@ -783,8 +886,9 @@ namespace EMLModule {
               LinkObject.whiteListedUrl = LinkObject.new.url;
             }
           }
+
+
         });
-        window.ga('send', 'event', "HTML", "Add Eloqua Tracking", "Add Eloqua Tracking");
       } else {
         this.mapLinkObjects(function(LinkObject){
           if(LinkObject.new.searchParams.has("elqTrack")){
@@ -792,17 +896,40 @@ namespace EMLModule {
             if(index>-1){
               LinkObject.new.searchParams.deleteAtIndex(index);
             }
-            LinkObject.refreshURL();
+            LinkObject.isLinkComplete();
           }
-
+          LinkObject.ChangeMonitor.update();
         });
-
-
       }
-      this.outputCode = this.generateOutputCode();
+
+      this.mapLinkObjects(function(LinkObject){
+        if(!LinkObject.new.searchParams.has("s") && LinkObject.requiresSCode()){
+          LinkObject.new.searchParams.append("s=email");
+        } else {
+          if(LinkObject.new.searchParams.has("s") && LinkObject.new.searchParams.get("s")=="oft"){
+            LinkObject.new.searchParams.set("s","email");
+          }
+        }
+        LinkObject.ChangeMonitor.update();
+      });
+
+      this.mapLinkObjects(function(LinkObject){
+        LinkObject.ChangeMonitor.update();
+      });
+
+    }
+    afterDidExportCodeToHTML(){
+      this.mapLinkObjects(function(LinkObject){
+        if(LinkObject.whiteListedUrl==LinkObject.new.url){
+          //report the non tracked link;
+          window.ga('send', 'event', "Tracking-Optout", "override", LinkObject.new.url);
+        }
+      });
       window.ga('send', 'event', "HTML", "view sourcecode", "Export/View HTML");
       location.href= "#/export-html";
     }
+
+
     setUpShortcutKeys():void{
       var _this= this;
       this.keyBoardShortcuts = [];
@@ -833,7 +960,7 @@ namespace EMLModule {
                 if(LinkObject.errors.messages.length>0){
                   LinkObject.errors.messages.forEach(function(MessageObject){
                     if(MessageObject.type == ErrorType.Suggestion){
-                      MessageObject.handler(LinkObject);
+                      MessageObject.ctaHandler();
                     }
                   });
                   LinkObject.isLinkComplete();
@@ -854,7 +981,7 @@ namespace EMLModule {
             _this.scope.$apply(function(){
               _this.mapLinkObjects(function(LinkObject){
                 if(!LinkObject.readOnly
-                  && /resource|campaign/g.test(LinkObject.new.url)
+                  && LinkObject.requiresSCode()
                 && !LinkObject.new.searchParams.has('s')){
                   LinkObject.new.searchParams.append('s=email');
                   LinkObject.isLinkComplete();
@@ -931,10 +1058,11 @@ namespace EMLModule {
       return text;
     }
     processHtml():void{
-
+      //creates a new workspace from html
       this.setUpShortcutKeys();
       this.linkData = [];
-      this.intelligence.checkEmail();
+      this.intelligence.overridden = [];
+      this.intelligence.evaluateRules();
       window.scrollTo(0,0);
       // .replace(new RegExp("</a>","ig"), "</a>\n")
       this.workingCode = this.replaceSpecialCharacters(this.sourceCode);
@@ -1001,16 +1129,7 @@ namespace EMLModule {
     }
     verifyLinkSectionComplete():boolean{
       var output = false;
-      // are there problems in the EMLEmailAIEngine
 
-      // if(this.intelligence.messages.length>0){
-      //   for(var i =0; i<this.intelligence.messages.length; i++){
-      //     // this.intelligence[i].
-      //     if(this.intelligence.messages[i].severity==1 && !this.intelligence.messages[i].override){
-      //       output = false;
-      //       }
-      //     }
-      //   }
       if(this.intelligence && !this.intelligence.canContinue){
         return false;
         }
@@ -1028,15 +1147,18 @@ namespace EMLModule {
       }
       return output;
     }
-    generateOutputCode():string{
+
+
+    generateOutputCode(type?, clone?):string{
+      if(type === undefined) type = "email";
+      if(clone === undefined) clone = true;
       var _this = this;
       var output:string = this.workingCode;
+
+      //post processing.
+      //do post processing.
+      //export code?
       this.mapLinkObjects(function(LinkObject){
-        // codeLines[line] = codeLines[line].replace(new RegExp("href=\"" + item.old, "g"),"href=\"" + item.new);
-        if(LinkObject.whiteListedUrl==LinkObject.new.url){
-          //report the non tracked link;
-          window.ga('send', 'event', "Tracking-Optout", "override", LinkObject.new.url);
-        }
 
         if(LinkObject.hasOwnProperty("deleteOnRender")&&LinkObject.deleteOnRender){
           output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), "");
@@ -1044,11 +1166,7 @@ namespace EMLModule {
           let readOnlyUrl = LinkObject.context.replace(/eml\-id\=\"[0-9]{1,}\"\s/g,"");
           output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), readOnlyUrl);
         } else {
-          if(LinkObject.isLinkType("mailto")&&LinkObject.mailto.subject!==""){
-            //save subject to persist;
-            RememberValues.add("mailto-subject", LinkObject.mailto.subject);
-            console.log(LinkObject.mailto.subject);
-          }
+
           var start = LinkObject.context.indexOf("href=\"" + LinkObject.old.url);
           // codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + LinkObject.new.url + codeLines[line].substr(start+6+LinkObject.old.url.length, codeLines[line].length);
           //this is where we update the context;
@@ -1064,8 +1182,16 @@ namespace EMLModule {
 
       });
 
+      //find all images without alt attribute and add alt="";
+      output = output.replace(/\<img[^\>].*?\>/gi, function(found){
+        if(found.indexOf("alt=")>-1){
+          return found;
+        } else {
+          return found.replace(/\<img/gi, "<img alt=\"\"");
+        }
+        });
+
       try {
-        // this.sourceCode = this.sourceCode.replace(/<\/a>\n/g, "</a>");
         output = output.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
       } catch(e){
         console.log("error merging lines with links that previously had punctuation.");
@@ -1084,7 +1210,7 @@ namespace EMLModule {
     }
     areLinksComplete():boolean{
       var output = true;
-      // this.intelligence.checkEmail();
+
       this.mapLinkObjects(function(LinkObject){
 
         if(!LinkObject.__isComplete){
@@ -1225,6 +1351,7 @@ namespace EMLModule {
 
   }
 
+
   export class KeyboardShortcut {
 
     when : ()=>boolean;
@@ -1241,10 +1368,5 @@ namespace EMLModule {
     }
   }
 
-
-
-
-
-//EMLModule
 
 }
