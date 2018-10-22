@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register(
+EMLMaker.intelligence.module("hyperlink").register(
   "hyperlink-tracking-s-code",[
   "LinkObject",function(LinkObject){
 
@@ -29,7 +29,7 @@ EMLIntelligence.module("hyperlink").register(
       let requiresS = LinkObject.requiresSCode();
       let hasS = LinkObject.new.searchParams.has("s");
       let proceed = requiresS && !hasS;
-      
+
       return proceed && !hasS;
       }
     };

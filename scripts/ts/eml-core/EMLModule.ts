@@ -60,6 +60,36 @@ namespace GlobalVars {
   ];
 }
 
+class InjectorModule {
+  // scope: any[];
+  variables: {string?:any};
+  constructor(){
+    this.variables = {};
+  }
+  __getParams(keys, injectables){
+    var args = keys.map((key:string)=>{
+      return injectables[key]
+    });
+    //console.log(keys,args);
+    return args;
+  }
+  __getInjector(specs){ //format is ["", fn(a)] or fn(){}
+    var output = { fn: function(){}, args: [] };
+    if(typeof specs == "object"){
+      output.fn = specs[specs.length-1];
+      output.args = this.__getParams(specs.slice(0, specs.length-1), this.variables);
+
+    } else {
+      output.fn = specs;
+    }
+    return output;
+  }
+
+  inject(varName, varValue){
+    this.variables[varName] = varValue;
+
+  }
+}
 
 namespace EMLModule {
 
@@ -427,8 +457,9 @@ namespace EMLModule {
       this.queryStrings = [];
 
       this.ChangeMonitor = new ChangeMonitor(this);
-      this.errors = EMLIntelligence.module("hyperlink").monitor();
-      this.errors.associateVariable("LinkObject", this);
+      this.errors = EMLMaker.intelligence.module("hyperlink").monitor();
+      this.errors.inject("LinkObject", this);
+      this.errors.inject("EMLWorkspace", this._super);
 
       this.whiteListedUrl = "~~whitelist~~";
 
@@ -796,8 +827,8 @@ namespace EMLModule {
         "X-Uniform-Type-Identifier: com.apple.mail-draft",
         "Content-Transfer-Encoding: 7bit"
       ];
-      this.intelligence = EMLIntelligence.module("email").monitor();
-      this.intelligence.associateVariable("EMLWorkspace", this);
+      this.intelligence = EMLMaker.intelligence.module("email").monitor();
+      this.intelligence.inject("EMLWorkspace", this);
     }
     mapLinkObjects(callback){
       if(this.linkData.length>0){
@@ -811,32 +842,21 @@ namespace EMLModule {
     }
 
     downloadEml():void{
-      this.beforeDidDownloadEml();
-      var output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.__replaceEloquaMergeFields(this.generateOutputCode("oft")));
+
+      var beforeDidDownloadEml = EMLMaker.filter.module("beforeDidDownloadEml");
+      beforeDidDownloadEml.inject("EMLWorkspace", this);
+
+      var output = beforeDidDownloadEml.applyFilter(this.generateOutputCode("oft"));
+      output = this.__emlHeaders + "\n\n" + this.__removeWhiteSpace(this.__replaceEloquaMergeFields(output));
       this.fileName = this.__formatFileName(this.fileName);
-      window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".eml");
-      this.afterDidDownloadEml();
-    }
-    beforeDidDownloadEml(){
-      this.mapLinkObjects(function(LinkObject){
-        if(LinkObject.new.searchParams.has("elqTrack")){
-          let index = LinkObject.new.searchParams.entries.indexOf("elqTrack=true");
-          if(index>-1){
-            LinkObject.new.searchParams.deleteAtIndex(index);
-          }
-        }
-        if(!LinkObject.new.searchParams.has("s")&& LinkObject.requiresSCode()){
-          LinkObject.new.searchParams.append("s=oft");
-        } else {
-          if(LinkObject.new.searchParams.get("s")=="email"){
-            LinkObject.new.searchParams.set("s","oft");
-          }
-        }
-      });
+
       this.mapLinkObjects(function(LinkObject){
         LinkObject.ChangeMonitor.update();
       });
+      window.saveAs(new Blob([output], {type:"text/html"}), this.fileName+".eml");
+      this.afterDidDownloadEml();
     }
+
     afterDidDownloadEml(){
       window.ga('send', 'event', "EML", "download", "EML Export");
       location.href= "#/export-eml";
@@ -928,111 +948,149 @@ namespace EMLModule {
       window.ga('send', 'event', "HTML", "view sourcecode", "Export/View HTML");
       location.href= "#/export-html";
     }
+    removeAllSearchStrings():void{
+      var _this= this;
+      // this.scope.$apply(function(){
+        this.mapLinkObjects(function(LinkObject){
+          if(LinkObject.readOnly) return true;
+          LinkObject.new.searchParams.delete("o");
+          LinkObject.new.searchParams.delete("oin");
+          LinkObject.new.searchParams.delete("v");
+          LinkObject.new.searchParams.delete("oiex");
+          LinkObject.new.searchParams.delete("elq_mid");
+          LinkObject.new.searchParams.delete("elq_lid");
+          LinkObject.new.searchParams.delete("elqTrack");
+          LinkObject.new.searchParams.delete("elqTrackId");
+          LinkObject.new.searchParams.delete("s");
+          LinkObject.new.searchParams.delete("s3");
 
+          LinkObject.isLinkComplete();
+          _this.areLinksComplete();
+        });
+
+      // });
+    }
+    removeEloquaSearchStrings():void{
+      var _this= this;
+      // this.scope.$apply(function(){
+        this.mapLinkObjects(function(LinkObject){
+          if(LinkObject.readOnly) return true;
+          LinkObject.new.searchParams.delete("v");
+          LinkObject.new.searchParams.delete("elq_mid");
+          LinkObject.new.searchParams.delete("elq_lid");
+          LinkObject.new.searchParams.delete("elqTrack");
+          LinkObject.new.searchParams.delete("elqTrackId");
+
+          LinkObject.isLinkComplete();
+          _this.areLinksComplete();
+        });
+
+      // });
+    }
 
     setUpShortcutKeys():void{
-      var _this= this;
-      this.keyBoardShortcuts = [];
-
-      _this.keyBoardShortcuts.push(
-        new KeyboardShortcut(
-          function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 52; },
-          function(){
-            //dothis;
-            _this.scope.$apply(function(){
-              console.log('downloading file');
-              _this.downloadHtml();
-
-            });
-          },
-          "CTRL + SHIFT + 4",
-          "Download HTML"
-        )
-      );
-
-      _this.keyBoardShortcuts.push(
-        new KeyboardShortcut(
-          function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 51; },
-          function(){
-            //dothis;
-            _this.scope.$apply(function(){
-              _this.mapLinkObjects(function(LinkObject){
-                if(LinkObject.errors.messages.length>0){
-                  LinkObject.errors.messages.forEach(function(MessageObject){
-                    if(MessageObject.type == ErrorType.Suggestion){
-                      MessageObject.ctaHandler();
-                    }
-                  });
-                  LinkObject.isLinkComplete();
-                }
-              });
-            });
-          },
-          "CTRL + SHIFT + 3",
-          "Apply all suggestions"
-        )
-      );
-
-      _this.keyBoardShortcuts.push(
-        new KeyboardShortcut(
-          function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 50; },
-          function(){
-            //dothis;
-            _this.scope.$apply(function(){
-              _this.mapLinkObjects(function(LinkObject){
-                if(!LinkObject.readOnly
-                  && LinkObject.requiresSCode()
-                && !LinkObject.new.searchParams.has('s')){
-                  LinkObject.new.searchParams.append('s=email');
-                  LinkObject.isLinkComplete();
-                }
-              });
-            });
-          },
-          "CTRL + SHIFT + 2",
-          "Add s=email to all links"
-        )
-      );
-
-      _this.keyBoardShortcuts.push(
-        new KeyboardShortcut(
-          function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 49; },
-          function(){
-            //dothis;
-            _this.scope.$apply(function(){
-              _this.mapLinkObjects(function(LinkObject){
-                if(LinkObject.readOnly) return true;
-                LinkObject.new.searchParams.delete("o");
-                LinkObject.new.searchParams.delete("oin");
-                LinkObject.new.searchParams.delete("v");
-                LinkObject.new.searchParams.delete("oiex");
-                LinkObject.new.searchParams.delete("elq_mid");
-                LinkObject.new.searchParams.delete("elq_lid");
-                LinkObject.new.searchParams.delete("elqTrack");
-                LinkObject.new.searchParams.delete("elqTrackId");
-                LinkObject.new.searchParams.delete("s");
-                LinkObject.new.searchParams.delete("s3");
-
-                LinkObject.isLinkComplete();
-                _this.areLinksComplete();
-              });
-
-            });
-          },
-          "CTRL + SHIFT + 1",
-          "Remove all query strings from email"
-        )
-      );
-
-
-
-      document.onkeyup = function(e){
-        for(let shortcut of _this.keyBoardShortcuts){
-          if(shortcut.when && shortcut.when(e)){
-            shortcut.doThis();
-          }
-        }
-      };
+      // var _this= this;
+      // this.keyBoardShortcuts = [];
+      //
+      // _this.keyBoardShortcuts.push(
+      //   new KeyboardShortcut(
+      //     function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 52; },
+      //     function(){
+      //       //dothis;
+      //       _this.scope.$apply(function(){
+      //         console.log('downloading file');
+      //         _this.downloadHtml();
+      //
+      //       });
+      //     },
+      //     "CTRL + SHIFT + 4",
+      //     "Download HTML"
+      //   )
+      // );
+      //
+      // _this.keyBoardShortcuts.push(
+      //   new KeyboardShortcut(
+      //     function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 51; },
+      //     function(){
+      //       //dothis;
+      //       _this.scope.$apply(function(){
+      //         _this.mapLinkObjects(function(LinkObject){
+      //           if(LinkObject.errors.messages.length>0){
+      //             LinkObject.errors.messages.forEach(function(MessageObject){
+      //               if(MessageObject.type == ErrorType.Suggestion){
+      //                 MessageObject.ctaHandler();
+      //               }
+      //             });
+      //             LinkObject.isLinkComplete();
+      //           }
+      //         });
+      //       });
+      //     },
+      //     "CTRL + SHIFT + 3",
+      //     "Apply all suggestions"
+      //   )
+      // );
+      //
+      // _this.keyBoardShortcuts.push(
+      //   new KeyboardShortcut(
+      //     function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 50; },
+      //     function(){
+      //       //dothis;
+      //       _this.scope.$apply(function(){
+      //         _this.mapLinkObjects(function(LinkObject){
+      //           if(!LinkObject.readOnly
+      //             && LinkObject.requiresSCode()
+      //           && !LinkObject.new.searchParams.has('s')){
+      //             LinkObject.new.searchParams.append('s=email');
+      //             LinkObject.isLinkComplete();
+      //           }
+      //         });
+      //       });
+      //     },
+      //     "CTRL + SHIFT + 2",
+      //     "Add s=email to all links"
+      //   )
+      // );
+      //
+      // _this.keyBoardShortcuts.push(
+      //   new KeyboardShortcut(
+      //     function(e){ return (e.ctrlKey||e.metaKey) && e.shiftKey && e.which == 49; },
+      //     function(){
+      //       //dothis;
+      //       _this.scope.$apply(function(){
+      //         _this.mapLinkObjects(function(LinkObject){
+      //           if(LinkObject.readOnly) return true;
+      //           LinkObject.new.searchParams.delete("o");
+      //           LinkObject.new.searchParams.delete("oin");
+      //           LinkObject.new.searchParams.delete("v");
+      //           LinkObject.new.searchParams.delete("oiex");
+      //           LinkObject.new.searchParams.delete("elq_mid");
+      //           LinkObject.new.searchParams.delete("elq_lid");
+      //           LinkObject.new.searchParams.delete("elqTrack");
+      //           LinkObject.new.searchParams.delete("elqTrackId");
+      //           LinkObject.new.searchParams.delete("s");
+      //           LinkObject.new.searchParams.delete("s3");
+      //
+      //           LinkObject.isLinkComplete();
+      //           _this.areLinksComplete();
+      //         });
+      //
+      //       });
+      //     },
+      //     "CTRL + SHIFT + 1",
+      //     "Remove all query strings from email"
+      //   )
+      // );
+      //
+      //
+      //
+      // document.onkeyup = function(e){
+      //   for(let shortcut of _this.keyBoardShortcuts){
+      //     if(shortcut.when && shortcut.when(e)){
+      //       shortcut.doThis();
+      //     }
+      //   }
+      // };
     }
     replaceSpecialCharacters(text):string{
       var replace = {
@@ -1165,11 +1223,9 @@ namespace EMLModule {
         } else if(LinkObject.readOnly) {
           let readOnlyUrl = LinkObject.context.replace(/eml\-id\=\"[0-9]{1,}\"\s/g,"");
           output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), readOnlyUrl);
-        } else {
 
+        } else {
           var start = LinkObject.context.indexOf("href=\"" + LinkObject.old.url);
-          // codeLines[line] = codeLines[line].substr(0, start) + "href=\"" + LinkObject.new.url + codeLines[line].substr(start+6+LinkObject.old.url.length, codeLines[line].length);
-          //this is where we update the context;
           var newContext = LinkObject.context;
           newContext = newContext.substr(0,start) + "href=\"" + LinkObject.new.url + newContext.substr(start+6+LinkObject.old.url.length, newContext.length);
           if(LinkObject.LinkedImage){
@@ -1183,13 +1239,9 @@ namespace EMLModule {
       });
 
       //find all images without alt attribute and add alt="";
-      output = output.replace(/\<img[^\>].*?\>/gi, function(found){
-        if(found.indexOf("alt=")>-1){
-          return found;
-        } else {
-          return found.replace(/\<img/gi, "<img alt=\"\"");
-        }
-        });
+      // filter output with hooks to ;
+      EMLMaker.filter.module("beforeDidGenerateCode").inject("EMLWorkspace",this);
+      output = EMLMaker.filter.module("beforeDidGenerateCode").applyFilter(output);
 
       try {
         output = output.replace(/<\/a>\n{0,5}(\.|,|\?|!|:|;|\|)/g, "</a>$1");
@@ -1255,7 +1307,7 @@ namespace EMLModule {
             WS.sourceCode = dropText;
           }
           WS.processHtml();
-          // WS.intelligence = EMLMakerAIEngine.CheckEmail(WS);
+
           location.href = "#/links";
         };
         reader.readAsText(files[0]);
@@ -1352,21 +1404,22 @@ namespace EMLModule {
   }
 
 
-  export class KeyboardShortcut {
 
-    when : ()=>boolean;
-    doThis : ()=>void;
-    description: string;
-    keys: string;
-
-    constructor(when, doThis, keys, description){
-
-      this.when = when;
-      this.doThis = doThis;
-      this.keys = keys;
-      this.description = description;
-    }
-  }
+  // export class KeyboardShortcut {
+  //
+  //   when : ()=>boolean;
+  //   doThis : ()=>void;
+  //   description: string;
+  //   keys: string;
+  //
+  //   constructor(when, doThis, keys, description){
+  //
+  //     this.when = when;
+  //     this.doThis = doThis;
+  //     this.keys = keys;
+  //     this.description = description;
+  //   }
+  // }
 
 
 }

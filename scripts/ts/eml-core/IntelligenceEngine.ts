@@ -18,6 +18,8 @@ interface IntelligenceSub{
   title: string,
   description: string,
   resource: string,
+  resourceText: string,
+  suggestion: string,
   cta: {
     label: string,
     handler: ()=>void
@@ -32,11 +34,13 @@ class IntelligenceAlert {
   title: string;
   description: string;
   resource: string;
+  resourceText: string;
   ctaLabel: string;
   ctaHandler: any;
   canContinue: boolean;
   severity: ErrorSeverity;
   cleanType: string;
+  suggestion: string;
   args: IntelligenceAlertArgs;
 
   generateGuid() {
@@ -177,20 +181,18 @@ module EMLMakerIntelligence {
       return this;
     }
   }
-  export class IntelligenceMonitor {
+  export class IntelligenceMonitor extends InjectorModule {
     scope: string;
     rules: any[];
-    variables: {};
     overridden: string[];
     canContinue: boolean;
     messages: IntelligenceAlert[];
 
     constructor(parentScope){
+      super();
       this.rules = parentScope.rules;
       this.overridden = [];
-      this.variables = {
-        "IntelligenceMonitor": this
-      };
+      this.inject("IntelligenceMonitor", this);
       this.reset();
     }
     reset(){
@@ -198,24 +200,34 @@ module EMLMakerIntelligence {
       this.canContinue = true;
     }
     associateVariable(accessor, value){
-      this.variables[accessor] = value;
+      this.inject(accessor, value);
+      console.warn("associateVariable is depreciated, use inject method.");
+      // this.variables[accessor] = value;
     }
     evaluateRule(rule):IntelligenceSub{
       //look for injection parameters
       var result;
 
-      if(typeof rule == "object"){
-        //last parameter is the fuunction;
-        var func = rule[rule.length-1];
-        var parameters = rule.slice(0, rule.length-1);
-        let IM = this;
 
-        var args = parameters.map(function(key:string){return IM.variables[key]; });
-        try {
-          result = func.apply(null, args);
-        } catch(e){
-          console.error(e);
-        }
+        //last parameter is the fuunction;
+        var func;
+        //console.log(this.variables);
+        if(typeof rule === "object"){
+          let injector = this.__getInjector(rule);
+          result = injector.fn.apply(null, injector.args);
+
+
+
+        // var func = rule[rule.length-1];
+        // var parameters = rule.slice(0, rule.length-1);
+        // let IM = this;
+        //
+        // var args = parameters.map(function(key:string){return IM.variables[key]; });
+        // try {
+        //   result = func.apply(null, args);
+        // } catch(e){
+        //   console.error(e);
+        // }
 
       } else {
         result = rule();
@@ -239,6 +251,9 @@ module EMLMakerIntelligence {
           IA.title = result.title === undefined ? "" : result.title;
           IA.description = result.description === undefined ? "" : result.description;
           IA.resource = result.resource === undefined ? "" : result.resource;
+          IA.suggestion = result.suggestion === undefined ? "" : result.suggestion;
+          IA.resourceText = result.resourceText === undefined ? "Read more" : result.resourceText;
+
           IA.ctaHandler = result.cta && result.cta.handler ? result.cta.handler : function(){};
           IA.ctaLabel = result.cta && result.cta.label ? result.cta.label : "";
           IA.canContinue = result.hasOwnProperty("canContinue") ? result.canContinue : true;
@@ -294,5 +309,7 @@ module EMLMakerIntelligence {
 
 }
 
-
-var EMLIntelligence = new EMLMakerIntelligence.IntelligenceEngine();
+var EMLMaker;
+(function (EMLMaker) {
+    EMLMaker.intelligence =  new EMLMakerIntelligence.IntelligenceEngine();
+})(EMLMaker || (EMLMaker = {}));

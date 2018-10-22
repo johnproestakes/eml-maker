@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register(
+EMLMaker.intelligence.module("hyperlink").register(
   "hyperlink-tracking-required",[
   "LinkObject",function(LinkObject){
 

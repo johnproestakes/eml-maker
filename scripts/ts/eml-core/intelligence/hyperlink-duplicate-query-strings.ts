@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-duplicate-query-strings",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-duplicate-query-strings",[
   "LinkObject",function(LinkObject){
 var param;
 var proceed = LinkObject.hasDuplicateQueryStrings();

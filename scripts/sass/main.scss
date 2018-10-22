@@ -41,6 +41,37 @@ message-item {display:block;}
 
   }
 }
+.eml-logo.update-exists {
+  //background-color: #a333c8;
+  overflow:visible;
+  position:relative;
+  box-shadow: 5px 5px 22px #db2828;
+}
+.eml-logo.update-exists:before{
+  display: block;
+    content: "";
+    width: 10px;
+    height: 10px;
+    background-color: #db2828;
+    position: absolute;
+    top: 3px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px #000009;
+    animation-name: animate-eml-logo-update;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    left: 25px;
+    &.big {
+      left: 45px;
+    }
+}
+@keyframes animate-eml-logo-update {
+  0% {top: 2px;}
+  50% {top: 6px}
+  100% {top: 1px}
+}
+
+
 .truncate {
   width: 100%;
   display:block;
@@ -268,6 +299,7 @@ ul.inline {
   }
 
 
+
 }
 // enum ErrorType {
 //   Fix=1,
@@ -279,6 +311,7 @@ ul.inline {
 
 
 .message-center {
+  .intel-msg { border-left: solid 5px transparent; padding-left:.75em; }
   .type-1, .type-2, .type-3, .type-4, .type-5 {border-left: solid 5px; padding-left:.75em;}
   .level-1 { border-color: #DB2828;}
   .level-2 { border-color: #F2711C;}
@@ -291,6 +324,13 @@ ul.inline {
   .type-3 { border-color: #6435C9;}
   .type-5 { border-color: transparent;}
 
+  .suggestion {
+    padding: .75em 1em;
+    background-color: #f3f4f5;
+    margin-bottom: .5em;
+    border-radius: .28571429rem;
+    box-shadow: 0 0 0 1px rgba(34,36,38,.22) inset, 0 0 0 0 transparent;
+  }
   //suggestion
   // .level-1 { border-color: #DB2828;}
 }

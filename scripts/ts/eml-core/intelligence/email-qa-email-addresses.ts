@@ -1,4 +1,4 @@
-EMLIntelligence.module("email").register(
+EMLMaker.intelligence.module("email").register(
   "email-qa-email-addresses",
   ["EMLWorkspace","IntelligenceMonitor", function(EMLWorkspace, IntelligenceMonitor){
 

@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-image-size",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-image-size",[
   "LinkObject",function(LinkObject){
 
     var width, height;

@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-is-valid-url",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-is-valid-url",[
   "LinkObject",function(LinkObject){
 
 

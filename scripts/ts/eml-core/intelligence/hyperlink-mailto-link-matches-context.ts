@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-mailto-link-matches-context",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-mailto-link-matches-context",[
   "LinkObject",function(LinkObject){
 
 

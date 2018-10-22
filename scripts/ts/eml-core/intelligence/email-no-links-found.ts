@@ -1,8 +1,9 @@
-EMLIntelligence.module("email").register(
+EMLMaker.intelligence.module("email").register(
   "email-no-links-found",[
   "EMLWorkspace", function(EMLWorkspace){
 
 
+  let proceed =  EMLWorkspace.hasOwnProperty("linkData") && EMLWorkspace.linkData.length ==0;
   return {
     id: "did-not-find-links",
     title: "Did not find any links",
@@ -19,7 +20,7 @@ EMLIntelligence.module("email").register(
     //   handler: function(){}
     // },
     when: function(){
-      return EMLWorkspace.linkData.length ==0
+      return proceed;
       }
     };
 }]);

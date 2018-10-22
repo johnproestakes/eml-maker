@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-has-spaces",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-has-spaces",[
   "LinkObject",function(LinkObject){
 
 

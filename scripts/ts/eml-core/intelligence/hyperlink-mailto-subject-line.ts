@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-mailto-subject-line",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-mailto-subject-line",[
   "LinkObject",function(LinkObject){
 
 

@@ -1,4 +1,4 @@
-EMLIntelligence.module("email").register("email-qa-telelphone-numbers",[
+EMLMaker.intelligence.module("email").register("email-qa-telelphone-numbers",[
   "EMLWorkspace","IntelligenceMonitor", function(EMLWorkspace,IntelligenceMonitor){
 
     //do the code here;

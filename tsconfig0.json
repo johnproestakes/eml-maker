@@ -1,0 +1,13 @@
+{
+  "compilerOptions":{
+    "target":"es5",
+    "module":"system",
+    "sourceMap": true
+  },
+  "include":[
+    "./scripts/ts/**/*"
+  ],
+  "exclude":[
+    "./scripts/definitions/**/*"
+  ]
+}

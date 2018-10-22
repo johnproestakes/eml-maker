@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-jump-links",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-jump-links",[
   "LinkObject",function(LinkObject){
 
 

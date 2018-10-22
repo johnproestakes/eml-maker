@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-is-valid-mailto",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-is-valid-mailto",[
   "LinkObject",function(LinkObject){
 
   return {

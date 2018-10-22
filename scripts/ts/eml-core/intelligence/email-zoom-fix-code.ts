@@ -1,4 +1,4 @@
-EMLIntelligence.module("email").register("email-zoom-fix-code",[
+EMLMaker.intelligence.module("email").register("email-zoom-fix-code",[
   "EMLWorkspace",function(EMLWorkspace){
 
   return {

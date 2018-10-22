@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-remove-title-tag",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-remove-title-tag",[
   "LinkObject",function(LinkObject){
 
 

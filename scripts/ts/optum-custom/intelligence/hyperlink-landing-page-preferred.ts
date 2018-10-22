@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register(
+EMLMaker.intelligence.module("hyperlink").register(
   "hyperlink-landing-page-preferred",[
   "LinkObject",function(LinkObject){
 let proceed = GlobalVars.landingPagePreferred.test(LinkObject.new.url);

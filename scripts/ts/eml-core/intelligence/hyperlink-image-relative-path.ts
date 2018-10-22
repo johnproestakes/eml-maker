@@ -1,12 +1,11 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-image-relative-path",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-image-relative-path",[
   "LinkObject",function(LinkObject){
 
 
   return {
     // id: "",
     title: "Linked image URL is relative",
-    description:"The image is probably stored on your computer \
-    somewhere or the image is broken. \
+    description:"The image is probably stored on your computer or the image is broken. \
     Images in emails should only be referenced by absolute URLs.",
     type: ErrorType.Fix,
     severity: ErrorSeverity.High,

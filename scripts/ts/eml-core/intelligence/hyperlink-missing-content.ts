@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-missing-content",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-missing-content",[
   "LinkObject",function(LinkObject){
 
 var proceed = (window.jQuery(LinkObject.context).find("img").length ==0

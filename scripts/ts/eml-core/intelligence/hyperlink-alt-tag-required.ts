@@ -1,4 +1,4 @@
-EMLIntelligence.module("hyperlink").register("hyperlink-alt-tag-required",[
+EMLMaker.intelligence.module("hyperlink").register("hyperlink-alt-tag-required",[
   "LinkObject",function(LinkObject){
 
 
