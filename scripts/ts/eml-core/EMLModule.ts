@@ -93,7 +93,53 @@ class InjectorModule {
 
 namespace EMLModule {
 
+  export class PreviewTextObject {
+    parent: EMLWorkspace;
+    text: string;
+    status: boolean;
+    suggestions: string[];
+    defaultPreviewTextCSS: string;
+    defaultPreviewTextCode: string;
 
+
+    constructor(EMLWorkspace){
+      this.status = false;
+      this.parent = EMLWorkspace;
+      this.text = "";
+      this.defaultPreviewTextCSS = `.preheader {display:none !important; visibility:hidden; opacity:0; color:#fff; font-size:0; height:0; width:0;}`;
+      this.defaultPreviewTextCode = `<p class="preheader" style="display: none !important; visibility: hidden; opacity: 0; color: transparent; height: 0; width: 0; margin:0; padding:0;"></p>`;
+    }
+
+    init(){
+      let outputCode = this.parent.generateOutputCode("email", true);
+      let regex = /\<p.*class=\"preheader\"[^\>].*\>([^<].*)?\<\/p\>/gi;
+      let regexS = /\<p([^\>].*)class=\"preheader\"([^\>].*)\>/gi;
+      if(regexS.test(outputCode)){
+        var found = outputCode.match(regex);
+        if(found){
+          this.text = window.jQuery(found[0]);
+          //found
+        } else {
+          // not found
+          // need to add the code;
+          var workingCode = this.parent.workingCode;
+          if(/\<style\s?(\s[^>].*)?\>/.test(workingCode)){
+            //add to existing code
+            workingCode = workingCode.replace(new RegExp("</style>"), this.defaultPreviewTextCSS + "\n</style>");
+          } else {
+            if(workingCode.indexOf("</head>")>-1){
+              workingCode = workingCode.replace(new RegExp("</head>"), "<style type=\"text/css\">" + this.defaultPreviewTextCSS + "</style>");
+            } else {
+
+            }
+
+          }
+          workingCode = workingCode.replace(new RegExp("<body>"), "<body>\n" + this.defaultPreviewTextCode);
+
+        }
+      }
+    }
+  }
 
   export class MailtoLinkObject {
      parent: LinkObject;
@@ -788,6 +834,7 @@ namespace EMLModule {
     messages: any[];
     fileName: string;
     linkData: LinkObject[];
+    previewText: PreviewTextObject;
     _defaultSCode: string;
     header: any;
     errors: any;
@@ -801,6 +848,7 @@ namespace EMLModule {
       if( html === undefined) html = "";
       if( $scope === undefined) $scope = "";
       var Workspace = this;
+      this.previewText = new PreviewTextObject(this);
       this.buffer = null;
       this.scope = $scope;
       this.linksView = 'experimental'; //advanced shows all
@@ -892,7 +940,8 @@ namespace EMLModule {
       this.afterDidExportCodeToHTML();
     }
     beforeDidExportCodeToHTML(){
-      let trackingOptOut = false;
+
+
       if(this.exportForEloqua && this.exportForEloqua == "Yes") {
         window.ga('send', 'event', "HTML", "Add Eloqua Tracking", "Add Eloqua Tracking");
         this.mapLinkObjects(function(LinkObject){
@@ -1139,6 +1188,10 @@ namespace EMLModule {
           }
         }
       }
+
+      //preview Stuff
+      this.previewText.init();
+
       var _super = this;
       var re1 = /<a\b[^>]*?>([\r\n]|.)*?<\/a>/gm, n = 0;
       this.workingCode = this.workingCode.replace(re1, function(found){
@@ -1217,6 +1270,8 @@ namespace EMLModule {
       //do post processing.
       //export code?
       this.mapLinkObjects(function(LinkObject){
+
+        // if(LinkObject.requiresSCode()&& !LinkObject.new.searchParams.has("s")) LinkObject.new.searchParams.append("s=email");
 
         if(LinkObject.hasOwnProperty("deleteOnRender")&&LinkObject.deleteOnRender){
           output = output.replace(new RegExp("{{EMLMaker_Link:"+LinkObject.id+"}}", "gi"), "");

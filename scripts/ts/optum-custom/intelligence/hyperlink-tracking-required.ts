@@ -6,7 +6,7 @@ EMLMaker.intelligence.module("hyperlink").register(
   return {
     id: "optum-budurl-tracking-code-required",
     title: "This URL needs a tracking code.",
-    description: "Create and add one to make this message go away.",
+    description: "Create and add a tracking code to make this message go away.",
     type: ErrorType.Fix,
     severity: ErrorSeverity.High,
     // resource: "",

@@ -12,7 +12,7 @@ EMLMaker.intelligence.module("hyperlink").register(
 
   return {
     // id: "",
-    title: "Need a hand?",
+    title: "Tracking code - Apply to all links?",
     description:"I noticed you added a tracking code to this link, great job.\
      If you want I can add the same tracking code to the other links in this email \
      which require tracking codes.",

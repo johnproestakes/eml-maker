@@ -16,6 +16,7 @@ EMLMaker.intelligence.module("hyperlink").register(
       handler: function(){
         LinkObject.context = LinkObject.context.replace(GlobalVars.linkEncapsulatedPunctuation, "</a>$1");
         LinkObject.isLinkComplete();
+        window.ga('send', 'event', "Suggestion", "Move punctuation");
       }
     },
     when: function(){

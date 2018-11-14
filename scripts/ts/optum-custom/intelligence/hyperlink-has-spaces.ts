@@ -15,6 +15,7 @@ EMLMaker.intelligence.module("hyperlink").register("hyperlink-has-spaces",[
       handler: function(){
         LinkObject.new.url = LinkObject.new.url.replace(/\s/g, "%20");
         LinkObject.isLinkComplete();
+        window.ga('send', 'event', "Suggestion", "Remove spaces");
       }
     },
     when: function(){

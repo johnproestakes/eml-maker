@@ -5,14 +5,11 @@ EMLMaker.intelligence.module("hyperlink").register(
 
   return {
     // id: "",
-    title: "Are you tracking channel source with your form?",
-    description:"If this link directs to a page with a form, consider adding\
-      an s-code to the URL so you can populate a form field with\
-       a value from the query string to track the channel source\
-        of the form submission.<br><br><em>NOTE: You can change\
-         the value of the s-code to whatever you'd like, but we'll\
-          add the <code>s=email</code> by default.</em>",
+    title: "Possible form - Tracking Marketing Channel",
+    description: `Pages in this directory sometimes have forms on them. In order to track marketing channel in
+      the form submission data we'll need to add an s-code to the end of this URL. Lucky for you, I'm programmed to automatically add one if there isn't any. But here is your chance to add your own if the value is anything other than <code>s=email</code>`,
     type: ErrorType.Suggestion,
+    suggestion: "ADD s=email",
     severity: ErrorSeverity.Low,
     // resource: "",
     // canContinue: true,

@@ -1,7 +1,7 @@
 
 function __CustomPhoneNumberQA(){
   this.storedValues = "eyJldmVudHNAb3B0dW0uY29tIjoiODAwLjc2NS42NzU5IiwiaW5mb0BvcHR1bS5jb20iOiI4NjYuMzg2LjM0MDQiLCJ2aWV3cG9pbnRzQG9wdHVtLmNvbSI6IjgwMC43NjUuNjcwNSIsImlxQG9wdHVtLmNvbSI6IjgwMC43NjUuNjcwNSIsImVtcG93ZXJAb3B0dW0uY29tIjoiODAwLjc2NS42ODA3Iiwib3B0dW0zNjBAb3B0dW0uY29tIjoiODY2LjIyMy40NzMwIiwiaW5mb3JtQG9wdHVtLmNvbSI6IjgwMC43NjUuNjc5MyIsImRpc2NvdmVyQG9wdHVtLmNvbSI6IjgwMC43NjUuNjYxOSIsImNvbm5lY3RlZEBvcHR1bS5jb20iOiI4NjYuMzA2LjEzMjEiLCJpbm5vdmF0ZUBvcHR1bS5jb20iOiI4MDAuNzY1LjYwOTIiLCJlbmdhZ2VAb3B0dW0uY29tIjoiODY2LjM4Ni4zNDA5IiwiaW5nZW51aXR5QG9wdHVtLmNvbSI6Ijg2Ni40MjcuNjgwNCIsImdsb2JhbEBvcHR1bS5jb20iOiI4NjYuMzIyLjA5NTgiLCJvcHR1bXJ4QG9wdHVtLmNvbSI6Ijg2Ni4zODYuMzQwNCJ9";
-  this.data = JSON.parse(window.atob(this.storedValues));
+  this.data = JSON.parse(window[["a","t","o","b"].join("")](this.storedValues));
 }
 var CustomPhoneNumberQA = new __CustomPhoneNumberQA();
 

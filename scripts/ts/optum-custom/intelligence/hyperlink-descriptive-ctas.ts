@@ -12,7 +12,7 @@ EMLMaker.intelligence.module("hyperlink").register("hyperlink-descriptive-ctas",
     //engagement
     let security = /privacy|refund|protected|secure|certified|guaranteed|realistic|researched|proven|official|money-back|tested|lifetime|backed/i
     let simplicity = /easy|simple|hassle\-free|help|complete|entire|total|thorough|pure|natural|plain|straightforward|uncomplicated|candid/i
-    let engagement = /increase|create|share|discover|compare|take|show|tell|find|make|plan|learn|start|grow/i
+    let engagement = /increase|create|share|discover|compare|take|show|tell|find|make|plan|learn|start|grow|subscribe/i
     let exclusive = /select|private|confidential|insider|vip|secret|exclusive|members|elite|invitation|secret|reserved|only|choice/i
     let urgency = /now|immediately|today|limited|shortly|soon|rapid|quick|flash|hurry|alert|fast|instant|urgent/i
     let excitement = /new|introducing|latest|special|alert|gift|free|freebie|best|prize|win|save|ultimate|try/i
@@ -20,38 +20,45 @@ EMLMaker.intelligence.module("hyperlink").register("hyperlink-descriptive-ctas",
     var a  = window.jQuery(LinkObject.context);
     var c = a.text();
 
-
+    enum CTAAnalysis {
+      Security=0,
+      Simplicity,
+      Engagement,
+      Exclusive,
+      Urgency,
+      Excitement
+    }
     var score = [0,0,0,0,0,0];
     if(security.test(c)){
       console.log("security");
-      score[0] = 1;
+      score[CTAAnalysis.Security] = 1;
     }
     if(simplicity.test(c)){
       console.log("simplicity");
-      score[1] = 1;
+      score[CTAAnalysis.Simplicity] = 1;
     }
     if(engagement.test(c)){
       console.log("engagement");
-      score[2] = 1;
+      score[CTAAnalysis.Engagement] = 1;
     }
     if(exclusive.test(c)){
       console.log("exclusive");
-      score[3] = 1;
+      score[CTAAnalysis.Exclusive] = 1;
     }
     if(urgency.test(c)){
       console.log("urgency");
-      score[4] = 1;
+      score[CTAAnalysis.Urgency] = 1;
     }
     if(excitement.test(c)){
       console.log("excitement");
-      score[5] = 1;
+      score[CTAAnalysis.Excitement] = 1;
     }
 
 
 
 
-
-    let proceed = regex.test(a.text()) && a.text().length > 45;
+    // let proceed = score.reduce((a,b)=> a+b, 0) > 0;
+    let proceed = false;
 
   //
   //
@@ -63,7 +70,7 @@ EMLMaker.intelligence.module("hyperlink").register("hyperlink-descriptive-ctas",
   return {
     // id: "",
     title: "Consider the language of the CTA",
-    description: "",
+    description: score.toString(),
     type: ErrorType.Warn,
     severity: ErrorSeverity.Low,
     resource: "https://www.campaignmonitor.com/resources/guides/10-tips-improve-email-calls-action/",

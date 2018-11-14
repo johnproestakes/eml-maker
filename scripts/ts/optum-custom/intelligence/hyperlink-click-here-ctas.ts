@@ -21,7 +21,7 @@ EMLMaker.intelligence.module("hyperlink").register("hyperlink-click-here-ctas",[
     //   }
     // },
     when: function(){
-      return LinkObject.context && /click|click\shere/g.test(LinkObject.context)
+      return LinkObject.context && /click|click\shere/gi.test(LinkObject.context)
       }
     };
 }]);
