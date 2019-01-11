@@ -108,36 +108,43 @@ namespace EMLModule {
       this.text = "";
       this.defaultPreviewTextCSS = `.preheader {display:none !important; visibility:hidden; opacity:0; color:#fff; font-size:0; height:0; width:0;}`;
       this.defaultPreviewTextCode = `<p class="preheader" style="display: none !important; visibility: hidden; opacity: 0; color: transparent; height: 0; width: 0; margin:0; padding:0;"></p>`;
-    }
 
+    }
+    render(){
+
+    }
     init(){
       let outputCode = this.parent.generateOutputCode("email", true);
       let regex = /\<p.*class=\"preheader\"[^\>].*\>([^<].*)?\<\/p\>/gi;
       let regexS = /\<p([^\>].*)class=\"preheader\"([^\>].*)\>/gi;
+      var workingCode = this.parent.workingCode.toString();
       if(regexS.test(outputCode)){
         var found = outputCode.match(regex);
         if(found){
-          this.text = window.jQuery(found[0]);
+          //has code already.
+          this.status = true;
+          this.text = window.jQuery(found[0]).text();
           //found
         } else {
           // not found
           // need to add the code;
-          var workingCode = this.parent.workingCode;
+
           if(/\<style\s?(\s[^>].*)?\>/.test(workingCode)){
             //add to existing code
-            workingCode = workingCode.replace(new RegExp("</style>"), this.defaultPreviewTextCSS + "\n</style>");
+            workingCode = workingCode.replace(new RegExp("</style>", "g"), this.defaultPreviewTextCSS + "\n</style>");
           } else {
             if(workingCode.indexOf("</head>")>-1){
-              workingCode = workingCode.replace(new RegExp("</head>"), "<style type=\"text/css\">" + this.defaultPreviewTextCSS + "</style>");
+              workingCode = workingCode.replace(new RegExp("</head>", "g"), "<style type=\"text/css\">" + this.defaultPreviewTextCSS + "</style>");
             } else {
 
             }
 
           }
-          workingCode = workingCode.replace(new RegExp("<body>"), "<body>\n" + this.defaultPreviewTextCode);
+          workingCode = workingCode.replace(new RegExp("(<body[^>]*>)", "g"), "$1\n" + this.defaultPreviewTextCode);
 
         }
       }
+      this.parent.workingCode = workingCode;
     }
   }
 
@@ -527,8 +534,8 @@ namespace EMLModule {
           this.old = new URLObj("#");
           this.context = this.context.replace(new RegExp("href=\"\"","g"),"href=\"#\"");
         } else {
-          this.new = new URLObj((href[0].substr(6, href[0].length-7)).trim());
-          this.old = new URLObj((href[0].substr(6, href[0].length-7)).trim());
+          this.new = new URLObj((href[0].substr(6, href[0].length-7)).trim().replace(/\n/g,""));
+          this.old = new URLObj((href[0].substr(6, href[0].length-7)).trim().replace(/\n/g,""));
         }
 
       }
@@ -848,7 +855,7 @@ namespace EMLModule {
       if( html === undefined) html = "";
       if( $scope === undefined) $scope = "";
       var Workspace = this;
-      this.previewText = new PreviewTextObject(this);
+
       this.buffer = null;
       this.scope = $scope;
       this.linksView = 'experimental'; //advanced shows all
@@ -1170,6 +1177,7 @@ namespace EMLModule {
       this.linkData = [];
       this.intelligence.overridden = [];
       this.intelligence.evaluateRules();
+
       window.scrollTo(0,0);
       // .replace(new RegExp("</a>","ig"), "</a>\n")
       this.workingCode = this.replaceSpecialCharacters(this.sourceCode);
@@ -1190,7 +1198,9 @@ namespace EMLModule {
       }
 
       //preview Stuff
+      this.previewText = new PreviewTextObject(this);
       this.previewText.init();
+      console.log('preview text', this.previewText);
 
       var _super = this;
       var re1 = /<a\b[^>]*?>([\r\n]|.)*?<\/a>/gm, n = 0;
