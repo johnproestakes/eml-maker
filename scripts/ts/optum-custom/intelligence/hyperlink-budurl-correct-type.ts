@@ -19,7 +19,7 @@ EMLMaker.intelligence.module("hyperlink").register(
     //   }
     // },
     when: function(){
-      return LinkObject.hasTrackingCode() && !/\:eml\:/i.test(LinkObject.new.url)
+      return LinkObject.hasTrackingCode() && !/\:eml|em\:/i.test(LinkObject.new.url)
       }
     };
 }]);
