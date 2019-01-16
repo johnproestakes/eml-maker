@@ -226,6 +226,19 @@ pre {background-color: #fafafa;padding: .5em;}
     margin-bottom:.5em;
     padding: 2px 5px 6px 15px;
     border-radius: .28571429rem;}
+  li:last-child{
+
+    input {
+      padding: 2px 5px 6px 15px;
+    }
+    width: auto;
+    padding:0;
+    background: inherit;
+    box-shadow:inherit;
+    margin: inherit;
+    margin-right: .5em;
+    border: inherit;
+  }
 }
 
 .code.linked-image {

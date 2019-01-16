@@ -1,8 +1,8 @@
 EMLMaker.intelligence.module("hyperlink").register("hyperlink-missing-content",[
   "LinkObject",function(LinkObject){
-
-var proceed = (window.jQuery(LinkObject.context).find("img").length ==0
-&& window.jQuery(LinkObject.context).text().trim() =="")
+var jQueryContext = window.jQuery(LinkObject.context).text();
+var proceed = (window.jQuery(LinkObject.context).find("[elqtype]").length ==0 && window.jQuery(LinkObject.context).find("img").length ==0
+&& jQueryContext.trim() =="" )
 && (!LinkObject.hasOwnProperty("deleteOnRender") ||!LinkObject.deleteOnRender);
 
   return {
